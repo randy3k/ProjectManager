@@ -84,9 +84,9 @@ class Manager:
         # learnt from SideBarEnhancements
         if close:
             self.window.run_command("close_all")
+            if len(self.window.views())>0: return
             self.window.run_command("close_workspace")
             self.window.run_command("close_project")
-            if len(self.window.views())>0: return
         def on_switch():
             executable_path = sublime.executable_path()
             if sublime.platform() == 'osx':
