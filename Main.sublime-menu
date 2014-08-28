@@ -1,0 +1,43 @@
+[
+    {
+        "caption": "Project",
+        "id": "project",
+        "children":
+        [
+            {
+                "caption": "-"
+            },
+            {
+                "caption": "Simple Project Manager",
+                "command": "simple_project_manager"
+            },
+            {
+                "caption": "Append Project",
+                "command": "simple_project_manager",
+                "args": { "action": 0 }
+            },
+            {
+                "caption": "Add Project",
+                "command": "simple_project_manager",
+                "args": { "action": 1 }
+            },
+            {
+                "caption": "Remove Project",
+                "command": "simple_project_manager",
+                "args": { "action": 2 }
+            },
+            {
+                "caption": "Edit Project",
+                "command": "simple_project_manager",
+                "args": { "action": 3 }
+            },
+            {
+                "caption": "List Projects",
+                "command": "simple_project_manager",
+                "args": { "action": 4 }
+            }
+        ]
+    }
+
+
+]

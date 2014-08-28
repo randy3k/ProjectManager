@@ -64,7 +64,10 @@ class Manager:
             for f in os.listdir(self.projects_dir):
                 if f.endswith(".sublime-project"):
                     pd = Jfile(os.path.join(self.projects_dir,f)).load()
-                    ret.append([f.replace(".sublime-project",""), pd["folders"][0]["path"]])
+                    if "folders" in pd:
+                        ret.append([f.replace(".sublime-project",""), pd["folders"][0]["path"]])
+                    else:
+                        ret.append([f.replace(".sublime-project",""),""])
             return ret
         else:
             return []
@@ -102,17 +105,25 @@ class Manager:
 
 
     def open_in_new_window(self, project):
-        pass
+        executable_path = sublime.executable_path()
+        if sublime.platform() == 'osx':
+            app_path = executable_path[:executable_path.rfind(".app/")+5]
+            executable_path = app_path+"Contents/SharedSupport/bin/subl"
+
+        sublime_project = os.path.join(self.projects_dir, "%s.sublime-project" % project)
+        subprocess.Popen([executable_path, "-n", "--project", sublime_project])
 
     def remove_project(self, project):
-        sublime_project = os.path.join(self.projects_dir, "%s.sublime-project" % project)
-        sublime_workspace = os.path.join(self.projects_dir, "%s.sublime-workspace" % project)
-        if self.window.project_file_name() == sublime_project:
-            self.window.run_command("close_all")
-            self.window.run_command("close_workspace")
-            self.window.run_command("close_project")
-        os.unlink(sublime_project)
-        os.unlink(sublime_workspace)
+        ok = sublime.ok_cancel_dialog("Remove Project %s?" % project)
+        if ok:
+            sublime_project = os.path.join(self.projects_dir, "%s.sublime-project" % project)
+            sublime_workspace = os.path.join(self.projects_dir, "%s.sublime-workspace" % project)
+            if self.window.project_file_name() == sublime_project:
+                self.window.run_command("close_all")
+                self.window.run_command("close_workspace")
+                self.window.run_command("close_project")
+            os.unlink(sublime_project)
+            os.unlink(sublime_workspace)
 
     def edit_project(self, project):
         sublime_project = os.path.join(self.projects_dir, "%s.sublime-project" % project)
@@ -127,11 +138,14 @@ class ProjectManager(sublime_plugin.WindowCommand):
 
     def run(self, action=None):
         self.manager = Manager(self.window)
-        self.cancel = action is None
+        self.callback_on_cancel = action is None
         self.project_list = self.manager.list_projects()
         self.options = [
+                ["[-] List Projects", "List all projects"],
                 ["[-] Add Project", "Add project to Project Manager"],
-                ["[-] List Projects", "List all projects"]
+                ["[-] Append Project", "Append a project in current window"],
+                ["[-] Edit Project", "Edit project settings"],
+                ["[-] Remove Project", "Remove a project from Project Manager"]
             ]
 
         if action is not None:
@@ -144,44 +158,67 @@ class ProjectManager(sublime_plugin.WindowCommand):
             return
 
         elif action==0:
-            # print("add project")
-            self.manager.add_project()
+            self.show_quick_panel(self.project_list, self.on_list)
 
         elif action==1:
-            # print("list projects")
-            self.show_quick_panel(self.project_list, self.on_list)
+            self.manager.add_project()
+
+        elif action==2:
+            self.show_quick_panel(self.project_list, self.on_append)
+
+        elif action==3:
+            self.show_quick_panel(self.project_list, self.on_edit)
+
+        elif action==4:
+            self.show_quick_panel(self.project_list, self.on_remove)
 
         elif action>=len(self.options):
             action = action-len(self.options)
-            project = self.project_list[action][0]
-            self.manager.switch_project(project)
+            self.manager.switch_project(self.project_list[action][0])
 
-    def on_list(self, action):
-        # print("action:", action)
+    def on_append(self, action):
         if action>=0:
-            project = self.project_list[action][0]
-            # self.manager.switch_project(project)
-            self.options_for_project(project)
-
-        elif self.cancel:
+            self.manager.append_project(self.project_list[action][0])
+        elif self.callback_on_cancel:
             sublime.set_timeout(self.run, 100)
 
-    def options_for_project(self, project):
-        items = [
-            ["Append", "Append to current window"],
-            ["Edit", "Edit project settings"],
-            ["Remove", "Remove from ProJect Manager"]
-        ]
-        def callback(action):
-                if action==0:
-                    self.manager.append_project(project)
-                elif action==1:
-                    self.manager.edit_project(project)
-                elif action==2:
-                    ok = sublime.ok_cancel_dialog("Remove Project %s?" % project)
-                    if ok:
-                        self.manager.remove_project(project)
-                else:
-                    sublime.set_timeout(self.run, 100)
+    def on_remove(self, action):
+        if action>=0:
+            self.manager.remove_project(self.project_list[action][0])
+        elif self.callback_on_cancel:
+            sublime.set_timeout(self.run, 100)
 
-        self.show_quick_panel(items, callback)
+    def on_edit(self, action):
+        if action>=0:
+            self.manager.edit_project(self.project_list[action][0])
+        elif self.callback_on_cancel:
+            sublime.set_timeout(self.run, 100)
+
+    def on_list(self, action):
+        if action>=0:
+            items = [
+                ["Open", "Open in current window"],
+                ["Open in new window", "Open in a new window"],
+                ["Append", "Append to current window"],
+                ["Edit", "Edit project settings"],
+                ["Remove", "Remove from ProJect Manager"]
+            ]
+            project = self.project_list[action][0]
+            def callback(a):
+                if a==0:
+                    self.manager.switch_project(project)
+                elif a==1:
+                    self.manager.open_in_new_window(project)
+                elif a==2:
+                    self.manager.append_project(project)
+                elif a==3:
+                    self.manager.edit_project(project)
+                elif a==4:
+                    self.manager.remove_project(project)
+                else:
+                    self.show_quick_panel(self.project_list, self.on_list)
+
+            self.show_quick_panel(items, callback)
+
+        elif self.callback_on_cancel:
+            sublime.set_timeout(self.run, 100)
