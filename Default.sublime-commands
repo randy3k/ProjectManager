@@ -1,0 +1,31 @@
+[
+    {
+        "caption": "Project Manager",
+        "command": "project_manager"
+    },
+    {
+        "caption": "Project Manager: Append Project",
+        "command": "project_manager",
+        "args": { "action": 0 }
+    },
+    {
+        "caption": "Project Manager: Add Project",
+        "command": "project_manager",
+        "args": { "action": 1 }
+    },
+    {
+        "caption": "Project Manager: Remove Project",
+        "command": "project_manager",
+        "args": { "action": 2 }
+    },
+    {
+        "caption": "Project Manager: Edit Project",
+        "command": "project_manager",
+        "args": { "action": 3 }
+    },
+    {
+        "caption": "Project Manager: List Projects",
+        "command": "project_manager",
+        "args": { "action": 4 }
+    }
+]
