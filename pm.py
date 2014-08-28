@@ -201,7 +201,7 @@ class ProjectManager(sublime_plugin.WindowCommand):
                 ["Open in new window", "Open in a new window"],
                 ["Append", "Append to current window"],
                 ["Edit", "Edit project settings"],
-                ["Remove", "Remove from ProJect Manager"]
+                ["Remove", "Remove from Project Manager"]
             ]
             project = self.project_list[action][0]
             def callback(a):

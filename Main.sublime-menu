@@ -8,32 +8,32 @@
                 "caption": "-"
             },
             {
-                "caption": "Simple Project Manager",
-                "command": "simple_project_manager"
+                "caption": "Project Manager",
+                "command": "project_manager"
             },
             {
-                "caption": "Append Project",
-                "command": "simple_project_manager",
+                "caption": "Project Manager: List Projects",
+                "command": "project_manager",
                 "args": { "action": 0 }
             },
             {
-                "caption": "Add Project",
-                "command": "simple_project_manager",
+                "caption": "Project Manager: Add Project",
+                "command": "project_manager",
                 "args": { "action": 1 }
             },
             {
-                "caption": "Remove Project",
-                "command": "simple_project_manager",
+                "caption": "Project Manager: Append Project",
+                "command": "project_manager",
                 "args": { "action": 2 }
             },
             {
-                "caption": "Edit Project",
-                "command": "simple_project_manager",
+                "caption": "Project Manager: Edit Project",
+                "command": "project_manager",
                 "args": { "action": 3 }
             },
             {
-                "caption": "List Projects",
-                "command": "simple_project_manager",
+                "caption": "Project Manager: Remove Project",
+                "command": "project_manager",
                 "args": { "action": 4 }
             }
         ]
