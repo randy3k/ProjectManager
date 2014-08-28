@@ -1,0 +1,6 @@
+[
+  {
+    "keys": ["ctrl+alt+p"],
+    "command": "project_manager"
+  }
+]
