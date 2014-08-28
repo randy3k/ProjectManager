@@ -60,8 +60,12 @@ class Manager:
 
     def list_projects(self):
         if os.path.exists(self.projects_dir):
-            return [ [f.replace(".sublime-project",""),f]\
-                for f in os.listdir(self.projects_dir) if f.endswith(".sublime-project")]
+            ret = []
+            for f in os.listdir(self.projects_dir):
+                if f.endswith(".sublime-project"):
+                    pd = Jfile(os.path.join(self.projects_dir,f)).load()
+                    ret.append([f.replace(".sublime-project",""), pd["folders"][0]["path"]])
+            return ret
         else:
             return []
 
