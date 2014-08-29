@@ -8,19 +8,23 @@
         "command": "project_manager_add"
     },
     {
-        "caption": "Project Manager: Append Project",
-        "command": "project_manager_list", "args": {"callback": "on_append"}
+        "caption": "Project Manager: Open Project",
+        "command": "project_manager_list", "args": {"action": "switch"}
+    },
+    {
+        "caption": "Project Manager: Open Project in New Window",
+        "command": "project_manager_list", "args": {"action": "new"}
     },
     {
         "caption": "Project Manager: Remove Project",
-        "command": "project_manager_list", "args": {"callback": "on_remove"}
+        "command": "project_manager_list", "args": {"action": "remove"}
     },
     {
         "caption": "Project Manager: Edit Project",
-        "command": "project_manager_list", "args": {"callback": "on_edit"}
+        "command": "project_manager_list", "args": {"action": "edit"}
     },
     {
         "caption": "Project Manager: Rename Project",
-        "command": "project_manager_list", "args": {"callback": "on_rename"}
+        "command": "project_manager_list", "args": {"action": "rename"}
     }
 ]
