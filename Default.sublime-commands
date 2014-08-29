@@ -4,6 +4,10 @@
         "command": "project_manager"
     },
     {
+        "caption": "Project Manager: Add Project",
+        "command": "project_manager_add"
+    },
+    {
         "caption": "Project Manager: Append Project",
         "command": "project_manager_list", "args": {"callback": "on_append"}
     },

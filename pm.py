@@ -52,10 +52,11 @@ class Manager:
     def add_project(self):
         pd = self.window.project_data()
         if not pd:
-            sublime.message_dialog("Add some folders!")
-            return
+            self.window.run_command("prompt_add_folder")
 
         def on_add(project):
+            pd = self.window.project_data()
+
             sublime_project = os.path.join(self.projects_dir, "%s.sublime-project" % project)
             Jfile(sublime_project).save(pd)
 
@@ -63,8 +64,9 @@ class Manager:
             Jfile(sublime_workspace).save({})
             self.switch_project(project)
 
-        self.window.show_input_panel("Project name:", "", on_add, None, None)
-
+        sublime.set_timeout_async(
+            lambda: self.window.show_input_panel("Project name:", "", on_add, None, None),
+            10)
 
     def list_projects(self):
         if os.path.exists(self.projects_dir):
@@ -72,7 +74,7 @@ class Manager:
             for f in os.listdir(self.projects_dir):
                 if f.endswith(".sublime-project"):
                     pd = Jfile(os.path.join(self.projects_dir,f)).load()
-                    if "folders" in pd:
+                    if pd and "folders" in pd:
                         ret.append([f.replace(".sublime-project",""), pd["folders"][0]["path"]])
                     else:
                         ret.append([f.replace(".sublime-project",""),""])
@@ -92,7 +94,7 @@ class Manager:
     def switch_project(self, project):
         self.window.run_command("close_workspace")
         sublime_project = os.path.join(self.projects_dir, "%s.sublime-project" % project)
-        sublime.set_timeout_async(lambda: subl(["-a", "--project", sublime_project]) , 500)
+        sublime.set_timeout_async(lambda: subl(["-a", "--project", sublime_project]), 10)
 
     def open_in_new_window(self, project):
         sublime_project = os.path.join(self.projects_dir, "%s.sublime-project" % project)
@@ -201,6 +203,10 @@ class ProjectManager(sublime_plugin.WindowCommand):
 
             self.show_quick_panel(items, callback)
 
+class ProjectManagerAdd(sublime_plugin.WindowCommand):
+    def run(self):
+        self.manager = Manager(self.window)
+        self.manager.add_project()
 
 class ProjectManagerList(sublime_plugin.WindowCommand):
 
