@@ -14,5 +14,9 @@
     {
         "caption": "Project Manager: Edit Project",
         "command": "project_manager_list", "args": {"callback": "on_edit"}
+    },
+    {
+        "caption": "Project Manager: Rename Project",
+        "command": "project_manager_list", "args": {"callback": "on_rename"}
     }
 ]

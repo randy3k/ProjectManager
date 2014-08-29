@@ -37,6 +37,7 @@ class Jfile:
         if os.path.exists(self.fpath): os.remove(self.fpath)
 
 def subl(args=[]):
+    # learnt from SideBarEnhancements
     executable_path = sublime.executable_path()
     if sublime.platform() == 'osx':
         app_path = executable_path[:executable_path.rfind(".app/")+5]
@@ -60,7 +61,7 @@ class Manager:
 
             sublime_workspace = os.path.join(self.projects_dir, "%s.sublime-workspace" % project)
             Jfile(sublime_workspace).save({})
-            self.switch_project(project, close=False)
+            self.switch_project(project)
 
         self.window.show_input_panel("Project name:", "", on_add, None, None)
 
@@ -84,15 +85,12 @@ class Manager:
         return Jfile(sublime_project).load()
 
     def append_project(self, project):
-        # learnt from SideBarEnhancements
         pd = self.get_project_data(project)
         paths = [f.get("path") for f in pd.get("folders")]
         subl(["-a"] + paths)
 
-    def switch_project(self, project, close=True):
-        # learnt from SideBarEnhancements
-        if close:
-            self.window.run_command("close_workspace")
+    def switch_project(self, project):
+        self.window.run_command("close_workspace")
         def on_switch():
             sublime_project = os.path.join(self.projects_dir, "%s.sublime-project" % project)
             subl(["-a", "--project", sublime_project])
@@ -116,6 +114,31 @@ class Manager:
     def edit_project(self, project):
         sublime_project = os.path.join(self.projects_dir, "%s.sublime-project" % project)
         self.window.open_file(sublime_project)
+
+    def rename_project(self, project):
+        def on_rename(new_project):
+            sublime_project = os.path.join(self.projects_dir, "%s.sublime-project" % project)
+            new_sublime_project = os.path.join(self.projects_dir, "%s.sublime-project" % new_project)
+            sublime_workspace = os.path.join(self.projects_dir, "%s.sublime-workspace" % project)
+            new_sublime_workspace = os.path.join(self.projects_dir, "%s.sublime-workspace" % new_project)
+            if self.window.project_file_name() == sublime_project:
+                reopen = True
+                self.window.run_command("close_workspace")
+            else:
+                reopen = False
+            os.rename(sublime_project, new_sublime_project)
+            os.rename(sublime_workspace, new_sublime_workspace)
+            try:
+                j = Jfile(new_sublime_workspace)
+                data = j.load()
+                data["project"] = "%s.sublime-project" % new_project
+                j.save(data)
+            except:
+                pass
+            if reopen:
+                self.switch_project(new_project)
+        self.window.show_input_panel("New project name:", project, on_rename, None, None)
+
 
 class ProjectManager(sublime_plugin.WindowCommand):
 
@@ -157,6 +180,7 @@ class ProjectManager(sublime_plugin.WindowCommand):
                 ["Open in new window", "Open in a new window"],
                 ["Append", "Append to current window"],
                 ["Edit", "Edit project settings"],
+                ['Rename', "Rename project"],
                 ["Remove", "Remove from Project Manager"]
             ]
             project = self.project_list[action][0]
@@ -170,7 +194,11 @@ class ProjectManager(sublime_plugin.WindowCommand):
                 elif a==3:
                     self.manager.edit_project(project)
                 elif a==4:
-                    self.manager.remove_project(project)
+                    # need set_timeout since interface is involved
+                    sublime.set_timeout(lambda: self.manager.rename_project(project), 10)
+                elif a==5:
+                    # need set_timeout since interface is involved
+                    sublime.set_timeout(lambda: self.manager.remove_project(project), 10)
                 else:
                     self.show_quick_panel(self.project_list, self.on_list)
 
@@ -205,5 +233,11 @@ class ProjectManagerList(sublime_plugin.WindowCommand):
     def on_edit(self, action):
         if action>=0:
             self.manager.edit_project(self.project_list[action][0])
+        elif self.callback_on_cancel:
+            sublime.set_timeout(self.run, 10)
+
+    def on_rename(self, action):
+        if action>=0:
+            self.manager.rename_project(self.project_list[action][0])
         elif self.callback_on_cancel:
             sublime.set_timeout(self.run, 10)
