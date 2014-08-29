@@ -36,6 +36,13 @@ class Jfile:
     def remove(self):
         if os.path.exists(self.fpath): os.remove(self.fpath)
 
+def subl(args=[]):
+    executable_path = sublime.executable_path()
+    if sublime.platform() == 'osx':
+        app_path = executable_path[:executable_path.rfind(".app/")+5]
+        executable_path = app_path+"Contents/SharedSupport/bin/subl"
+    subprocess.Popen([executable_path]+args)
+
 class Manager:
     def __init__(self, window):
         self.window = window
@@ -78,39 +85,23 @@ class Manager:
 
     def append_project(self, project):
         # learnt from SideBarEnhancements
-        executable_path = sublime.executable_path()
-        if sublime.platform() == 'osx':
-            app_path = executable_path[:executable_path.rfind(".app/")+5]
-            executable_path = app_path+"Contents/SharedSupport/bin/subl"
-
         pd = self.get_project_data(project)
         paths = [f.get("path") for f in pd.get("folders")]
-        subprocess.Popen([executable_path, "-a"] + paths, cwd=paths[0])
+        subl(["-a"] + paths)
 
     def switch_project(self, project, close=True):
         # learnt from SideBarEnhancements
         if close:
             self.window.run_command("close_workspace")
         def on_switch():
-            executable_path = sublime.executable_path()
-            if sublime.platform() == 'osx':
-                app_path = executable_path[:executable_path.rfind(".app/")+5]
-                executable_path = app_path+"Contents/SharedSupport/bin/subl"
-
             sublime_project = os.path.join(self.projects_dir, "%s.sublime-project" % project)
-            subprocess.Popen([executable_path, "-a", "--project", sublime_project])
+            subl(["-a", "--project", sublime_project])
 
         sublime.set_timeout(on_switch, 100)
 
-
     def open_in_new_window(self, project):
-        executable_path = sublime.executable_path()
-        if sublime.platform() == 'osx':
-            app_path = executable_path[:executable_path.rfind(".app/")+5]
-            executable_path = app_path+"Contents/SharedSupport/bin/subl"
-
         sublime_project = os.path.join(self.projects_dir, "%s.sublime-project" % project)
-        subprocess.Popen([executable_path, "-n", "--project", sublime_project])
+        subl(["-n", "--project", sublime_project])
 
     def remove_project(self, project):
         ok = sublime.ok_cancel_dialog("Remove Project %s?" % project)
