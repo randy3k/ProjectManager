@@ -66,7 +66,7 @@ class Manager:
 
         sublime.set_timeout_async(
             lambda: self.window.show_input_panel("Project name:", "", on_add, None, None),
-            10)
+            300)
 
     def list_projects(self):
         if os.path.exists(self.projects_dir):
@@ -94,7 +94,7 @@ class Manager:
     def switch_project(self, project):
         self.window.run_command("close_workspace")
         sublime_project = os.path.join(self.projects_dir, "%s.sublime-project" % project)
-        sublime.set_timeout_async(lambda: subl(["-a", "--project", sublime_project]), 10)
+        sublime.set_timeout_async(lambda: subl(["-a", "--project", sublime_project]), 300)
 
     def open_in_new_window(self, project):
         sublime_project = os.path.join(self.projects_dir, "%s.sublime-project" % project)
