@@ -18,4 +18,4 @@ A while ago, I created a similar package [Simple Project Manager](https://github
 
 ### Add existing projects to Project Manager
 
-Just put your `.sublime-project` and `.sublime-workspace` files under the directory `Packages/Users/Projects/`.
+Just put your `.sublime-project` and `.sublime-workspace` files under the directory `Packages/User/Projects/`.
