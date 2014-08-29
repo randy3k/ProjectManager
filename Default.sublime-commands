@@ -2,5 +2,17 @@
     {
         "caption": "Project Manager",
         "command": "project_manager"
+    },
+    {
+        "caption": "Project Manager: Append Project",
+        "command": "project_manager_list", "args": {"callback": "on_append"}
+    },
+    {
+        "caption": "Project Manager: Remove Project",
+        "command": "project_manager_list", "args": {"callback": "on_remove"}
+    },
+    {
+        "caption": "Project Manager: Edit Project",
+        "command": "project_manager_list", "args": {"callback": "on_edit"}
     }
 ]
