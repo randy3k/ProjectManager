@@ -98,10 +98,16 @@ class Manager:
     def switch_project(self, project):
         self.window.run_command("close_workspace")
         sublime_project = os.path.join(self.projects_dir, "%s.sublime-project" % project)
+        sublime_workspace = os.path.join(self.projects_dir, "%s.sublime-workspace" % project)
+        if not os.path.exists(sublime_workspace):
+            Jfile(sublime_workspace).save({})
         sublime.set_timeout_async(lambda: subl(["-a", "--project", sublime_project]), 300)
 
     def open_in_new_window(self, project):
         sublime_project = os.path.join(self.projects_dir, "%s.sublime-project" % project)
+        sublime_workspace = os.path.join(self.projects_dir, "%s.sublime-workspace" % project)
+        if not os.path.exists(sublime_workspace):
+            Jfile(sublime_workspace).save({})
         subl(["-n", "--project", sublime_project])
 
     def remove_project(self, project):
