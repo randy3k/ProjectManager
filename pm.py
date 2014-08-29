@@ -91,7 +91,6 @@ class Manager:
         # learnt from SideBarEnhancements
         if close:
             self.window.run_command("close_workspace")
-            # self.window.run_command("close_project")
         def on_switch():
             executable_path = sublime.executable_path()
             if sublime.platform() == 'osx':
@@ -119,9 +118,7 @@ class Manager:
             sublime_project = os.path.join(self.projects_dir, "%s.sublime-project" % project)
             sublime_workspace = os.path.join(self.projects_dir, "%s.sublime-workspace" % project)
             if self.window.project_file_name() == sublime_project:
-                self.window.run_command("close_all")
                 self.window.run_command("close_workspace")
-                self.window.run_command("close_project")
             os.unlink(sublime_project)
             os.unlink(sublime_workspace)
 
@@ -141,11 +138,8 @@ class ProjectManager(sublime_plugin.WindowCommand):
         self.callback_on_cancel = action is None
         self.project_list = self.manager.list_projects()
         self.options = [
-                ["[-] List Projects", "List all projects"],
-                ["[-] Add Project", "Add project to Project Manager"],
-                ["[-] Append Project", "Append a project in current window"],
-                ["[-] Edit Project", "Edit project settings"],
-                ["[-] Remove Project", "Remove a project from Project Manager"]
+                ["[-] Project Manager", "List all projects, edit projects"],
+                ["[-] Add Project", "Add project to Project Manager"]
             ]
 
         if action is not None:
@@ -162,15 +156,6 @@ class ProjectManager(sublime_plugin.WindowCommand):
 
         elif action==1:
             self.manager.add_project()
-
-        elif action==2:
-            self.show_quick_panel(self.project_list, self.on_append)
-
-        elif action==3:
-            self.show_quick_panel(self.project_list, self.on_edit)
-
-        elif action==4:
-            self.show_quick_panel(self.project_list, self.on_remove)
 
         elif action>=len(self.options):
             action = action-len(self.options)
