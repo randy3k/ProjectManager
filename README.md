@@ -1,7 +1,7 @@
 Project Manager for Sublime Text 3
 ===
 
-Dont't have any idea what `*.sublime-project` and `*.sublime-workspace` are doing? Forget where the project files are? Project Manager helps in organizing the profile files by putting all files under `Packages/Users/Projects/`.
+Dont't have any idea what `*.sublime-project` and `*.sublime-workspace` are doing? Forget where the project files are? Project Manager helps in organizing the project files by putting all files under `Packages/Users/Projects/`.
 
 [SideBarFolders](https://github.com/SublimeText/SideBarFolders) is a lot lighter than the bulit-in project system, but it does not have any management functionality at all. I really hate that a folder cannot be easily removed in SideBarFolders. Now, you have a new option other than SiderBarFolders. Project Manager helps in managing multiple projects with a minimal amount of effort. It is inspired by Atom's [Project Manager](https://atom.io/packages/project-manager).
 
