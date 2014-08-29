@@ -100,7 +100,7 @@ class Manager:
             sublime_project = os.path.join(self.projects_dir, "%s.sublime-project" % project)
             subprocess.Popen([executable_path, "-a", "--project", sublime_project])
 
-        sublime.set_timeout(on_switch, 10)
+        sublime.set_timeout(on_switch, 100)
 
 
     def open_in_new_window(self, project):
