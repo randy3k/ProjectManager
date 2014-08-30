@@ -1,7 +1,6 @@
 import sublime, sublime_plugin
 import subprocess, os
-import json, codecs
-import random, string
+import json, codecs, re
 
 class Jfile:
     def __init__(self, fpath, encoding="utf-8"):
@@ -14,8 +13,11 @@ class Jfile:
             os.makedirs(self.fdir)
         if os.path.exists(self.fpath):
             f = codecs.open(self.fpath, "r+", encoding=self.encoding)
+            content = f.read()
+            content = re.sub('(^)?[^\S\n]*/(?:\*(.*?)\*/[^\S\n]*|/[^\n]*)($)?',
+                '', content, flags=re.DOTALL | re.MULTILINE)
             try:
-                data = json.load(f)
+                data = json.loads(content)
             except:
                 data = default
             f.close()
@@ -94,6 +96,11 @@ class Manager:
         sublime_project = os.path.join(self.projects_dir, "%s.sublime-project" % project)
         return Jfile(sublime_project).load()
 
+    def check_project(self, project):
+        sublime_workspace = os.path.join(self.projects_dir, "%s.sublime-workspace" % project)
+        if not os.path.exists(sublime_workspace):
+            Jfile(sublime_workspace).save({})
+
     def append_project(self, project):
         pd = self.get_project_data(project)
         paths = [f.get("path") for f in pd.get("folders")]
@@ -101,17 +108,13 @@ class Manager:
 
     def switch_project(self, project):
         self.window.run_command("close_workspace")
+        self.check_project(project)
         sublime_project = os.path.join(self.projects_dir, "%s.sublime-project" % project)
-        sublime_workspace = os.path.join(self.projects_dir, "%s.sublime-workspace" % project)
-        if not os.path.exists(sublime_workspace):
-            Jfile(sublime_workspace).save({})
         sublime.set_timeout_async(lambda: subl(["-a", "--project", sublime_project]), 300)
 
     def open_in_new_window(self, project):
+        self.check_project(project)
         sublime_project = os.path.join(self.projects_dir, "%s.sublime-project" % project)
-        sublime_workspace = os.path.join(self.projects_dir, "%s.sublime-workspace" % project)
-        if not os.path.exists(sublime_workspace):
-            Jfile(sublime_workspace).save({})
         subl(["-n", "--project", sublime_project])
 
     def remove_project(self, project):
