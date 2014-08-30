@@ -109,7 +109,7 @@ class Manager:
     def switch_project(self, project):
         self.window.run_command("close_workspace")
         self.check_project(project)
-        sublime.set_timeout_async(lambda: subl(["-a", "--project", self.sublime_project(project)]), 300)
+        sublime.set_timeout_async(lambda: subl(["--project", self.sublime_project(project)]), 300)
 
     def open_in_new_window(self, project):
         self.check_project(project)
