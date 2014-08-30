@@ -53,6 +53,9 @@ class Manager:
         pd = self.window.project_data()
         if not pd:
             self.window.run_command("prompt_add_folder")
+            delay = 300
+        else:
+            delay = 1
 
         def on_add(project):
             pd = self.window.project_data()
@@ -64,13 +67,14 @@ class Manager:
             Jfile(sublime_workspace).save({})
             self.switch_project(project)
 
-        try:
-            project = os.path.basename(pd["folders"][0]["path"])
-        except:
-            project = ""
-        sublime.set_timeout(
-            lambda: self.window.show_input_panel("Project name:", project, on_add, None, None),
-            300)
+        def show_input_panel():
+            pd = self.window.project_data()
+            if pd:
+                project = os.path.basename(pd["folders"][0]["path"])
+                self.window.show_input_panel("Project name:", project, on_add, None, None)
+
+        sublime.set_timeout(show_input_panel, delay)
+
 
     def list_projects(self):
         if os.path.exists(self.projects_dir):
