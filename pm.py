@@ -14,8 +14,7 @@ class Jfile:
         if os.path.exists(self.fpath):
             f = codecs.open(self.fpath, "r+", encoding=self.encoding)
             content = f.read()
-            content = re.sub('(^)?[^\S\n]*/(?:\*(.*?)\*/[^\S\n]*|/[^\n]*)($)?',
-                '', content, flags=re.DOTALL | re.MULTILINE)
+            content = re.sub(r'^\s*//.*?$|^\s*/\*(?:.|\n)*?\*/', '', content, flags=re.MULTILINE)
             try:
                 data = json.loads(content)
             except:
