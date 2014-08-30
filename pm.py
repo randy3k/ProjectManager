@@ -51,6 +51,12 @@ class Manager:
         self.window = window
         self.projects_dir = os.path.join(sublime.packages_path(), "User", "Projects")
 
+    def sublime_project(self, project):
+        return os.path.join(self.projects_dir, "%s.sublime-project" % project)
+
+    def sublime_workspace(self, project):
+        return os.path.join(self.projects_dir, "%s.sublime-workspace" % project)
+
     def add_project(self):
         pd = self.window.project_data()
         if not pd:
@@ -61,12 +67,8 @@ class Manager:
 
         def on_add(project):
             pd = self.window.project_data()
-
-            sublime_project = os.path.join(self.projects_dir, "%s.sublime-project" % project)
-            Jfile(sublime_project).save(pd)
-
-            sublime_workspace = os.path.join(self.projects_dir, "%s.sublime-workspace" % project)
-            Jfile(sublime_workspace).save({})
+            Jfile(self.sublime_project(project)).save(pd)
+            Jfile(self.sublime_workspace(project)).save({})
             self.switch_project(project)
 
         def show_input_panel():
@@ -93,13 +95,11 @@ class Manager:
             return []
 
     def get_project_data(self, project):
-        sublime_project = os.path.join(self.projects_dir, "%s.sublime-project" % project)
-        return Jfile(sublime_project).load()
+        return Jfile(self.sublime_project(project)).load()
 
     def check_project(self, project):
-        sublime_workspace = os.path.join(self.projects_dir, "%s.sublime-workspace" % project)
-        if not os.path.exists(sublime_workspace):
-            Jfile(sublime_workspace).save({})
+        if not os.path.exists(self.sublime_workspace(project)):
+            Jfile(self.sublime_workspace).save({})
 
     def append_project(self, project):
         pd = self.get_project_data(project)
@@ -109,34 +109,29 @@ class Manager:
     def switch_project(self, project):
         self.window.run_command("close_workspace")
         self.check_project(project)
-        sublime_project = os.path.join(self.projects_dir, "%s.sublime-project" % project)
-        sublime.set_timeout_async(lambda: subl(["-a", "--project", sublime_project]), 300)
+        sublime.set_timeout_async(lambda: subl(["-a", "--project", self.sublime_project(project)]), 300)
 
     def open_in_new_window(self, project):
         self.check_project(project)
-        sublime_project = os.path.join(self.projects_dir, "%s.sublime-project" % project)
-        subl(["-n", "--project", sublime_project])
+        subl(["-n", "--project", self.sublime_project(project)])
 
     def remove_project(self, project):
         ok = sublime.ok_cancel_dialog("Remove Project %s?" % project)
         if ok:
-            sublime_project = os.path.join(self.projects_dir, "%s.sublime-project" % project)
-            sublime_workspace = os.path.join(self.projects_dir, "%s.sublime-workspace" % project)
-            if self.window.project_file_name() == sublime_project:
+            if self.window.project_file_name() == self.sublime_project(project):
                 self.window.run_command("close_workspace")
-            os.unlink(sublime_project)
-            os.unlink(sublime_workspace)
+            os.unlink(self.sublime_project(project))
+            os.unlink(self.sublime_workspace(project))
 
     def edit_project(self, project):
-        sublime_project = os.path.join(self.projects_dir, "%s.sublime-project" % project)
-        self.window.open_file(sublime_project)
+        self.window.open_file(self.sublime_project(project))
 
     def rename_project(self, project):
         def on_rename(new_project):
-            sublime_project = os.path.join(self.projects_dir, "%s.sublime-project" % project)
-            new_sublime_project = os.path.join(self.projects_dir, "%s.sublime-project" % new_project)
-            sublime_workspace = os.path.join(self.projects_dir, "%s.sublime-workspace" % project)
-            new_sublime_workspace = os.path.join(self.projects_dir, "%s.sublime-workspace" % new_project)
+            sublime_project = self.sublime_project(project)
+            new_sublime_project = self.sublime_project(new_project)
+            sublime_workspace = self.sublime_workspace(project)
+            new_sublime_workspace = self.sublime_workspace(new_project)
             if self.window.project_file_name() == sublime_project:
                 reopen = True
                 self.window.run_command("close_workspace")
