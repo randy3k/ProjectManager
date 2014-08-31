@@ -68,6 +68,8 @@ class Manager:
             pd = self.window.project_data()
             Jfile(self.sublime_project(project)).save(pd)
             Jfile(self.sublime_workspace(project)).save({})
+            self.window.run_command("close_workspace")
+            self.window.run_command("close_project")
             self.switch_project(project)
 
         def show_input_panel():
