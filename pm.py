@@ -87,8 +87,8 @@ class Manager:
             for f in os.listdir(self.projects_dir):
                 if f.endswith(".sublime-project"):
                     pd = Jfile(os.path.join(self.projects_dir,f)).load()
-                    if pd and "folders" in pd:
-                        ret.append([f.replace(".sublime-project",""), pd["folders"][0]["path"]])
+                    if pd and "folders" in pd and pd["folders"]:
+                        ret.append([f.replace(".sublime-project",""), pd["folders"][0].get("path", "")])
                     else:
                         ret.append([f.replace(".sublime-project",""),""])
             return ret
