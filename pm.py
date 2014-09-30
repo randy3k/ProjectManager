@@ -145,7 +145,7 @@ class Manager:
             os.rename(sublime_workspace, new_sublime_workspace)
             try:
                 j = Jfile(new_sublime_workspace)
-                data = j.load()
+                data = j.load({})
                 data["project"] = "%s.sublime-project" % new_project
                 j.save(data)
             except:
