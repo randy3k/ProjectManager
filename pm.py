@@ -110,6 +110,15 @@ class Manager:
     def switch_project(self, project):
         self.window.run_command("close_workspace")
         self.check_project(project)
+        # if project already opened, change focus
+        for w in sublime.windows():
+            print(w.project_file_name(), self.sublime_project(project))
+            if w.project_file_name() == self.sublime_project(project):
+                w.run_command("close_workspace")
+                w.run_command("close_window")
+                sublime.set_timeout_async(lambda: subl(["-n", self.sublime_project(project)]), 300)
+                return
+
         if len(self.window.views())==0:
             sublime.set_timeout_async(lambda: subl([self.sublime_project(project)]), 300)
         else:
