@@ -170,15 +170,15 @@ class ProjectManager(sublime_plugin.WindowCommand):
             lambda: self.window.show_quick_panel(items, on_done),
             10)
 
-    def run(self, open_manager=False):
+    def run(self, action=None):
         self.manager = Manager(self.window)
         self.project_list = self.manager.list_projects()
         self.options = [
                 ["[-] Project Manager", "More options"],
                 ["[-] Add Project", "Add project to Project Manager"]
             ]
-        if open_manager:
-            self.on_open(0)
+        if action:
+            sublime.set_timeout(lambda: self.on_open(action), 10)
         else:
             self.show_quick_panel(self.options + self.project_list, self.on_open)
 
@@ -188,7 +188,6 @@ class ProjectManager(sublime_plugin.WindowCommand):
 
         elif action==0:
             items = [
-                ["Open Project", "Open project in current window"],
                 ["Open Project in New Window", "Open project in a new window"],
                 ["Append Project", "Append project to current window"],
                 ["Edit Project", "Edit project settings"],
@@ -197,16 +196,14 @@ class ProjectManager(sublime_plugin.WindowCommand):
             ]
             def callback(a):
                 if a==0:
-                    self.window.run_command("project_manager_list", args={"action": "switch", "caller" : "manager"})
-                elif a==1:
                     self.window.run_command("project_manager_list", args={"action": "new", "caller" : "manager"})
-                elif a==2:
+                elif a==1:
                     self.window.run_command("project_manager_list", args={"action": "append", "caller" : "manager"})
-                elif a==3:
+                elif a==2:
                     self.window.run_command("project_manager_list", args={"action": "edit", "caller" : "manager"})
-                elif a==4:
+                elif a==3:
                     self.window.run_command("project_manager_list", args={"action": "rename", "caller" : "manager"})
-                elif a==5:
+                elif a==4:
                     self.window.run_command("project_manager_list", args={"action": "remove", "caller" : "manager"})
                 else:
                     sublime.set_timeout(self.run, 10)
@@ -250,7 +247,7 @@ class ProjectManagerList(sublime_plugin.WindowCommand):
         if action>=0:
             self.manager.open_in_new_window(self.project_list[action][0])
         elif action<0:
-            self.on_cancel()
+            sublime.set_timeout(self.on_cancel, 10)
 
     def on_switch(self, action):
         if action>=0:
@@ -266,7 +263,9 @@ class ProjectManagerList(sublime_plugin.WindowCommand):
 
     def on_remove(self, action):
         if action>=0:
-            self.manager.remove_project(self.project_list[action][0])
+            sublime.set_timeout(lambda:
+                self.manager.remove_project(self.project_list[action][0]),
+                10)
         elif action<0:
             self.on_cancel()
 
@@ -278,10 +277,12 @@ class ProjectManagerList(sublime_plugin.WindowCommand):
 
     def on_rename(self, action):
         if action>=0:
-            self.manager.rename_project(self.project_list[action][0])
+            sublime.set_timeout(lambda:
+                self.manager.rename_project(self.project_list[action][0]),
+                10)
         elif action<0:
             self.on_cancel()
 
     def on_cancel(self):
         if self.caller == "manager":
-            self.window.run_command("project_manager", args={"open_manager": True})
+            self.window.run_command("project_manager", args={"action": 0})
