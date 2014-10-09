@@ -177,10 +177,16 @@ class ProjectManager(sublime_plugin.WindowCommand):
                 ["[-] Project Manager", "More options"],
                 ["[-] Add Project", "Add project to Project Manager"]
             ]
+        display = copy.deepcopy(self.project_list)
+        for i, item in enumerate(self.project_list):
+            pfn = self.manager.sublime_project(item[0])
+            for w in sublime.windows():
+                if w.project_file_name() == pfn:
+                    display[i][0] = display[i][0] + "*"
         if action:
             sublime.set_timeout(lambda: self.on_open(action), 10)
         else:
-            self.show_quick_panel(self.options + self.project_list, self.on_open)
+            self.show_quick_panel(self.options + display, self.on_open)
 
     def on_open(self, action):
         if action<0:
@@ -230,17 +236,16 @@ class ProjectManagerList(sublime_plugin.WindowCommand):
             10)
 
     def run(self, action, caller=None):
+        self.caller = caller
+        callback = eval("self.on_" + action)
         self.manager = Manager(self.window)
         self.project_list = self.manager.list_projects()
         display = copy.deepcopy(self.project_list)
-        self.caller = caller
-        callback = eval("self.on_" + action)
-        for i, item in enumerate(display):
-            if self.manager.sublime_project(item[0]) == self.window.project_file_name():
-                display[i][0] = display[i][0] + "*"
-                display.insert(0, display.pop(i))
-                self.project_list.insert(0, self.project_list.pop(i))
-                break
+        for i, item in enumerate(self.project_list):
+            pfn = self.manager.sublime_project(item[0])
+            for w in sublime.windows():
+                if w.project_file_name() == pfn:
+                    display[i][0] = display[i][0] + "*"
         self.show_quick_panel(display, callback)
 
     def on_new(self, action):
