@@ -71,6 +71,10 @@ class Manager:
             Jfile(self.sublime_workspace(project)).save({})
             self.window.run_command("close_workspace")
             self.window.run_command("close_project")
+            for v in self.window.views():
+                if not v.is_dirty():
+                    self.window.focus_view(v)
+                    self.window.run_command("close")
             self.switch_project(project)
 
         def show_input_panel():
