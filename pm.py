@@ -81,7 +81,8 @@ class Manager:
             pd = self.window.project_data()
             if pd:
                 project = os.path.basename(pd["folders"][0]["path"])
-                self.window.show_input_panel("Project name:", project, on_add, None, None)
+                v = self.window.show_input_panel("Project name:", project, on_add, None, None)
+                v.run_command("select_all")
 
         sublime.set_timeout(show_input_panel, delay)
 
