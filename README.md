@@ -12,9 +12,15 @@ You can install Project Manager via Package Control. To launch the Project Manag
 ### Usage
 Drag some folders into your Sublime Text window and add a project to Project Manager. The options are self-explained, enjoy!
 
-### Project Manager? Simple Project Manager?
+### Optional keybind
+You can additionally add the following keybind in your user keybind settings file for "Open project in new window"
 
-A while ago, I created a similar package [Simple Project Manager](https://github.com/randy3k/Simple-Project-Manager) aiming to provide better experiences in project management. Simple Project Manager only handles the `*.sublime-project` settings and ignores the workspace settings. It was [suggested](http://www.sublimetext.com/forum/viewtopic.php?f=5&t=16683) that workspace files contain a lot of useful information such as open file history, search history, remember build system etc. For the sake of a more complete coverage, I rewrote the package and Project Manager was born. Development of SPM has been stopped as this manager is recommended over SPM.
+```
+    {
+      "keys": ["super+ctrl+o"],
+      "command": "project_manager_list", "args": {"action": "new"}
+    }
+```
 
 ### Add existing projects to Project Manager
 
