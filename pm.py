@@ -108,6 +108,14 @@ class Manager:
         if not os.path.exists(self.sublime_workspace(project)):
             Jfile(self.sublime_workspace).save({})
 
+    def close_project(self, project):
+        for w in sublime.windows():
+            if w.project_file_name() == self.sublime_project(project):
+                w.run_command("close_workspace")
+                w.run_command("close_window")
+                return True
+        return False
+
     def append_project(self, project):
         pd = self.get_project_data(project)
         paths = [f.get("path") for f in pd.get("folders")]
@@ -116,12 +124,9 @@ class Manager:
     def switch_project(self, project):
         self.window.run_command("close_workspace")
         self.check_project(project)
-        for w in sublime.windows():
-            if w.project_file_name() == self.sublime_project(project):
-                w.run_command("close_workspace")
-                w.run_command("close_window")
-                sublime.set_timeout_async(lambda: subl(["-n", self.sublime_project(project)]), 300)
-                return
+        if self.close_project(project):
+            sublime.set_timeout_async(lambda: subl(["-n", self.sublime_project(project)]), 300)
+            return
 
         if len(self.window.views())==0:
             sublime.set_timeout_async(lambda: subl([self.sublime_project(project)]), 300)
@@ -130,13 +135,13 @@ class Manager:
 
     def open_in_new_window(self, project):
         self.check_project(project)
-        subl(["-n", self.sublime_project(project)])
+        self.close_project(project)
+        sublime.set_timeout_async(lambda: subl(["-n", self.sublime_project(project)]), 300)
 
     def remove_project(self, project):
         ok = sublime.ok_cancel_dialog("Remove Project %s?" % project)
         if ok:
-            if self.window.project_file_name() == self.sublime_project(project):
-                self.window.run_command("close_workspace")
+            self.close_project(project)
             os.unlink(self.sublime_project(project))
             os.unlink(self.sublime_workspace(project))
 
@@ -149,9 +154,8 @@ class Manager:
             new_sublime_project = self.sublime_project(new_project)
             sublime_workspace = self.sublime_workspace(project)
             new_sublime_workspace = self.sublime_workspace(new_project)
-            if self.window.project_file_name() == sublime_project:
+            if self.close_project(project):
                 reopen = True
-                self.window.run_command("close_workspace")
             else:
                 reopen = False
             os.rename(sublime_project, new_sublime_project)
@@ -164,7 +168,7 @@ class Manager:
             except:
                 pass
             if reopen:
-                self.switch_project(new_project)
+                self.open_in_new_window(new_project)
         self.window.show_input_panel("New project name:", project, on_rename, None, None)
 
 
@@ -188,7 +192,7 @@ class ProjectManager(sublime_plugin.WindowCommand):
             for w in sublime.windows():
                 if w.project_file_name() == pfn:
                     display[i][0] = display[i][0] + "*"
-        if action:
+        if action is not None:
             sublime.set_timeout(lambda: self.on_open(action), 10)
         else:
             self.show_quick_panel(self.options + display, self.on_open)
