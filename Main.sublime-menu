@@ -36,7 +36,7 @@
                             },
                             {
                                 "command": "open_file", 
-                                "args": {"file": "${packages}/user/pm.sublime-settings"},
+                                "args": {"file": "${packages}/User/pm.sublime-settings"},
                                 "caption": "Settings – User"
                             },
                             { "caption": "-" }
