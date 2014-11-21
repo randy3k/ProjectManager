@@ -31,7 +31,7 @@
                         [
                             {
                                 "command": "open_file", 
-                                "args": {"file": "${packages}/pm/pm.sublime-settings"},
+                                "args": {"file": "${packages}/Project Manager/pm.sublime-settings"},
                                 "caption": "Settings – Default"
                             },
                             {
