@@ -49,7 +49,7 @@ def subl(args=[]):
 class Manager:
     def __init__(self, window):
         self.window = window
-        self.settings_file = 'pm.sublime-settings'
+        settings_file = 'pm.sublime-settings'
         self.settings = sublime.load_settings(settings_file)
         custom_projects_dir = self.settings.get("customProjectsDir")
         if not custom_projects_dir:
