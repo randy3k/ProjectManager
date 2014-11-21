@@ -49,7 +49,13 @@ def subl(args=[]):
 class Manager:
     def __init__(self, window):
         self.window = window
-        self.projects_dir = os.path.join(sublime.packages_path(), "User", "Projects")
+        self.settings_file = 'pm.sublime-settings'
+        self.settings = sublime.load_settings(settings_file)
+        custom_projects_dir = self.settings.get("customProjectsDir")
+        if not custom_projects_dir:
+            self.projects_dir = os.path.join(sublime.packages_path(), "User", "Projects")
+        else:
+            self.projects_dir = custom_projects_dir
 
     def sublime_project(self, project):
         return os.path.join(self.projects_dir, "%s.sublime-project" % project)
