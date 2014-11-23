@@ -25,3 +25,13 @@ You can additionally add the following keybind in your user keybind settings fil
 ### Add existing projects to Project Manager
 
 Just put your `.sublime-project` and `.sublime-workspace` files under the directory `Packages/Users/Projects/`.
+
+### Custom Projects directory
+
+To use a different directory for your projects rather than `Packages/Users/Projects/`, edit the following in package settings: Preferences -> Package Settings -> Project Manager
+
+```
+{
+    "projects_dir": "path/to/custom/projects_dir",
+}
+```

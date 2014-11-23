@@ -51,7 +51,7 @@ class Manager:
         self.window = window
         settings_file = 'pm.sublime-settings'
         self.settings = sublime.load_settings(settings_file)
-        custom_projects_dir = self.settings.get("customProjectsDir")
+        custom_projects_dir = self.settings.get("projects_dir")
         if not custom_projects_dir:
             self.projects_dir = os.path.join(sublime.packages_path(), "User", "Projects")
         else:
