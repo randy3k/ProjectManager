@@ -1,6 +1,6 @@
 import sublime, sublime_plugin
 import subprocess, os
-import json, codecs, re
+import codecs, re
 import copy
 
 class Jfile:
@@ -15,9 +15,8 @@ class Jfile:
         if os.path.exists(self.fpath):
             f = codecs.open(self.fpath, "r+", encoding=self.encoding)
             content = f.read()
-            content = re.sub(r'^\s*//.*?$|^\s*/\*(?:.|\n)*?\*/', '', content, flags=re.MULTILINE)
             try:
-                data = json.loads(content)
+                data = sublime.decode_value(content)
             except:
                 data = default
             f.close()
@@ -32,7 +31,7 @@ class Jfile:
         if not os.path.isdir(self.fdir):
             os.makedirs(self.fdir)
         f = codecs.open(self.fpath, "w+", encoding=self.encoding)
-        f.write(json.dumps(data, ensure_ascii=False, indent=indent))
+        f.write(sublime.encode_value(data, True))
         f.close()
 
     def remove(self):
