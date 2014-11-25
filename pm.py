@@ -106,7 +106,7 @@ class Manager:
         else:
             return []
 
-    def star_current(self, project_list):
+    def star_opened(self, project_list):
         # it is a ugly function since it changes project_list
         display = copy.deepcopy(project_list)
         current = []
@@ -116,9 +116,9 @@ class Manager:
                 if w.project_file_name() == pfn:
                     display[i][0] = display[i][0] + "*"
                     current.append(i)
-        for i in current:
-            display.insert(0, display.pop(i))
-            project_list.insert(0, project_list.pop(i))
+        for i, index in enumerate(current):
+            display.insert(i, display.pop(index))
+            project_list.insert(i, project_list.pop(index))
 
         return display
 
@@ -207,7 +207,7 @@ class ProjectManager(sublime_plugin.WindowCommand):
                 ["[-] Project Manager", "More options"],
                 ["[-] Add Project", "Add project to Project Manager"]
             ]
-        display = self.manager.star_current(self.project_list)
+        display = self.manager.star_opened(self.project_list)
         if action is not None:
             sublime.set_timeout(lambda: self.on_open(action), 10)
         else:
@@ -265,7 +265,7 @@ class ProjectManagerList(sublime_plugin.WindowCommand):
         callback = eval("self.on_" + action)
         self.manager = Manager(self.window)
         self.project_list = self.manager.list_projects()
-        display = self.manager.star_current(self.project_list)
+        display = self.manager.star_opened(self.project_list)
         self.show_quick_panel(display, callback)
 
     def on_new(self, action):
