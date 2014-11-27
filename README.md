@@ -10,7 +10,9 @@ Dont't have any idea what `*.sublime-project` and `*.sublime-workspace` are doin
 You can install Project Manager via Package Control. To launch the Project Manager, you can either open it under the `Project` menu, via the command palette, or use the hotkey `ctrl+cmd+p` (`ctrl+alt+p` for windows/linux).
 
 ### Usage
-Drag some folders into your Sublime Text window and add a project to Project Manager. The options are self-explained, enjoy!
+If you want Project Manager to manage the `*.sublime-project` and `*.sublime-workspace` files. You should open the project folder and use the "Add Folder" option of Project Manager. On the other hand, if you want to keep the project files where they are, you can use the "Import" option.
+
+Other options are self-explained, enjoy!
 
 ### Optional keybind
 You can additionally add the following keybind in your user keybind settings file for "Open project in new window"
@@ -24,7 +26,10 @@ You can additionally add the following keybind in your user keybind settings fil
 
 ### Add existing projects to Project Manager
 
-Just put your `.sublime-project` and `.sublime-workspace` files under the directory `Packages/Users/Projects/`.
+There are two ways to add existing projects to Project Manager.
+
+1. Put your `.sublime-project` and `.sublime-workspace` files in the project directory `Packages/Users/Projects/`.
+2. Open your project, and then use the import option of Project Manager. Project Manager will memorize where the corresponding `.sublime-project` is located and open it accordingly. In other words, you can put the `.sublime-project` file in any places.
 
 ### Custom Projects directory
 
