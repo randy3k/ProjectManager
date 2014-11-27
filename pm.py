@@ -262,7 +262,7 @@ class ProjectManager(sublime_plugin.WindowCommand):
         self.options = [
                 ["[-] Project Manager", "More options"],
                 ["[-] Add Folder", "Add folder to Project Manager"],
-                ["[-] Import Project", "Import .sublime_project"]
+                ["[-] Import .sublime-project", "Import .sublime_project file"]
             ]
         if action is not None:
             sublime.set_timeout(lambda: self.on_open(action), 10)
