@@ -4,8 +4,8 @@
         "command": "project_manager"
     },
     {
-        "caption": "Project Manager: Add Project",
-        "command": "project_manager_add"
+        "caption": "Project Manager: Add Folder",
+        "command": "project_manager_add_folder"
     },
     {
         "caption": "Project Manager: Open Project",
