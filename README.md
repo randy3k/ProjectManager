@@ -1,7 +1,7 @@
 Project Manager for Sublime Text 3
 ===
 
-Dont't have any idea what `*.sublime-project` and `*.sublime-workspace` are doing? Forget where the project files are? Project Manager helps in organizing the project files by putting all files under `Packages/Users/Projects/`. It is inspired by Atom's [Project Manager](https://atom.io/packages/project-manager).
+Dont't have any idea what `*.sublime-project` and `*.sublime-workspace` are doing? Forget where the project files are? Project Manager will help organizing the project files for you. It is inspired by Atom's [Project Manager](https://atom.io/packages/project-manager).
 
 ![](https://raw.githubusercontent.com/randy3k/Project-Manager/master/pm.png)
 
@@ -16,7 +16,7 @@ Options are self-explained, enjoy!
 
 #### Create new project
 
-Just drag some folders to Sublime Text and then "Add Folder".
+Just drag some folders to Sublime Text and then "Add Folder". The project files will be created in `Packages/Users/Projects/`.
 
 #### Add existing projects to Project Manager
 
