@@ -5,6 +5,8 @@ Dont't have any idea what `*.sublime-project` and `*.sublime-workspace` are doin
 
 ![](https://raw.githubusercontent.com/randy3k/Project-Manager/master/pm.png)
 
+If you like it, you could send me some tips via [![](http://img.shields.io/gittip/randy3k.svg)](https://www.gittip.com/randy3k).
+
 ### Installation
 
 You can install Project Manager via Package Control. To launch the Project Manager, you can either open it under the `Project` menu, via the command palette, or use the hotkey `ctrl+cmd+p` (`ctrl+alt+p` for windows/linux).
