@@ -10,18 +10,22 @@ Dont't have any idea what `*.sublime-project` and `*.sublime-workspace` are doin
 You can install Project Manager via Package Control. To launch the Project Manager, you can either open it under the `Project` menu, via the command palette, or use the hotkey `ctrl+cmd+p` (`ctrl+alt+p` for windows/linux).
 
 ### Usage
-If you want Project Manager to manage the `*.sublime-project` and `*.sublime-workspace` files, you should open the project folder and use the "Add Folder" option of Project Manager. On the other hand, if you want to keep the project files where they are, you can use the "Import" option.
+Options are self-explained, enjoy!
 
-Other options are self-explained, enjoy!
+#### Create new project
 
-### Add existing projects to Project Manager
+Just drag some folders to Sublime Text and then "Add Folder".
 
-There are two ways to add existing projects to Project Manager.
+#### Add existing projects to Project Manager
 
-1. Put your `.sublime-project` and `.sublime-workspace` files in the project directory `Packages/Users/Projects/`.
-2. Open your project, and then use the import option of Project Manager. Project Manager will memorize where the corresponding `.sublime-project` is located and open it accordingly. In other words, you can put the `.sublime-project` file in any places.
+There are two ways to add existing projects to Project Manager. 
+If you want to keep the project files (`.sublime-project` and `sublime-workspace`) in your project directory, you should follow the first method. If you want Project Manager manages the project files, folow the second method.
 
-### Custom Projects directory
+1. Open your project file `.sublime-project`, and then use the import option of Project Manager. This tells Project Manager where `.sublime-project` is located and Project Manager will khow where to look when the project is opened. In other words, you can put the `.sublime-project` file in any places.
+2. Move your `.sublime-project` and `.sublime-workspace` files in the project directory `Packages/Users/Projects/`.
+
+
+#### Custom Projects directory
 
 To use a different directory for your projects rather than `Packages/Users/Projects/`, edit the following in package settings: Preferences -> Package Settings -> Project Manager
 
