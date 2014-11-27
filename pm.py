@@ -84,37 +84,27 @@ class Manager:
                 folder = pd["folders"][0].get("path", "")
             else:
                 folder = ""
-            star = ""
+            opened = False
             for w in sublime.windows():
                 if w.project_file_name() == f:
-                    star = "*"
+                    opened = True
                     break
             ret[pname] = {
                             "folder": pabs(root, folder),
                             "file": f,
-                            "display": pname+star
+                            "opened": opened
                         }
         return ret
 
-    def list_projects(self):
-        d = [[key, value["folder"]] for key, value in self.projects_info.items()]
-        return sorted(d)
-
-    def star_opened(self, project_list):
-        # it is a ugly function since it changes project_list
-        display = copy.deepcopy(project_list)
-        current = []
-        for i, item in enumerate(project_list):
-            pfn = self.sublime_project(item[0])
-            for w in sublime.windows():
-                if w.project_file_name() == pfn:
-                    display[i][0] = display[i][0] + "*"
-                    current.append(i)
-        for i, index in enumerate(current):
-            display.insert(i, display.pop(index))
-            project_list.insert(i, project_list.pop(index))
-
-        return display
+    def display_projects(self):
+        ret = [[key, key+"*" if value["opened"] else key, value["folder"]] for key, value in self.projects_info.items()]
+        ret = sorted(ret)
+        count = 0
+        for i in range(len(ret)):
+            if ret[i][0] is not ret[i][1]:
+                ret.insert(count, ret.pop(i))
+                count = count + 1
+        return [[item[0] for item in ret], [[item[1], item[2]] for item in ret]]
 
     def sublime_project(self, project):
         return self.projects_info[project]["file"]
@@ -268,13 +258,12 @@ class ProjectManager(sublime_plugin.WindowCommand):
 
     def run(self, action=None):
         self.manager = Manager(self.window)
-        self.project_list = self.manager.list_projects()
+        self.projects, display = self.manager.display_projects()
         self.options = [
                 ["[-] Project Manager", "More options"],
                 ["[-] Add Folder", "Add folder to Project Manager"],
                 ["[-] Import Project", "Import .sublime_project"]
             ]
-        display = self.manager.star_opened(self.project_list)
         if action is not None:
             sublime.set_timeout(lambda: self.on_open(action), 10)
         else:
@@ -293,18 +282,13 @@ class ProjectManager(sublime_plugin.WindowCommand):
                 ["Remove Project", "Remove from Project Manager"]
             ]
             def callback(a):
-                if a==0:
-                    self.window.run_command("project_manager_list", args={"action": "new", "caller" : "manager"})
-                elif a==1:
-                    self.window.run_command("project_manager_list", args={"action": "append", "caller" : "manager"})
-                elif a==2:
-                    self.window.run_command("project_manager_list", args={"action": "edit", "caller" : "manager"})
-                elif a==3:
-                    self.window.run_command("project_manager_list", args={"action": "rename", "caller" : "manager"})
-                elif a==4:
-                    self.window.run_command("project_manager_list", args={"action": "remove", "caller" : "manager"})
-                else:
+                if a<0:
                     sublime.set_timeout(self.run, 10)
+                    return
+                else:
+                    actions = ["new", "append", "edit", "rename", "remove"]
+                    self.window.run_command("project_manager_list",
+                            args={"action": actions[a], "caller" : "manager"})
 
             self.show_quick_panel(items, callback)
 
@@ -316,7 +300,7 @@ class ProjectManager(sublime_plugin.WindowCommand):
 
         elif action>=len(self.options):
             action = action-len(self.options)
-            self.manager.switch_project(self.project_list[action][0])
+            self.manager.switch_project(self.projects[action])
 
 class ProjectManagerAdd(sublime_plugin.WindowCommand):
     def run(self):
@@ -334,46 +318,45 @@ class ProjectManagerList(sublime_plugin.WindowCommand):
         self.caller = caller
         callback = eval("self.on_" + action)
         self.manager = Manager(self.window)
-        self.project_list = self.manager.list_projects()
-        display = self.manager.star_opened(self.project_list)
+        self.projects, display = self.manager.display_projects()
         self.show_quick_panel(display, callback)
 
     def on_new(self, action):
         if action>=0:
-            self.manager.open_in_new_window(self.project_list[action][0])
+            self.manager.open_in_new_window(self.projects[action])
         elif action<0:
             sublime.set_timeout(self.on_cancel, 10)
 
     def on_switch(self, action):
         if action>=0:
-            self.manager.switch_project(self.project_list[action][0])
+            self.manager.switch_project(self.projects[action])
         elif action<0:
             self.on_cancel()
 
     def on_append(self, action):
         if action>=0:
-            self.manager.append_project(self.project_list[action][0])
+            self.manager.append_project(self.projects[action])
         elif action<0:
             self.on_cancel()
 
     def on_remove(self, action):
         if action>=0:
             sublime.set_timeout(lambda:
-                self.manager.remove_project(self.project_list[action][0]),
+                self.manager.remove_project(self.projects[action]),
                 10)
         elif action<0:
             self.on_cancel()
 
     def on_edit(self, action):
         if action>=0:
-            self.manager.edit_project(self.project_list[action][0])
+            self.manager.edit_project(self.projects[action])
         elif action<0:
             self.on_cancel()
 
     def on_rename(self, action):
         if action>=0:
             sublime.set_timeout(lambda:
-                self.manager.rename_project(self.project_list[action][0]),
+                self.manager.rename_project(self.projects[action]),
                 10)
         elif action<0:
             self.on_cancel()
