@@ -108,11 +108,11 @@ class Manager:
                 count = count + 1
         return [[item[0] for item in ret], [[item[1], item[2]] for item in ret]]
 
-    def sublime_project(self, project):
+    def project_file_name(self, project):
         return self.projects_info[project]["file"]
 
-    def sublime_workspace(self, project):
-        return self.sublime_project(project).replace(".sublime-project", ".sublime-workspace")
+    def project_workspace(self, project):
+        return self.project_file_name(project).replace(".sublime-project", ".sublime-workspace")
 
     def add_folder(self):
         pd = self.window.project_data()
@@ -152,34 +152,31 @@ class Manager:
         sublime.set_timeout(show_input_panel, delay)
 
     def import_sublime_project(self):
-        project = self.window.project_file_name()
-        if not project:
+        pfile = self.window.project_file_name()
+        if not pfile:
             sublime.message_dialog("Project file not found!")
             return
-        root = os.path.dirname(project)
-        if re.match(self.projects_dir, root):
+        if re.match(self.projects_dir, os.path.dirname(pfile)):
             sublime.message_dialog("This project was created by Project Manager!")
             return
-        ok = sublime.ok_cancel_dialog("Import %s?" % os.path.basename(project))
+        ok = sublime.ok_cancel_dialog("Import %s?" % os.path.basename(pfile))
         if ok:
             j = Jfile(os.path.join(self.projects_dir, "library.json"))
             data = j.load([])
-            if project not in data:
-                data.append(project)
+            if pfile not in data:
+                data.append(pfile)
                 j.save(data)
 
     def get_project_data(self, project):
-        return Jfile(self.sublime_project(project)).load()
+        return Jfile(self.project_file_name(project)).load()
 
     def check_project(self, project):
-        wspace = self.sublime_workspace(project)
-        if not os.path.exists(wspace):
-            Jfile(wspace).save({})
-        pass
+        wsfile = self.project_workspace(project)
+        if not os.path.exists(wsfile): Jfile(wsfile).save({})
 
     def close_project(self, project):
         for w in sublime.windows():
-            if w.project_file_name() == self.sublime_project(project):
+            if w.project_file_name() == self.project_file_name(project):
                 w.run_command("close_workspace")
                 w.run_command("close_window")
                 return True
@@ -187,85 +184,80 @@ class Manager:
 
     def append_project(self, project):
         pd = self.get_project_data(project)
-        paths = [pabs(f.get("path"), self.sublime_project(project)) for f in pd.get("folders")]
+        paths = [pabs(f.get("path"), self.project_file_name(project)) for f in pd.get("folders")]
         subl(["-a"] + paths)
 
     def switch_project(self, project):
         self.window.run_command("close_workspace")
         self.check_project(project)
         if self.close_project(project):
-            sublime.set_timeout_async(lambda: subl(["-n", self.sublime_project(project)]), 300)
+            sublime.set_timeout_async(lambda: subl(["-n", self.project_file_name(project)]), 300)
             return
 
         if len(self.window.views())==0:
-            sublime.set_timeout_async(lambda: subl([self.sublime_project(project)]), 300)
+            sublime.set_timeout_async(lambda: subl([self.project_file_name(project)]), 300)
         else:
-            sublime.set_timeout_async(lambda: subl(["-n", self.sublime_project(project)]), 300)
+            sublime.set_timeout_async(lambda: subl(["-n", self.project_file_name(project)]), 300)
 
     def open_in_new_window(self, project):
         self.check_project(project)
         self.close_project(project)
-        sublime.set_timeout_async(lambda: subl(["-n", self.sublime_project(project)]), 300)
+        sublime.set_timeout_async(lambda: subl(["-n", self.project_file_name(project)]), 300)
 
     def remove_project(self, project):
         ok = sublime.ok_cancel_dialog("Remove project %s from Project Manager?" % project)
         if ok:
-            pfile = self.sublime_project(project)
-            root = os.path.dirname(pfile)
-            if re.match(self.projects_dir, root):
+            pfile = self.project_file_name(project)
+            if re.match(self.projects_dir, os.path.dirname(pfile)):
                 self.close_project(project)
-                os.unlink(self.sublime_project(project))
-                os.unlink(self.sublime_workspace(project))
+                os.unlink(self.project_file_name(project))
+                os.unlink(self.project_workspace(project))
             else:
                 j = Jfile(os.path.join(self.projects_dir, "library.json"))
                 data = j.load([])
-                if pfile in data:
-                    data.remove(pfile)
+                if pfile in data: data.remove(pfile)
                 j.save(data)
                 if self.settings.get("use_machine_projects_dir", False):
                     j = Jfile(os.path.join(self.projects_dir, "..", "library.json"))
                     data = j.load([])
-                    if pfile in data:
-                        data.remove(pfile)
+                    if pfile in data: data.remove(pfile)
                     j.save(data)
 
     def edit_project(self, project):
-        self.window.open_file(self.sublime_project(project))
+        self.window.open_file(self.project_file_name(project))
 
     def rename_project(self, project):
         def on_rename(new_project):
-            sublime_project = self.sublime_project(project)
-            new_sublime_project = os.path.join(os.path.dirname(sublime_project),
-                                    "%s.sublime-project" % new_project)
-            sublime_workspace = self.sublime_workspace(project)
-            new_sublime_workspace = new_sublime_project.replace(".sublime-project", ".sublime-workspace")
+            pfile = self.project_file_name(project)
+            new_pfile = os.path.join(os.path.dirname(pfile), "%s.sublime-project" % new_project)
+            wsfile = self.project_workspace(project)
+            new_wsfile = wsfile.replace(".sublime-project", ".sublime-workspace")
             if self.close_project(project):
                 reopen = True
             else:
                 reopen = False
-            os.rename(sublime_project, new_sublime_project)
-            os.rename(sublime_workspace, new_sublime_workspace)
+            os.rename(pfile, new_pfile)
+            os.rename(wsfile, new_wsfile)
 
             # fix workspace file
             try:
-                j = Jfile(new_sublime_workspace)
+                j = Jfile(new_wsfile)
                 data = j.load({})
                 data["project"] = "%s.sublime-project" % new_project
                 j.save(data)
             except:
                 pass
 
-            root = os.path.dirname(sublime_project)
-            if not re.match(self.projects_dir, root):
+            if not re.match(self.projects_dir, os.path.dirname(pfile)):
                 j = Jfile(os.path.join(self.projects_dir, "library.json"))
                 data = j.load([])
-                if sublime_project in data: data.remove(sublime_project)
-                data.append(new_sublime_project)
+                if pfile in data: data.remove(pfile)
+                data.append(pfile)
                 j.save(data)
                 if self.settings.get("use_machine_projects_dir", False):
                     j = Jfile(os.path.join(self.projects_dir, "..", "library.json"))
                     data = j.load([])
-                    if sublime_project in data: data.remove(sublime_project)
+                    if pfile in data: data.remove(pfile)
                     j.save(data)
 
             if reopen:
@@ -289,7 +281,7 @@ class ProjectManager(sublime_plugin.WindowCommand):
         self.options = [
                 ["[-] Project Manager", "More options"],
                 ["[-] Add Folder", "Add folder to Project Manager"],
-                ["[-] Import .sublime-project", "Import .sublime_project file"]
+                ["[-] Import .sublime-project", "Import .sublime-project file"]
             ]
         if action is not None:
             sublime.set_timeout(lambda: self.on_open(action), 10)
