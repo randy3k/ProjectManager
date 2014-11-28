@@ -2,6 +2,7 @@ import sublime, sublime_plugin
 import subprocess, os
 import codecs, re
 import copy
+import platform
 
 class Jfile:
     def __init__(self, fpath, encoding="utf-8"):
@@ -56,27 +57,27 @@ class Manager:
         settings_file = 'pm.sublime-settings'
         self.settings = sublime.load_settings(settings_file)
         default_projects_dir = os.path.join(sublime.packages_path(), "User", "Projects")
+        node = platform.node().split(".")[0]
         self.projects_dir = self.settings.get("projects_dir", default_projects_dir)
-        self.library_json = os.path.join(self.projects_dir, "library.json")
-        self.projects_info = self.get_projects_info()
+        self.projects_info = self.get_projects_info(self.projects_dir)
+        if self.settings.get("use_machine_projects_dir", False):
+            self.projects_dir = os.path.join(self.projects_dir, node)
+            self.projects_info.update(self.get_projects_info(self.projects_dir))
 
-    def get_library(self):
+    def get_projects_info(self, projects_dir):
         paths = []
-        j = Jfile(self.library_json)
+        j = Jfile(os.path.join(projects_dir, "library.json"))
         for f in j.load([]):
             if os.path.exists(f) and f not in paths:
                 paths.append(f)
-        for f in os.listdir(self.projects_dir):
-            f = os.path.join(self.projects_dir, f)
+        paths.sort()
+        j.save(paths)
+        for f in os.listdir(projects_dir):
+            f = os.path.join(projects_dir, f)
             if f.endswith(".sublime-project") and f not in paths:
                 paths.append(f)
-        j.save(paths)
-        return paths
-
-    def get_projects_info(self):
         ret = {}
-        library = self.get_library()
-        for f in library:
+        for f in paths:
             pname = os.path.basename(f).replace(".sublime-project","")
             root = os.path.dirname(f)
             pd = Jfile(f).load()
@@ -90,14 +91,15 @@ class Manager:
                     opened = True
                     break
             ret[pname] = {
-                            "folder": pabs(root, folder),
-                            "file": f,
-                            "opened": opened
-                        }
+                "folder": pabs(root, folder),
+                "file": f,
+                "opened": opened
+            }
         return ret
 
     def display_projects(self):
-        ret = [[key, key+"*" if value["opened"] else key, value["folder"]] for key, value in self.projects_info.items()]
+        ret = [[key, key+"*" if value["opened"] else key, value["folder"]] \
+                                for key, value in self.projects_info.items()]
         ret = sorted(ret)
         count = 0
         for i in range(len(ret)):
@@ -133,13 +135,18 @@ class Manager:
                     self.window.run_command("close")
 
             # reload projects info
-            self.projects_info = self.get_projects_info()
+            self.__init__(self.window)
             self.switch_project(project)
 
         def show_input_panel():
             pd = self.window.project_data()
+            pf = self.window.project_file_name()
             if pd:
-                project = os.path.basename(pd["folders"][0]["path"])
+                if pf:
+                    root = os.path.dirname(pf)
+                    project = os.path.basename(pabs(root, pd["folders"][0]["path"]))
+                else:
+                    project = os.path.basename(pd["folders"][0]["path"])
                 v = self.window.show_input_panel("Project name:", project, on_add, None, None)
                 v.run_command("select_all")
 
@@ -148,11 +155,11 @@ class Manager:
     def import_sublime_project(self):
         project = self.window.project_file_name()
         if not project:
-            sublime.message_dialog("Project file *.sublime-project not found!")
+            sublime.message_dialog("Project file not found!")
             return
         ok = sublime.ok_cancel_dialog("Import %s?" % os.path.basename(project))
         if ok:
-            j = Jfile(self.library_json)
+            j = Jfile(os.path.join(self.projects_dir, "library.json"))
             data = j.load([])
             if project not in data:
                 data.append(project)
@@ -198,7 +205,7 @@ class Manager:
         sublime.set_timeout_async(lambda: subl(["-n", self.sublime_project(project)]), 300)
 
     def remove_project(self, project):
-        ok = sublime.ok_cancel_dialog("Remove Project %s from Project Manager?" % project)
+        ok = sublime.ok_cancel_dialog("Remove project %s from Project Manager?" % project)
         if ok:
             pfile = self.sublime_project(project)
             root = os.path.dirname(pfile)
@@ -207,11 +214,17 @@ class Manager:
                 os.unlink(self.sublime_project(project))
                 os.unlink(self.sublime_workspace(project))
             else:
-                j = Jfile(self.library_json)
+                j = Jfile(os.path.join(self.projects_dir, "library.json"))
                 data = j.load([])
                 if pfile in data:
                     data.remove(pfile)
                 j.save(data)
+                if self.settings.get("use_machine_projects_dir", False):
+                    j = Jfile(os.path.join(self.projects_dir, "..", "library.json"))
+                    data = j.load([])
+                    if pfile in data:
+                        data.remove(pfile)
+                    j.save(data)
 
     def edit_project(self, project):
         self.window.open_file(self.sublime_project(project))
@@ -236,7 +249,7 @@ class Manager:
                 j.save(data)
             except:
                 pass
-            j = Jfile(self.library_json)
+            j = Jfile(os.path.join(self.projects_dir, "library.json"))
             data = j.load([])
             if sublime_project in data: data.remove(sublime_project)
             data.append(new_sublime_project)
@@ -244,7 +257,7 @@ class Manager:
 
             if reopen:
                 # reload projects info
-                self.projects_info = self.get_projects_info()
+                self.__init__(self.window)
                 self.open_in_new_window(new_project)
         self.window.show_input_panel("New project name:", project, on_rename, None, None)
 
