@@ -172,8 +172,9 @@ class Manager:
         return Jfile(self.sublime_project(project)).load()
 
     def check_project(self, project):
-        if not os.path.exists(self.sublime_workspace(project)):
-            Jfile(self.sublime_workspace(project)).save({})
+        wspace = self.sublime_workspace(project)
+        if not os.path.exists(wspace):
+            Jfile(wspace).save({})
         pass
 
     def close_project(self, project):
