@@ -242,6 +242,8 @@ class Manager:
                 reopen = False
             os.rename(sublime_project, new_sublime_project)
             os.rename(sublime_workspace, new_sublime_workspace)
+
+            # fix workspace file
             try:
                 j = Jfile(new_sublime_workspace)
                 data = j.load({})
@@ -249,16 +251,25 @@ class Manager:
                 j.save(data)
             except:
                 pass
-            j = Jfile(os.path.join(self.projects_dir, "library.json"))
-            data = j.load([])
-            if sublime_project in data: data.remove(sublime_project)
-            data.append(new_sublime_project)
-            j.save(data)
+
+            root = os.path.dirname(sublime_project)
+            if not re.match(self.projects_dir, root):
+                j = Jfile(os.path.join(self.projects_dir, "library.json"))
+                data = j.load([])
+                if sublime_project in data: data.remove(sublime_project)
+                data.append(new_sublime_project)
+                j.save(data)
+                if self.settings.get("use_machine_projects_dir", False):
+                    j = Jfile(os.path.join(self.projects_dir, "..", "library.json"))
+                    data = j.load([])
+                    if sublime_project in data: data.remove(sublime_project)
+                    j.save(data)
 
             if reopen:
                 # reload projects info
                 self.__init__(self.window)
                 self.open_in_new_window(new_project)
+
         self.window.show_input_panel("New project name:", project, on_rename, None, None)
 
 
