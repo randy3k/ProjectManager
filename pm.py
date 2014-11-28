@@ -156,6 +156,10 @@ class Manager:
         if not project:
             sublime.message_dialog("Project file not found!")
             return
+        root = os.path.dirname(project)
+        if re.match(self.projects_dir, root):
+            sublime.message_dialog("This project was created by Project Manager!")
+            return
         ok = sublime.ok_cancel_dialog("Import %s?" % os.path.basename(project))
         if ok:
             j = Jfile(os.path.join(self.projects_dir, "library.json"))
