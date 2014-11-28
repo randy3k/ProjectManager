@@ -1,5 +1,5 @@
 {
-	// "projects_dir": "path/to/custom/projects_dir",
+    // "projects_dir": "path/to/custom/projects_dir",
 
     // enable machine specified projects directory
     // such a directory will be placed under projects_dir/machine_name
