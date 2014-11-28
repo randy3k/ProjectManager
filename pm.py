@@ -46,7 +46,8 @@ def subl(args=[]):
         executable_path = app_path+"Contents/SharedSupport/bin/subl"
     subprocess.Popen([executable_path]+args)
 
-def pabs(root, folder):
+def pabs(folder, project_file):
+    root = os.path.dirname(project_file)
     if not os.path.isabs(folder):
         folder = os.path.abspath(os.path.join(root, folder))
     return folder
@@ -79,7 +80,6 @@ class Manager:
         ret = {}
         for f in paths:
             pname = os.path.basename(f).replace(".sublime-project","")
-            root = os.path.dirname(f)
             pd = Jfile(f).load()
             if pd and "folders" in pd and pd["folders"]:
                 folder = pd["folders"][0].get("path", "")
@@ -91,7 +91,7 @@ class Manager:
                     opened = True
                     break
             ret[pname] = {
-                "folder": pabs(root, folder),
+                "folder": pabs(folder, f),
                 "file": f,
                 "opened": opened
             }
@@ -143,8 +143,7 @@ class Manager:
             pf = self.window.project_file_name()
             if pd:
                 if pf:
-                    root = os.path.dirname(pf)
-                    project = os.path.basename(pabs(root, pd["folders"][0]["path"]))
+                    project = os.path.basename(pabs(pd["folders"][0]["path"], pf))
                 else:
                     project = os.path.basename(pd["folders"][0]["path"])
                 v = self.window.show_input_panel("Project name:", project, on_add, None, None)
@@ -183,8 +182,7 @@ class Manager:
 
     def append_project(self, project):
         pd = self.get_project_data(project)
-        root = os.path.dirname(self.sublime_project(project))
-        paths = [pabs(root, f.get("path")) for f in pd.get("folders")]
+        paths = [pabs(f.get("path"), self.sublime_project(project)) for f in pd.get("folders")]
         subl(["-a"] + paths)
 
     def switch_project(self, project):
