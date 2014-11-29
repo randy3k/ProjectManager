@@ -4,6 +4,7 @@ import codecs, re
 import copy
 import platform
 
+
 class Jfile:
     def __init__(self, fpath, encoding="utf-8"):
         self.encoding = encoding
@@ -38,19 +39,22 @@ class Jfile:
     def remove(self):
         if os.path.exists(self.fpath): os.remove(self.fpath)
 
+
 def subl(args=[]):
     # learnt from SideBarEnhancements
     executable_path = sublime.executable_path()
     if sublime.platform() == 'osx':
-        app_path = executable_path[:executable_path.rfind(".app/")+5]
-        executable_path = app_path+"Contents/SharedSupport/bin/subl"
-    subprocess.Popen([executable_path]+args)
+        app_path = executable_path[:executable_path.rfind(".app/") + 5]
+        executable_path = app_path + "Contents/SharedSupport/bin/subl"
+    subprocess.Popen([executable_path] + args)
+
 
 def pabs(folder, project_file):
     root = os.path.dirname(project_file)
     if not os.path.isabs(folder):
         folder = os.path.abspath(os.path.join(root, folder))
     return folder
+
 
 class Manager:
     def __init__(self, window):
@@ -98,7 +102,7 @@ class Manager:
         return ret
 
     def display_projects(self):
-        ret = [[key, key+"*" if value["opened"] else key, value["folder"]] \
+        ret = [[key, key + "*" if value["opened"] else key, value["folder"]] \
                                 for key, value in self.projects_info.items()]
         ret = sorted(ret)
         count = 0
@@ -194,7 +198,7 @@ class Manager:
             sublime.set_timeout_async(lambda: subl(["-n", self.project_file_name(project)]), 300)
             return
 
-        if len(self.window.views())==0:
+        if len(self.window.views()) == 0:
             sublime.set_timeout_async(lambda: subl([self.project_file_name(project)]), 300)
         else:
             sublime.set_timeout_async(lambda: subl(["-n", self.project_file_name(project)]), 300)
@@ -289,10 +293,10 @@ class ProjectManager(sublime_plugin.WindowCommand):
             self.show_quick_panel(self.options + display, self.on_open)
 
     def on_open(self, action):
-        if action<0:
+        if action < 0:
             return
 
-        elif action==0:
+        elif action == 0:
             items = [
                 ["Open Project in New Window", "Open project in a new window"],
                 ["Append Project", "Append project to current window"],
@@ -301,7 +305,7 @@ class ProjectManager(sublime_plugin.WindowCommand):
                 ["Remove Project", "Remove from Project Manager"]
             ]
             def callback(a):
-                if a<0:
+                if a < 0:
                     sublime.set_timeout(self.run, 10)
                     return
                 else:
@@ -311,20 +315,23 @@ class ProjectManager(sublime_plugin.WindowCommand):
 
             self.show_quick_panel(items, callback)
 
-        elif action==1:
+        elif action == 1:
             self.manager.add_folder()
 
-        elif action==2:
+        elif action == 2:
             self.manager.import_sublime_project()
 
-        elif action>=len(self.options):
+        elif action >= len(self.options):
             action = action-len(self.options)
             self.manager.switch_project(self.projects[action])
 
+
 class ProjectManagerAddFolder(sublime_plugin.WindowCommand):
+
     def run(self):
         self.manager = Manager(self.window)
         self.manager.add_folder()
+
 
 class ProjectManagerList(sublime_plugin.WindowCommand):
 
@@ -341,43 +348,43 @@ class ProjectManagerList(sublime_plugin.WindowCommand):
         self.show_quick_panel(display, callback)
 
     def on_new(self, action):
-        if action>=0:
+        if action >= 0:
             self.manager.open_in_new_window(self.projects[action])
-        elif action<0:
+        elif action < 0:
             sublime.set_timeout(self.on_cancel, 10)
 
     def on_switch(self, action):
-        if action>=0:
+        if action >= 0:
             self.manager.switch_project(self.projects[action])
-        elif action<0:
+        elif action < 0:
             self.on_cancel()
 
     def on_append(self, action):
-        if action>=0:
+        if action >= 0:
             self.manager.append_project(self.projects[action])
-        elif action<0:
+        elif action < 0:
             self.on_cancel()
 
     def on_remove(self, action):
-        if action>=0:
+        if action >= 0:
             sublime.set_timeout(lambda:
                 self.manager.remove_project(self.projects[action]),
                 10)
-        elif action<0:
+        elif action < 0:
             self.on_cancel()
 
     def on_edit(self, action):
-        if action>=0:
+        if action >= 0:
             self.manager.edit_project(self.projects[action])
-        elif action<0:
+        elif action < 0:
             self.on_cancel()
 
     def on_rename(self, action):
-        if action>=0:
+        if action >= 0:
             sublime.set_timeout(lambda:
                 self.manager.rename_project(self.projects[action]),
                 10)
-        elif action<0:
+        elif action < 0:
             self.on_cancel()
 
     def on_cancel(self):
