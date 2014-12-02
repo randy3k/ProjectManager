@@ -228,7 +228,9 @@ class Manager:
                     j.save(data)
 
     def edit_project(self, project):
-        self.window.open_file(self.project_file_name(project))
+        def on_open():
+            self.window.open_file(self.project_file_name(project))
+        sublime.set_timeout_async(on_open, 100)
 
     def rename_project(self, project):
         def on_rename(new_project):
