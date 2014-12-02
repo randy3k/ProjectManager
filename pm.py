@@ -1,6 +1,6 @@
 import sublime, sublime_plugin
 import subprocess, os
-import codecs, re
+import codecs
 import copy
 import platform
 
@@ -160,7 +160,7 @@ class Manager:
         if not pfile:
             sublime.message_dialog("Project file not found!")
             return
-        if re.match(self.projects_dir, os.path.dirname(pfile)):
+        if os.path.dirname(pfile).startswith(self.projects_dir):
             sublime.message_dialog("This project was created by Project Manager!")
             return
         ok = sublime.ok_cancel_dialog("Import %s?" % os.path.basename(pfile))
@@ -212,7 +212,7 @@ class Manager:
         ok = sublime.ok_cancel_dialog("Remove project %s from Project Manager?" % project)
         if ok:
             pfile = self.project_file_name(project)
-            if re.match(self.projects_dir, os.path.dirname(pfile)):
+            if os.path.dirname(pfile).startswith(self.projects_dir):
                 self.close_project(project)
                 os.unlink(self.project_file_name(project))
                 os.unlink(self.project_workspace(project))
@@ -254,7 +254,7 @@ class Manager:
             except:
                 pass
 
-            if not re.match(self.projects_dir, os.path.dirname(pfile)):
+            if not os.path.dirname(pfile).startswith(self.projects_dir):
                 j = Jfile(os.path.join(self.projects_dir, "library.json"))
                 data = j.load([])
                 if pfile in data: data.remove(pfile)
