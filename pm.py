@@ -55,6 +55,12 @@ def pabs(folder, project_file):
         folder = os.path.abspath(os.path.join(root, folder))
     return folder
 
+def get_node():
+    if sublime.platform() == "osx":
+        node = subprocess.check_output(["scutil", "--get", "ComputerName"]).decode().strip()
+    else:
+        node = platform.node().split(".")[0]
+    return node
 
 class Manager:
     def __init__(self, window):
@@ -62,7 +68,7 @@ class Manager:
         settings_file = 'pm.sublime-settings'
         self.settings = sublime.load_settings(settings_file)
         default_projects_dir = os.path.join(sublime.packages_path(), "User", "Projects")
-        node = platform.node().split(".")[0]
+        node = get_node()
         self.projects_dir = self.settings.get("projects_dir", default_projects_dir)
         self.projects_info = self.get_projects_info(self.projects_dir)
         if self.settings.get("use_machine_projects_dir", False):
