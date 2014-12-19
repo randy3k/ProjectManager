@@ -46,3 +46,8 @@ You can additionally add the following keybind in your user keybind settings fil
       "command": "project_manager_list", "args": {"action": "new"}
     }
 ```
+
+
+### License
+
+Project Manager is MIT licensed.
