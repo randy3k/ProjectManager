@@ -277,7 +277,8 @@ class Manager:
                 self.__init__(self.window)
                 self.open_in_new_window(new_project)
 
-        self.window.show_input_panel("New project name:", project, on_rename, None, None)
+        v = self.window.show_input_panel("New project name:", project, on_rename, None, None)
+        v.run_command("select_all")
 
 
 class ProjectManager(sublime_plugin.WindowCommand):
