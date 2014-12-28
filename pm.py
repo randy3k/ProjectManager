@@ -301,10 +301,10 @@ class ProjectManager(sublime_plugin.WindowCommand):
         self.manager = Manager(self.window)
         self.projects, display = self.manager.display_projects()
         self.options = [
-                ["[-] Project Manager", "More options"],
-                ["[-] Add Folder", "Add folder to Project Manager"],
-                ["[-] Import .sublime-project", "Import .sublime-project file"]
-            ]
+            ["[-] Project Manager", "More options"],
+            ["[-] Add Folder", "Add folder to Project Manager"],
+            ["[-] Import .sublime-project", "Import .sublime-project file"]
+        ]
         if action is not None:
             sublime.set_timeout(lambda: self.on_open(action), 10)
         else:
@@ -329,8 +329,10 @@ class ProjectManager(sublime_plugin.WindowCommand):
                     return
                 else:
                     actions = ["new", "append", "edit", "rename", "remove"]
-                    self.window.run_command("project_manager_list",
-                            args={"action": actions[a], "caller": "manager"})
+                    self.window.run_command(
+                        "project_manager_list",
+                        args={"action": actions[a], "caller": "manager"}
+                    )
 
             self.show_quick_panel(items, callback)
 
