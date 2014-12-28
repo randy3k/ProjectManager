@@ -1,7 +1,8 @@
-import sublime, sublime_plugin
-import subprocess, os
+import sublime
+import sublime_plugin
+import subprocess
+import os
 import codecs
-import copy
 import platform
 
 
@@ -37,7 +38,8 @@ class Jfile:
         f.close()
 
     def remove(self):
-        if os.path.exists(self.fpath): os.remove(self.fpath)
+        if os.path.exists(self.fpath):
+            os.remove(self.fpath)
 
 
 def subl(args=[]):
@@ -55,12 +57,14 @@ def pabs(folder, project_file):
         folder = os.path.abspath(os.path.join(root, folder))
     return folder
 
+
 def get_node():
     if sublime.platform() == "osx":
         node = subprocess.check_output(["scutil", "--get", "ComputerName"]).decode().strip()
     else:
         node = platform.node().split(".")[0]
     return node
+
 
 class Manager:
     def __init__(self, window):
@@ -89,7 +93,7 @@ class Manager:
                 paths.append(f)
         ret = {}
         for f in paths:
-            pname = os.path.basename(f).replace(".sublime-project","")
+            pname = os.path.basename(f).replace(".sublime-project", "")
             pd = Jfile(f).load()
             if pd and "folders" in pd and pd["folders"]:
                 folder = pd["folders"][0].get("path", "")
@@ -108,8 +112,8 @@ class Manager:
         return ret
 
     def display_projects(self):
-        ret = [[key, key + "*" if value["opened"] else key, value["folder"]] \
-                                for key, value in self.projects_info.items()]
+        ret = [[key, key + "*" if value["opened"] else key, value["folder"]]
+               for key, value in self.projects_info.items()]
         ret = sorted(ret)
         count = 0
         for i in range(len(ret)):
@@ -182,7 +186,8 @@ class Manager:
 
     def check_project(self, project):
         wsfile = self.project_workspace(project)
-        if not os.path.exists(wsfile): Jfile(wsfile).save({})
+        if not os.path.exists(wsfile):
+            Jfile(wsfile).save({})
 
     def close_project(self, project):
         for w in sublime.windows():
@@ -225,12 +230,14 @@ class Manager:
             else:
                 j = Jfile(os.path.join(self.projects_dir, "library.json"))
                 data = j.load([])
-                if pfile in data: data.remove(pfile)
+                if pfile in data:
+                    data.remove(pfile)
                 j.save(data)
                 if self.settings.get("use_machine_projects_dir", False):
                     j = Jfile(os.path.join(self.projects_dir, "..", "library.json"))
                     data = j.load([])
-                    if pfile in data: data.remove(pfile)
+                    if pfile in data:
+                        data.remove(pfile)
                     j.save(data)
 
     def edit_project(self, project):
@@ -263,13 +270,15 @@ class Manager:
             if not os.path.dirname(pfile).startswith(self.projects_dir):
                 j = Jfile(os.path.join(self.projects_dir, "library.json"))
                 data = j.load([])
-                if pfile in data: data.remove(pfile)
+                if pfile in data:
+                    data.remove(pfile)
                 data.append(pfile)
                 j.save(data)
                 if self.settings.get("use_machine_projects_dir", False):
                     j = Jfile(os.path.join(self.projects_dir, "..", "library.json"))
                     data = j.load([])
-                    if pfile in data: data.remove(pfile)
+                    if pfile in data:
+                        data.remove(pfile)
                     j.save(data)
 
             if reopen:
@@ -313,6 +322,7 @@ class ProjectManager(sublime_plugin.WindowCommand):
                 ['Rename Project', "Rename project"],
                 ["Remove Project", "Remove from Project Manager"]
             ]
+
             def callback(a):
                 if a < 0:
                     sublime.set_timeout(self.run, 10)
@@ -320,7 +330,7 @@ class ProjectManager(sublime_plugin.WindowCommand):
                 else:
                     actions = ["new", "append", "edit", "rename", "remove"]
                     self.window.run_command("project_manager_list",
-                            args={"action": actions[a], "caller" : "manager"})
+                            args={"action": actions[a], "caller": "manager"})
 
             self.show_quick_panel(items, callback)
 
@@ -377,8 +387,8 @@ class ProjectManagerList(sublime_plugin.WindowCommand):
     def on_remove(self, action):
         if action >= 0:
             sublime.set_timeout(lambda:
-                self.manager.remove_project(self.projects[action]),
-                10)
+                                self.manager.remove_project(self.projects[action]),
+                                10)
         elif action < 0:
             self.on_cancel()
 
@@ -391,8 +401,8 @@ class ProjectManagerList(sublime_plugin.WindowCommand):
     def on_rename(self, action):
         if action >= 0:
             sublime.set_timeout(lambda:
-                self.manager.rename_project(self.projects[action]),
-                10)
+                                self.manager.rename_project(self.projects[action]),
+                                10)
         elif action < 0:
             self.on_cancel()
 
