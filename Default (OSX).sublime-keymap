@@ -1,6 +1,6 @@
 [
-  {
-    "keys": ["super+ctrl+p"],
-    "command": "project_manager"
-  }
+    {
+        "keys": ["super+ctrl+p"],
+        "command": "project_manager"
+    }
 ]

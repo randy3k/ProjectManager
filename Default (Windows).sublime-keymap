@@ -1,6 +1,10 @@
 [
-  {
-    "keys": ["ctrl+alt+p"],
-    "command": "project_manager"
-  }
+    {
+        "keys": ["ctrl+alt+p"],
+        "command": "project_manager"
+    },
+    {
+        "keys": ["ctrl+shift+w"],
+        "command": "project_manager_close_window"
+    }
 ]
