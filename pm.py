@@ -232,13 +232,13 @@ class Manager:
                 data = j.load([])
                 if pfile in data:
                     data.remove(pfile)
-                j.save(data)
+                    j.save(data)
                 if self.settings.get("use_machine_projects_dir", False):
                     j = Jfile(os.path.join(self.projects_dir, "..", "library.json"))
                     data = j.load([])
                     if pfile in data:
                         data.remove(pfile)
-                    j.save(data)
+                        j.save(data)
 
     def edit_project(self, project):
         def on_open():
@@ -272,14 +272,15 @@ class Manager:
                 data = j.load([])
                 if pfile in data:
                     data.remove(pfile)
-                data.append(pfile)
-                j.save(data)
+                    data.append(new_pfile)
+                    j.save(data)
                 if self.settings.get("use_machine_projects_dir", False):
                     j = Jfile(os.path.join(self.projects_dir, "..", "library.json"))
                     data = j.load([])
                     if pfile in data:
                         data.remove(pfile)
-                    j.save(data)
+                        data.append(new_pfile)
+                        j.save(data)
 
             if reopen:
                 # reload projects info
