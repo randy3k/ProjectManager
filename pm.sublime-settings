@@ -1,9 +1,9 @@
 {
     // "projects_dir": "path/to/custom/projects_dir",
 
-    // enable machine specified projects directory
+    // enable machine specific projects directory
     // such a directory will be placed under projects_dir/machine_name
     // machine_name is your computer hostname, you can get it by running
-    // platform.node().split(".")[0] in your sublime console
+    // import sys; sys.modules['Project-Manager'].pm.get_node() in your sublime console
     // "use_machine_projects_dir": true
 }
