@@ -72,13 +72,13 @@ class Manager:
         settings_file = 'pm.sublime-settings'
         self.settings = sublime.load_settings(settings_file)
         default_projects_dir = os.path.join(sublime.packages_path(), "User", "Projects")
-        self.projects_dir = self.settings.get("projects_dir", default_projects_dir)
-        self.projects_fpath = self.settings.get("projects_fpath", [self.projects_dir])
-        self.projects_dir = self.projects_fpath[0]
+        self.projects_fpath = self.settings.get(
+            "projects_fpath", [self.settings.get("projects_dir", default_projects_dir)])
+        self.primary_dir = self.projects_fpath[0]
 
         node = get_node()
         if self.settings.get("use_local_projects_dir", False):
-            self.projects_fpath = [self.projects_dir + " - " + node] + self.projects_fpath
+            self.projects_fpath = [self.primary_dir + " - " + node] + self.projects_fpath
 
         self.projects_info = self.get_projects_info()
 
@@ -104,15 +104,15 @@ class Manager:
                     folder = pd["folders"][0].get("path", "")
                 else:
                     folder = ""
-                opened = False
+                star = False
                 for w in sublime.windows():
                     if w.project_file_name() == f:
-                        opened = True
+                        star = True
                         break
                 ret[pname] = {
                     "folder": pabs(folder, f),
                     "file": f,
-                    "opened": opened
+                    "star": star
                 }
         return ret
 
@@ -123,7 +123,7 @@ class Manager:
         return False
 
     def display_projects(self):
-        ret = [[key, key + "*" if value["opened"] else key, value["folder"]]
+        ret = [[key, key + "*" if value["star"] else key, value["folder"]]
                for key, value in self.projects_info.items()]
         ret = sorted(ret)
         count = 0
@@ -149,7 +149,7 @@ class Manager:
 
         def on_add(project):
             pd = self.window.project_data()
-            f = os.path.join(self.projects_fpath[0], "%s.sublime-project" % project)
+            f = os.path.join(self.primary_dir, "%s.sublime-project" % project)
             Jfile(f).save(pd)
             Jfile(f.replace(".sublime-project", ".sublime-workspace")).save({})
             self.window.run_command("close_workspace")
@@ -186,7 +186,7 @@ class Manager:
             return
         ok = sublime.ok_cancel_dialog("Import %s?" % os.path.basename(pfile))
         if ok:
-            j = Jfile(os.path.join(self.projects_fpath[0], "library.json"))
+            j = Jfile(os.path.join(self.primary_dir, "library.json"))
             data = j.load([])
             if pfile not in data:
                 data.append(pfile)
@@ -386,8 +386,7 @@ class ProjectManagerList(sublime_plugin.WindowCommand):
 
     def on_remove(self, action):
         if action >= 0:
-            sublime.set_timeout(lambda:
-                                self.manager.remove_project(self.projects[action]),
+            sublime.set_timeout(lambda: self.manager.remove_project(self.projects[action]),
                                 10)
         elif action < 0:
             self.on_cancel()
@@ -400,8 +399,7 @@ class ProjectManagerList(sublime_plugin.WindowCommand):
 
     def on_rename(self, action):
         if action >= 0:
-            sublime.set_timeout(lambda:
-                                self.manager.rename_project(self.projects[action]),
+            sublime.set_timeout(lambda: self.manager.rename_project(self.projects[action]),
                                 10)
         elif action < 0:
             self.on_cancel()
