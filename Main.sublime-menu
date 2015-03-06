@@ -26,16 +26,16 @@
                 "children":
                 [
                     {
-                        "caption": "Project Manager",
+                        "caption": "Project-Manager",
                         "children":
                         [
                             {
-                                "command": "open_file", 
+                                "command": "open_file",
                                 "args": {"file": "${packages}/Project Manager/pm.sublime-settings"},
                                 "caption": "Settings – Default"
                             },
                             {
-                                "command": "open_file", 
+                                "command": "open_file",
                                 "args": {"file": "${packages}/User/pm.sublime-settings"},
                                 "caption": "Settings – User"
                             },
