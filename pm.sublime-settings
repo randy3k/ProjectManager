@@ -1,5 +1,6 @@
 {
-    // "projects_dir": "path/to/custom/projects_dir",
+    // a list of folders containing *.sublime-project files
+    // "projects_fpath": ["path/to/custom/projects_dir", ...]
 
     // enable machine specific projects directory
     // such a directory will be placed under projects_dir/machine_name
