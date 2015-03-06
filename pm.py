@@ -77,8 +77,8 @@ class Manager:
         self.projects_dir = self.projects_fpath[0]
 
         node = get_node()
-        if self.settings.get("use_machine_projects_dir", False):
-            self.projects_fpath = [os.path.join(self.projects_dir, node)] + self.projects_fpath
+        if self.settings.get("use_local_projects_dir", False):
+            self.projects_fpath = [self.projects_dir + " - " + node] + self.projects_fpath
 
         self.projects_info = self.get_projects_info()
 
@@ -92,10 +92,11 @@ class Manager:
                     pfiles.append(f)
             pfiles.sort()
             j.save(pfiles)
-            for f in os.listdir(pdir):
-                f = os.path.join(pdir, f)
-                if f.endswith(".sublime-project") and f not in pfiles:
-                    pfiles.append(f)
+            for path, dirs, files in os.walk(pdir):
+                for f in files:
+                    f = os.path.join(path, f)
+                    if f.endswith(".sublime-project") and f not in pfiles:
+                        pfiles.append(f)
             for f in pfiles:
                 pname = os.path.basename(f).replace(".sublime-project", "")
                 pd = Jfile(f).load()
@@ -285,9 +286,8 @@ class Manager:
                 # reload projects info
                 self.__init__(self.window)
                 self.open_in_new_window(new_project)
-
-            # make sure old workspace is deleted
-            os.unlink(wsfile)
+                # make sure old workspace is deleted
+                os.unlink(wsfile)
 
         v = self.window.show_input_panel("New project name:", project, on_rename, None, None)
         v.run_command("select_all")

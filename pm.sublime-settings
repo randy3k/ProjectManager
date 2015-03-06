@@ -1,10 +1,11 @@
 {
-    // a list of folders containing *.sublime-project files
-    // "projects_fpath": ["path/to/custom/projects_dir", ...]
+    // A list of folders containing *.sublime-project files
+    // "projects_fpath": ["path/to/custom/Projects", "another_path/to/Projects"]
 
-    // enable machine specific projects directory
-    // such a directory will be placed under projects_dir/machine_name
-    // machine_name is your computer hostname, you can get it by running
+    // Enable local projects directory, such a directory will be named
+    // after "Projects - computer_name". where computer_name is your computer hostname.
+    // It would be useful if Sublime Text settings are synced across different computers.
+    // To discover your computer hostname, run
     // import sys; sys.modules['Project-Manager'].pm.get_node() in your sublime console
-    // "use_machine_projects_dir": true
+    // "use_local_projects_dir": true
 }
