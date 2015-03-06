@@ -258,20 +258,17 @@ class Manager:
             pfile = self.project_file_name(project)
             new_pfile = os.path.join(os.path.dirname(pfile), "%s.sublime-project" % new_project)
             wsfile = self.project_workspace(project)
-            new_wsfile = wsfile.replace(".sublime-project", ".sublime-workspace")
+            new_wsfile = new_pfile.replace(".sublime-project", ".sublime-workspace")
 
             reopen = self.close_project(project)
             os.rename(pfile, new_pfile)
             os.rename(wsfile, new_wsfile)
 
-            # fix workspace file
-            try:
-                j = Jfile(new_wsfile)
-                data = j.load({})
+            j = Jfile(new_wsfile)
+            data = j.load({})
+            if "project" in data:
                 data["project"] = "%s.sublime-project" % new_project
-                j.save(data)
-            except:
-                pass
+            j.save(data)
 
             if not self.in_projects_fpath(pfile):
                 for pdir in self.projects_fpath:
@@ -286,8 +283,6 @@ class Manager:
                 # reload projects info
                 self.__init__(self.window)
                 self.open_in_new_window(new_project)
-                # make sure old workspace is deleted
-                os.unlink(wsfile)
 
         v = self.window.show_input_panel("New project name:", project, on_rename, None, None)
         v.run_command("select_all")
