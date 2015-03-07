@@ -219,7 +219,7 @@ class Manager:
         self.window.run_command("close_workspace")
         self.check_project(project)
         if self.close_project(project):
-            sublime.set_timeout_async(lambda: subl(["-n", self.project_file_name(project)]), 300)
+            sublime.set_timeout_async(lambda: subl([self.project_file_name(project)]), 300)
             return
 
         if len(self.window.views()) == 0:
