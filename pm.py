@@ -99,7 +99,8 @@ class Manager:
                     if f.endswith(".sublime-project") and f not in pfiles:
                         pfiles.append(f)
             for f in pfiles:
-                pname = os.path.basename(f).replace(".sublime-project", "")
+                pname = os.path.relpath(f, self.which_projects_dir(f)).replace(
+                    ".sublime-project", "")
                 pd = Jfile(f).load()
                 if pd and "folders" in pd and pd["folders"]:
                     folder = pd["folders"][0].get("path", "")
@@ -117,11 +118,11 @@ class Manager:
                 }
         return ret
 
-    def in_projects_fpath(self, pfile):
+    def which_projects_dir(self, pfile):
         for pdir in self.projects_fpath:
             if os.path.dirname(pfile).startswith(pdir):
-                return True
-        return False
+                return pdir
+        return None
 
     def display_projects(self):
         ret = [[key, key + "*" if value["star"] else key, value["folder"]]
@@ -182,7 +183,7 @@ class Manager:
         if not pfile:
             sublime.message_dialog("Project file not found!")
             return
-        if self.in_projects_fpath(pfile):
+        if self.which_projects_dir(pfile):
             sublime.message_dialog("This project was created by Project Manager!")
             return
         ok = sublime.ok_cancel_dialog("Import %s?" % os.path.basename(pfile))
@@ -235,7 +236,7 @@ class Manager:
         ok = sublime.ok_cancel_dialog("Remove project %s from Project Manager?" % project)
         if ok:
             pfile = self.project_file_name(project)
-            if self.in_projects_fpath(pfile):
+            if self.which_projects_dir(pfile):
                 self.close_project(project)
                 os.unlink(self.project_file_name(project))
                 os.unlink(self.project_workspace(project))
@@ -257,8 +258,11 @@ class Manager:
             if project == new_project:
                 return
             pfile = self.project_file_name(project)
-            new_pfile = os.path.join(os.path.dirname(pfile), "%s.sublime-project" % new_project)
             wsfile = self.project_workspace(project)
+            new_pfile = os.path.join(
+                self.which_projects_dir(pfile),
+                "%s.sublime-project" % new_project
+            )
             new_wsfile = new_pfile.replace(".sublime-project", ".sublime-workspace")
 
             reopen = self.close_project(project)
@@ -271,7 +275,7 @@ class Manager:
                 data["project"] = "%s.sublime-project" % new_project
             j.save(data)
 
-            if not self.in_projects_fpath(pfile):
+            if not self.which_projects_dir(pfile):
                 for pdir in self.projects_fpath:
                     j = Jfile(os.path.join(pdir, "library.json"))
                     data = j.load([])
