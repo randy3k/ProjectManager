@@ -78,7 +78,8 @@ class Manager:
 
         node = get_node()
         if self.settings.get("use_local_projects_dir", False):
-            self.projects_fpath = [self.primary_dir + " - " + node] + self.projects_fpath
+            self.projects_fpath = \
+                [d + " - " + node for d in self.projects_fpath] + self.projects_fpath
 
         self.projects_info = self.get_projects_info()
 
