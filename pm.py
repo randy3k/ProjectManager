@@ -272,7 +272,7 @@ class Manager:
             j = Jfile(new_wsfile)
             data = j.load({})
             if "project" in data:
-                data["project"] = "%s.sublime-project" % new_project
+                data["project"] = "%s.sublime-project" % os.path.basename(new_project)
             j.save(data)
 
             if not self.which_projects_dir(pfile):
