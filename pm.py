@@ -98,6 +98,12 @@ class Manager:
                     f = os.path.join(path, f)
                     if f.endswith(".sublime-project") and f not in pfiles:
                         pfiles.append(f)
+                # remove empty directories
+                for d in dirs:
+                    d = os.path.join(path, d)
+                    if len(os.listdir(d)) == 0:
+                        os.rmdir(d)
+
             for f in pfiles:
                 pname = os.path.relpath(f, self.which_projects_dir(f)).replace(
                     ".sublime-project", "")
@@ -219,18 +225,18 @@ class Manager:
         self.window.run_command("close_workspace")
         self.check_project(project)
         if self.close_project(project):
-            sublime.set_timeout_async(lambda: subl([self.project_file_name(project)]), 300)
+            sublime.set_timeout_async(lambda: subl([self.project_file_name(project)]), 500)
             return
 
         if len(self.window.views()) == 0:
-            sublime.set_timeout_async(lambda: subl([self.project_file_name(project)]), 300)
+            sublime.set_timeout_async(lambda: subl([self.project_file_name(project)]), 500)
         else:
-            sublime.set_timeout_async(lambda: subl(["-n", self.project_file_name(project)]), 300)
+            sublime.set_timeout_async(lambda: subl(["-n", self.project_file_name(project)]), 500)
 
     def open_in_new_window(self, project):
         self.check_project(project)
         self.close_project(project)
-        sublime.set_timeout_async(lambda: subl(["-n", self.project_file_name(project)]), 300)
+        sublime.set_timeout_async(lambda: subl(["-n", self.project_file_name(project)]), 500)
 
     def remove_project(self, project):
         ok = sublime.ok_cancel_dialog("Remove project %s from Project Manager?" % project)
