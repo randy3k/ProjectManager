@@ -104,24 +104,27 @@ class Manager:
                     if len(os.listdir(d)) == 0:
                         os.rmdir(d)
 
-            for f in pfiles:
-                pname = os.path.relpath(f, self.which_projects_dir(f)).replace(
-                    ".sublime-project", "")
-                pd = Jfile(f).load()
-                if pd and "folders" in pd and pd["folders"]:
-                    folder = pd["folders"][0].get("path", "")
-                else:
-                    folder = ""
-                star = False
-                for w in sublime.windows():
-                    if w.project_file_name() == f:
-                        star = True
-                        break
-                ret[pname] = {
-                    "folder": pabs(folder, f),
-                    "file": f,
-                    "star": star
-                }
+        for f in pfiles:
+            pdir = self.which_projects_dir(f)
+            if pdir:
+                pname = os.path.relpath(f, pdir).replace(".sublime-project", "")
+            else:
+                pname = os.path.basename(f).replace(".sublime-project", "")
+            pd = Jfile(f).load()
+            if pd and "folders" in pd and pd["folders"]:
+                folder = pd["folders"][0].get("path", "")
+            else:
+                folder = ""
+            star = False
+            for w in sublime.windows():
+                if w.project_file_name() == f:
+                    star = True
+                    break
+            ret[pname] = {
+                "folder": pabs(folder, f),
+                "file": f,
+                "star": star
+            }
         return ret
 
     def which_projects_dir(self, pfile):
@@ -265,10 +268,10 @@ class Manager:
                 return
             pfile = self.project_file_name(project)
             wsfile = self.project_workspace(project)
-            new_pfile = os.path.join(
-                self.which_projects_dir(pfile),
-                "%s.sublime-project" % new_project
-            )
+            pdir = self.which_projects_dir(pfile)
+            if not pdir:
+                pdir = os.path.dirname(pfile)
+            new_pfile = os.path.join(pdir, "%s.sublime-project" % new_project)
             new_wsfile = new_pfile.replace(".sublime-project", ".sublime-workspace")
 
             reopen = self.close_project(project)
