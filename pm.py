@@ -74,13 +74,13 @@ class Manager:
         default_projects_dir = os.path.join(sublime.packages_path(), "User", "Projects")
         self.projects_fpath = self.settings.get(
             "projects_fpath", [self.settings.get("projects_dir", default_projects_dir)])
-        self.primary_dir = self.projects_fpath[0]
 
         node = get_node()
         if self.settings.get("use_local_projects_dir", False):
             self.projects_fpath = \
                 [d + " - " + node for d in self.projects_fpath] + self.projects_fpath
 
+        self.primary_dir = self.projects_fpath[0]
         self.projects_info = self.get_projects_info()
 
     def get_projects_info(self):
