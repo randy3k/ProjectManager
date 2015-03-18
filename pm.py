@@ -21,6 +21,9 @@ class Jfile:
             try:
                 data = sublime.decode_value(content)
             except:
+                sublime.message_dialog("%s is bad!" % self.fpath)
+                raise
+            if not data:
                 data = default
             f.close()
         else:
@@ -104,27 +107,27 @@ class Manager:
                     if len(os.listdir(d)) == 0:
                         os.rmdir(d)
 
-        for f in pfiles:
-            pdir = self.which_projects_dir(f)
-            if pdir:
-                pname = os.path.relpath(f, pdir).replace(".sublime-project", "")
-            else:
-                pname = os.path.basename(f).replace(".sublime-project", "")
-            pd = Jfile(f).load()
-            if pd and "folders" in pd and pd["folders"]:
-                folder = pd["folders"][0].get("path", "")
-            else:
-                folder = ""
-            star = False
-            for w in sublime.windows():
-                if w.project_file_name() == f:
-                    star = True
-                    break
-            ret[pname] = {
-                "folder": pabs(folder, f),
-                "file": f,
-                "star": star
-            }
+            for f in pfiles:
+                pdir = self.which_projects_dir(f)
+                if pdir:
+                    pname = os.path.relpath(f, pdir).replace(".sublime-project", "")
+                else:
+                    pname = os.path.basename(f).replace(".sublime-project", "")
+                pd = Jfile(f).load()
+                if pd and "folders" in pd and pd["folders"]:
+                    folder = pd["folders"][0].get("path", "")
+                else:
+                    folder = ""
+                star = False
+                for w in sublime.windows():
+                    if w.project_file_name() == f:
+                        star = True
+                        break
+                ret[pname] = {
+                    "folder": pabs(folder, f),
+                    "file": f,
+                    "star": star
+                }
         return ret
 
     def which_projects_dir(self, pfile):
