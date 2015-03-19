@@ -6,6 +6,6 @@
     // "Projects - computer_name", where computer_name is your computer hostname.
     // It would be useful if Sublime Text settings are synced across different computers.
     // To discover your computer hostname, run
-    // import sys; sys.modules['Project-Manager'].pm.get_node() in your sublime console
+    // import sys; sys.modules['Project Manager'].pm.get_node() in your sublime console
     // "use_local_projects_dir": true
 }
