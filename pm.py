@@ -228,7 +228,13 @@ class Manager:
         subl(["-a"] + paths)
 
     def switch_project(self, project):
-        self.window.run_command("close_workspace")
+        settings = sublime.load_settings("Preferences.sublime-settings")
+        if settings.get("close_windows_when_empty"):
+            settings.set("close_windows_when_empty", False)
+            self.window.run_command("close_workspace")
+            settings.set("close_windows_when_empty", True)
+        else:
+            self.window.run_command("close_workspace")
         self.check_project(project)
         if self.close_project(project):
             sublime.set_timeout_async(lambda: subl([self.project_file_name(project)]), 500)
