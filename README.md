@@ -3,7 +3,7 @@ Project Manager for Sublime Text 3
 
 Dont't have any idea what `*.sublime-project` and `*.sublime-workspace` are doing? Forget where the project files are? Project Manager will help organizing the project files for you. It is inspired by Atom's [Project Manager](https://atom.io/packages/project-manager).
 
-Project Manager also improves the shortcut `ctrl+shift+w` on Windows and Linux so that it will close the project when the window is closed. On OSX, it is the default behaviour.
+Project Manager also improves the shortcut <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>W</kbd> on Windows and Linux so that it will close the project when the window is closed. On OSX, it is the default behaviour.
 
 ![](https://raw.githubusercontent.com/randy3k/Project-Manager/master/pm.png)
 
@@ -11,7 +11,7 @@ If you like it, you could send me some tips via [![](http://img.shields.io/gitti
 
 ### Installation
 
-You can install Project Manager via Package Control. To launch the Project Manager, you can either open it under the `Project` menu, via the command palette, or use the hotkey `ctrl+cmd+p` (`ctrl+alt+p` for windows/linux).
+You can install Project Manager via Package Control. To launch the Project Manager, you can either open it under the `Project` menu, via the command palette, or use the hotkey <kbd>Ctrl</kbd>+<kbd>Cmd</kbd>+<kbd>P</kbd> (<kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>P</kbd> for windows/linux).
 
 ### Usage
 Options are self-explained, enjoy!
