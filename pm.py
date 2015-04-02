@@ -6,7 +6,7 @@ import codecs
 import platform
 
 
-class Jfile:
+class JsonFile:
     def __init__(self, fpath, encoding="utf-8"):
         self.encoding = encoding
         self.fpath = fpath
@@ -90,7 +90,7 @@ class Manager:
         ret = {}
         for pdir in self.projects_fpath:
             pfiles = []
-            j = Jfile(os.path.join(pdir, "library.json"))
+            j = JsonFile(os.path.join(pdir, "library.json"))
             for f in j.load([]):
                 if os.path.exists(f) and f not in pfiles:
                     pfiles.append(f)
@@ -113,7 +113,7 @@ class Manager:
                     pname = os.path.relpath(f, pdir).replace(".sublime-project", "")
                 else:
                     pname = os.path.basename(f).replace(".sublime-project", "")
-                pd = Jfile(f).load()
+                pd = JsonFile(f).load()
                 if pd and "folders" in pd and pd["folders"]:
                     folder = pd["folders"][0].get("path", "")
                 else:
@@ -164,8 +164,8 @@ class Manager:
         def on_add(project):
             pd = self.window.project_data()
             f = os.path.join(self.primary_dir, "%s.sublime-project" % project)
-            Jfile(f).save(pd)
-            Jfile(f.replace(".sublime-project", ".sublime-workspace")).save({})
+            JsonFile(f).save(pd)
+            JsonFile(f.replace(".sublime-project", ".sublime-workspace")).save({})
             self.window.run_command("close_workspace")
             self.window.run_command("close_project")
             for v in self.window.views():
@@ -200,19 +200,19 @@ class Manager:
             return
         ok = sublime.ok_cancel_dialog("Import %s?" % os.path.basename(pfile))
         if ok:
-            j = Jfile(os.path.join(self.primary_dir, "library.json"))
+            j = JsonFile(os.path.join(self.primary_dir, "library.json"))
             data = j.load([])
             if pfile not in data:
                 data.append(pfile)
                 j.save(data)
 
     def get_project_data(self, project):
-        return Jfile(self.project_file_name(project)).load()
+        return JsonFile(self.project_file_name(project)).load()
 
     def check_project(self, project):
         wsfile = self.project_workspace(project)
         if not os.path.exists(wsfile):
-            Jfile(wsfile).save({})
+            JsonFile(wsfile).save({})
 
     def close_project(self, project):
         for w in sublime.windows():
@@ -260,7 +260,7 @@ class Manager:
                 os.unlink(self.project_workspace(project))
             else:
                 for pdir in self.projects_fpath:
-                    j = Jfile(os.path.join(pdir, "library.json"))
+                    j = JsonFile(os.path.join(pdir, "library.json"))
                     data = j.load([])
                     if pfile in data:
                         data.remove(pfile)
@@ -287,7 +287,7 @@ class Manager:
             os.rename(pfile, new_pfile)
             os.rename(wsfile, new_wsfile)
 
-            j = Jfile(new_wsfile)
+            j = JsonFile(new_wsfile)
             data = j.load({})
             if "project" in data:
                 data["project"] = "%s.sublime-project" % os.path.basename(new_project)
@@ -295,7 +295,7 @@ class Manager:
 
             if not self.which_projects_dir(pfile):
                 for pdir in self.projects_fpath:
-                    j = Jfile(os.path.join(pdir, "library.json"))
+                    j = JsonFile(os.path.join(pdir, "library.json"))
                     data = j.load([])
                     if pfile in data:
                         data.remove(pfile)
