@@ -13,5 +13,5 @@
     // https://github.com/SublimeTextIssues/Core/issues/62#issuecomment-42258131
     // The work-around is to make sure that all of your projects are configured either
     // to Hide Open Files or Show Open Files in the sidebar.
-    "show_open_files": true
+    // "show_open_files": true
 }

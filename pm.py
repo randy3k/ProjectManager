@@ -215,7 +215,7 @@ class Manager:
         if not os.path.exists(wsfile):
             j.save({})
         else:
-            show_open_files = self.settings.get("show_open_files", True)
+            show_open_files = self.settings.get("show_open_files", False)
             data = j.load({})
             data["show_open_files"] = show_open_files
             df = data.get("distraction_free", {})
