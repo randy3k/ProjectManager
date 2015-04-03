@@ -211,8 +211,17 @@ class Manager:
 
     def check_project(self, project):
         wsfile = self.project_workspace(project)
+        j = JsonFile(wsfile)
         if not os.path.exists(wsfile):
-            JsonFile(wsfile).save({})
+            j.save({})
+        else:
+            show_open_files = self.settings.get("show_open_files", True)
+            data = j.load({})
+            data["show_open_files"] = show_open_files
+            df = data.get("distraction_free", {})
+            df["show_open_files"] = show_open_files
+            data["distraction_free"] = df
+            j.save(data)
 
     def close_project(self, project):
         for w in sublime.windows():
