@@ -49,6 +49,19 @@ You can additionally add the following keybind in your user keybind settings fil
     }
 ```
 
+### Show Open Files
+
+It is know that Subliem Text has a [bug](https://github.com/SublimeTextIssues/Core/issues/62) in showing open files. Project Manager includes a fix to this issue.
+
+The default value of  `show_open_files ` in Project Manager is `false`. It will make sure that the all the Projects will hide the open file. However, if your view setting is not consistent with the default value (i.e. the view is showing open files), you will still get the issue. 
+
+It is not always necessary to set `show_open_files` to `true`. It depends on your view setting: `View -> Side Bar -> Show/Hide Open File`. The easier solution is to do `View -> Side Bar -> Hide Open File`. However, if you really want to show open files, Then you have to do
+```
+{
+"show_open_files": true,
+}
+```
+in Project Managet settings.
 
 ### License
 
