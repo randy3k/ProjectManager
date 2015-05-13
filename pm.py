@@ -98,7 +98,7 @@ class Manager:
                     pfiles.append(f)
             pfiles.sort()
             j.save(pfiles)
-            for path, dirs, files in os.walk(pdir):
+            for path, dirs, files in os.walk(pdir, followlinks=True):
                 for f in files:
                     f = os.path.join(path, f)
                     if f.endswith(".sublime-project") and f not in pfiles:
