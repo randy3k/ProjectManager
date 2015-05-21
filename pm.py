@@ -373,7 +373,7 @@ class ProjectManager(sublime_plugin.WindowCommand):
             self.manager.switch_project(self.projects[action])
 
 
-class ProjectManagerAddFolder(sublime_plugin.WindowCommand):
+class ProjectManagerAddProject(sublime_plugin.WindowCommand):
 
     def run(self):
         self.manager = Manager(self.window)
