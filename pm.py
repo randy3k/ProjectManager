@@ -156,13 +156,6 @@ class Manager:
         return self.project_file_name(project).replace(".sublime-project", ".sublime-workspace")
 
     def add_project(self):
-        pd = self.window.project_data()
-        if not pd:
-            self.window.run_command("prompt_add_project")
-            delay = 300
-        else:
-            delay = 1
-
         def on_add(project):
             pd = self.window.project_data()
             f = os.path.join(self.primary_dir, "%s.sublime-project" % project)
@@ -187,10 +180,12 @@ class Manager:
                     project = os.path.basename(pabs(pd["folders"][0]["path"], pf))
                 else:
                     project = os.path.basename(pd["folders"][0]["path"])
-                v = self.window.show_input_panel("Project name:", project, on_add, None, None)
-                v.run_command("select_all")
+            else:
+                project = ""
+            v = self.window.show_input_panel("Project name:", project, on_add, None, None)
+            v.run_command("select_all")
 
-        sublime.set_timeout(show_input_panel, delay)
+        sublime.set_timeout(show_input_panel, 0.01)
 
     def import_sublime_project(self):
         pfile = self.window.project_file_name()
