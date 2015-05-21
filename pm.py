@@ -248,7 +248,7 @@ class Manager:
         else:
             sublime.set_timeout_async(lambda: subl(["-n", self.project_file_name(project)]), 500)
         if close_windows_when_empty:
-            sublime.set_timeout_async(lambda: settings.set("close_windows_when_empty", False), 1000)
+            sublime.set_timeout_async(lambda: settings.set("close_windows_when_empty", True), 1000)
 
     def open_in_new_window(self, project):
         self.check_project(project)
