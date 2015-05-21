@@ -185,7 +185,7 @@ class Manager:
             v = self.window.show_input_panel("Project name:", project, on_add, None, None)
             v.run_command("select_all")
 
-        sublime.set_timeout(show_input_panel, 0.01)
+        sublime.set_timeout(show_input_panel, 1)
 
     def import_sublime_project(self):
         pfile = self.window.project_file_name()
