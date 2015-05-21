@@ -159,7 +159,10 @@ class Manager:
         def on_add(project):
             pd = self.window.project_data()
             f = os.path.join(self.primary_dir, "%s.sublime-project" % project)
-            JsonFile(f).save(pd)
+            if pd:
+                JsonFile(f).save(pd)
+            else:
+                JsonFile(f).save({})
             JsonFile(f.replace(".sublime-project", ".sublime-workspace")).save({})
             self.window.run_command("close_workspace")
             self.window.run_command("close_project")
@@ -181,11 +184,11 @@ class Manager:
                 else:
                     project = os.path.basename(pd["folders"][0]["path"])
             else:
-                project = ""
+                project = "New Project"
             v = self.window.show_input_panel("Project name:", project, on_add, None, None)
             v.run_command("select_all")
 
-        sublime.set_timeout(show_input_panel, 1)
+        sublime.set_timeout(show_input_panel, 100)
 
     def import_sublime_project(self):
         pfile = self.window.project_file_name()
@@ -235,21 +238,17 @@ class Manager:
 
     def switch_project(self, project):
         settings = sublime.load_settings("Preferences.sublime-settings")
-        if settings.get("close_windows_when_empty"):
-            settings.set("close_windows_when_empty", False)
-            self.window.run_command("close_workspace")
-            settings.set("close_windows_when_empty", True)
-        else:
-            self.window.run_command("close_workspace")
+        close_windows_when_empty = settings.get("close_windows_when_empty")
+        settings.set("close_windows_when_empty", False)
+        self.window.run_command("close_workspace")
+        self.window.run_command("close_workspace")
         self.check_project(project)
-        if self.close_project(project):
-            sublime.set_timeout_async(lambda: subl([self.project_file_name(project)]), 500)
-            return
-
-        if len(self.window.views()) == 0:
+        if self.close_project(project) or len(self.window.views()) == 0:
             sublime.set_timeout_async(lambda: subl([self.project_file_name(project)]), 500)
         else:
             sublime.set_timeout_async(lambda: subl(["-n", self.project_file_name(project)]), 500)
+        if close_windows_when_empty:
+            sublime.set_timeout_async(lambda: settings.set("close_windows_when_empty", False), 1000)
 
     def open_in_new_window(self, project):
         self.check_project(project)
