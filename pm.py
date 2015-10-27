@@ -370,7 +370,12 @@ class ProjectManager(sublime_plugin.WindowCommand):
 
         elif action >= len(self.options):
             action = action-len(self.options)
-            self.manager.switch_project(self.projects[action])
+            pdata = self.manager.get_project_data(self.projects[action])
+            if pdata.get('workspaces'):
+                workspace_items = [[w['name'],w['path']] for w in pdata['workspaces']]
+                self.show_quick_panel(workspace_items, lambda a: subl([workspace_items[a][1]]))
+            else:
+                self.manager.switch_project(self.projects[action])
 
 
 class ProjectManagerAddProject(sublime_plugin.WindowCommand):
