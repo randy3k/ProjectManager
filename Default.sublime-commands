@@ -8,6 +8,10 @@
         "command": "project_manager_add_project"
     },
     {
+        "caption": "Project Manager: Import .sublime-project",
+        "command": "project_manager_import_project"
+    },
+    {
         "caption": "Project Manager: Open Project",
         "command": "project_manager_list", "args": {"action": "switch"}
     },

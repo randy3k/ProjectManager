@@ -380,6 +380,13 @@ class ProjectManagerAddProject(sublime_plugin.WindowCommand):
         self.manager.add_project()
 
 
+class ProjectManagerImportProject(sublime_plugin.WindowCommand):
+
+    def run(self):
+        self.manager = Manager(self.window)
+        self.manager.import_sublime_project()
+
+
 class ProjectManagerList(sublime_plugin.WindowCommand):
 
     def show_quick_panel(self, items, on_done):
