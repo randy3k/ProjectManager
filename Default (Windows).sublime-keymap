@@ -1,7 +1,7 @@
 [
     {
         "keys": ["ctrl+alt+p"],
-        "command": "project_manager"
+        "command": "project_manager_list_projects", "args": {"action": "switch"}
     },
     {
         "keys": ["ctrl+shift+w"],

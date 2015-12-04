@@ -45,7 +45,7 @@ You can additionally add the following keybind in your user keybind settings fil
 ```
     {
       "keys": ["super+ctrl+o"],
-      "command": "project_manager_list", "args": {"action": "new"}
+      "command": "project_manager_list_projects", "args": {"action": "new"}
     }
 ```
 

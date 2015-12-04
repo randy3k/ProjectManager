@@ -1,6 +1,6 @@
 [
     {
         "keys": ["super+ctrl+p"],
-        "command": "project_manager"
+        "command": "project_manager_list_projects", "args": {"action": "switch"}
     }
 ]
