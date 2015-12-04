@@ -6,6 +6,31 @@ import codecs
 import platform
 
 
+def update_settings():
+    keys = [
+            "projects_fpath",
+            "use_local_projects_dir",
+            "show_open_files",
+            "show_recent_projects_first"
+           ]
+
+    s = sublime.load_settings("pm.sublime-settings")
+    t = sublime.load_settings("Project Manager.sublime-settings")
+
+    for k in keys:
+        svalue = s.get(k)
+        tvalue = t.get(k)
+        if svalue and tvalue is None:
+            t.set(k, svalue)
+            sublime.save_settings("Project Manager.sublime-settings")
+
+    f = os.path.join(sublime.packages_path(), "User", "pm.sublime-settings")
+    if os.path.exists(f):
+        os.remove(f)
+
+update_settings()
+
+
 class JsonFile:
     def __init__(self, fpath, encoding="utf-8"):
         self.encoding = encoding
@@ -72,7 +97,7 @@ def get_node():
 class Manager:
     def __init__(self, window):
         self.window = window
-        settings_file = 'pm.sublime-settings'
+        settings_file = 'Project Manager.sublime-settings'
         self.settings = sublime.load_settings(settings_file)
         default_projects_dir = os.path.join(sublime.packages_path(), "User", "Projects")
         self.projects_fpath = self.settings.get(
