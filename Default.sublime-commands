@@ -8,27 +8,35 @@
         "command": "project_manager_add_project"
     },
     {
-        "caption": "Project Manager: Import .sublime-project",
+        "caption": "Project Manager: Import .sublime-project File",
         "command": "project_manager_import_project"
     },
     {
         "caption": "Project Manager: Open Project",
-        "command": "project_manager_list_projects", "args": {"action": "switch"}
+        "command": "project_manager", "args": {"action": "switch"}
     },
     {
         "caption": "Project Manager: Open Project in New Window",
-        "command": "project_manager_list_projects", "args": {"action": "new"}
+        "command": "project_manager", "args": {"action": "new"}
+    },
+    {
+        "caption": "Project Manager: Append Project",
+        "command": "project_manager", "args": {"action": "append"}
     },
     {
         "caption": "Project Manager: Remove Project",
-        "command": "project_manager_list_projects", "args": {"action": "remove"}
+        "command": "project_manager", "args": {"action": "remove"}
     },
     {
         "caption": "Project Manager: Edit Project",
-        "command": "project_manager_list_projects", "args": {"action": "edit"}
+        "command": "project_manager", "args": {"action": "edit"}
     },
     {
         "caption": "Project Manager: Rename Project",
-        "command": "project_manager_list_projects", "args": {"action": "rename"}
+        "command": "project_manager", "args": {"action": "rename"}
+    },
+    {
+        "caption": "Project Manager: Clear Recent Projects",
+        "command": "project_manager_clear_recent_projects"
     }
 ]

@@ -153,7 +153,7 @@ class Manager:
             if plist[i][0] is not plist[i][1]:
                 plist.insert(count, plist.pop(i))
                 count = count + 1
-        return [[item[0] for item in plist], [[item[1], item[2]] for item in plist]]
+        return [item[0] for item in plist], [[item[1], item[2]] for item in plist]
 
     def project_file_name(self, project):
         return self.projects_info[project]["file"]
@@ -173,6 +173,10 @@ class Manager:
         if len(recent) > 50:
             recent = recent[(50-len(recent)):len(recent)]
         j.save(recent)
+
+    def clear_recent_projects(self):
+        j = JsonFile(os.path.join(self.primary_dir, "recent.json"))
+        j.remove()
 
     def add_project(self):
         def on_add(project):
@@ -338,45 +342,6 @@ class Manager:
         v.run_command("select_all")
 
 
-class ProjectManager(sublime_plugin.WindowCommand):
-
-    def show_quick_panel(self, items, on_done):
-        sublime.set_timeout(
-            lambda: self.window.show_quick_panel(items, on_done),
-            10)
-
-    def run(self, action=None):
-        items = [
-            ["Open Project", "Open project in the current window"],
-            ["Open Project in New Window", "Open project in a new window"],
-            ["Append Project", "Append project to current window"],
-            ["Edit Project", "Edit project settings"],
-            ['Rename Project', "Rename project"],
-            ["Remove Project", "Remove from Project Manager"],
-            ["Add Project", "Add current folders to Project Manager"],
-            ["Import Project", "Import current .sublime-project file"]
-        ]
-        actions = ["switch", "new", "append", "edit", "rename", "remove"]
-
-        def callback(a):
-            if a < 0:
-                return
-            elif a <= 5:
-                self.window.run_command(
-                    "project_manager_list_projects",
-                    args={"action": actions[a], "caller": "manager"}
-                )
-            elif a == 6:
-                self.window.run_command("project_manager_add_project")
-            elif a == 7:
-                self.window.run_command("project_manager_import_project")
-
-        if action:
-            callback(action)
-        else:
-            self.show_quick_panel(items, callback)
-
-
 class ProjectManagerAddProject(sublime_plugin.WindowCommand):
 
     def run(self):
@@ -391,19 +356,61 @@ class ProjectManagerImportProject(sublime_plugin.WindowCommand):
         self.manager.import_sublime_project()
 
 
-class ProjectManagerListProjects(sublime_plugin.WindowCommand):
+class ProjectManagerClearRecentProjects(sublime_plugin.WindowCommand):
+
+    def run(self):
+        self.manager = Manager(self.window)
+        self.manager.clear_recent_projects()
+        sublime.status_message("Recent Projects cleared.")
+
+
+class ProjectManager(sublime_plugin.WindowCommand):
 
     def show_quick_panel(self, items, on_done):
         sublime.set_timeout(
             lambda: self.window.show_quick_panel(items, on_done),
             10)
 
-    def run(self, action, caller=None):
-        self.caller = caller
-        callback = eval("self.on_" + action)
-        self.manager = Manager(self.window)
-        self.projects, display = self.manager.display_projects()
-        self.show_quick_panel(display, callback)
+    def run(self, action=None, caller=None):
+        if action is None:
+            self.show_options()
+        else:
+            self.caller = caller
+            callback = eval("self.on_" + action)
+            self.manager = Manager(self.window)
+            self.projects, display = self.manager.display_projects()
+            self.show_quick_panel(display, callback)
+
+    def show_options(self):
+        items = [
+            ["Open Project", "Open project in the current window"],
+            ["Open Project in New Window", "Open project in a new window"],
+            ["Append Project", "Append project to current window"],
+            ["Edit Project", "Edit project settings"],
+            ['Rename Project', "Rename project"],
+            ["Remove Project", "Remove from Project Manager"],
+            ["Add Project", "Add current folders to Project Manager"],
+            ["Import Project", "Import current .sublime-project file"],
+            ["Clear Recent Projects", "Clear Recent Projects"]
+        ]
+        actions = ["switch", "new", "append", "edit", "rename", "remove"]
+
+        def callback(a):
+            if a < 0:
+                return
+            elif a <= 5:
+                self.window.run_command(
+                    "project_manager",
+                    args={"action": actions[a], "caller": "manager"}
+                )
+            elif a == 6:
+                self.window.run_command("project_manager_add_project")
+            elif a == 7:
+                self.window.run_command("project_manager_import_project")
+            elif a == 8:
+                self.window.run_command("project_manager_clear_recent_projects")
+
+        self.show_quick_panel(items, callback)
 
     def on_new(self, action):
         if action >= 0:
@@ -445,4 +452,4 @@ class ProjectManagerListProjects(sublime_plugin.WindowCommand):
 
     def on_cancel(self):
         if self.caller == "manager":
-            self.window.run_command("project_manager", args={"action": 0})
+            self.window.run_command("project_manager")
