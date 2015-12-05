@@ -6,6 +6,7 @@ Dont't have any idea what `*.sublime-project` and `*.sublime-workspace` are doin
 Project Manager also improves the shortcut <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>W</kbd> on Windows and Linux so that it will close the project when the window is closed. On OSX, it is the default behaviour.
 
 ![](https://raw.githubusercontent.com/randy3k/Project-Manager/master/pm.png)
+![](https://raw.githubusercontent.com/randy3k/Project-Manager/master/pm2.png)
 
 If you like it, you could send me some tips via [paypal](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=YAPVT8VB6RR9C&lc=US&item_name=tips&currency_code=USD&bn=PP%2dDonationsBF%3abtn_donateCC_LG%2egif%3aNonHosted) or [gratipay](https://gratipay.com/~randy3k/).
 
