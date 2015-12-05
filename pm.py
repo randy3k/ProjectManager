@@ -79,7 +79,7 @@ def subl(args=[]):
     subprocess.Popen([executable_path] + args)
 
 
-def pabs(folder, project_file):
+def expand_path(folder, project_file):
     root = os.path.dirname(project_file)
     if not os.path.isabs(folder):
         folder = os.path.abspath(os.path.join(root, folder))
@@ -113,51 +113,59 @@ class Manager:
         self.primary_dir = self.projects_fpath[0]
         self.projects_info = self.get_projects_info()
 
+    def get_project_files(self, folder):
+        pfiles = []
+        j = JsonFile(os.path.join(folder, "library.json"))
+        for f in j.load([]):
+            if os.path.exists(f) and f not in pfiles:
+                pfiles.append(f)
+        pfiles.sort()
+        j.save(pfiles)
+        for path, dirs, files in os.walk(folder, followlinks=True):
+            for f in files:
+                f = os.path.join(path, f)
+                if f.endswith(".sublime-project") and f not in pfiles:
+                    pfiles.append(f)
+            # remove empty directories
+            for d in dirs:
+                d = os.path.join(path, d)
+                if len(os.listdir(d)) == 0:
+                    os.rmdir(d)
+        return pfiles
+
+    def get_project_info(self, pfile):
+        pdir = self.which_project_dir(pfile)
+        if pdir:
+            pname = os.path.relpath(pfile, pdir).replace(".sublime-project", "")
+        else:
+            pname = os.path.basename(pfile).replace(".sublime-project", "")
+        pd = JsonFile(pfile).load()
+        if pd and "folders" in pd and pd["folders"]:
+            folder = pd["folders"][0].get("path", "")
+        else:
+            folder = ""
+        star = False
+        for w in sublime.windows():
+            if w.project_file_name() == pfile:
+                star = True
+                break
+        return {
+            pname: {
+                "folder": expand_path(folder, pfile),
+                "file": pfile,
+                "star": star
+                }
+            }
+
     def get_projects_info(self):
         ret = {}
         for pdir in self.projects_fpath:
-            pfiles = []
-            j = JsonFile(os.path.join(pdir, "library.json"))
-            for f in j.load([]):
-                if os.path.exists(f) and f not in pfiles:
-                    pfiles.append(f)
-            pfiles.sort()
-            j.save(pfiles)
-            for path, dirs, files in os.walk(pdir, followlinks=True):
-                for f in files:
-                    f = os.path.join(path, f)
-                    if f.endswith(".sublime-project") and f not in pfiles:
-                        pfiles.append(f)
-                # remove empty directories
-                for d in dirs:
-                    d = os.path.join(path, d)
-                    if len(os.listdir(d)) == 0:
-                        os.rmdir(d)
-
+            pfiles = self.get_project_files(pdir)
             for f in pfiles:
-                pdir = self.which_projects_dir(f)
-                if pdir:
-                    pname = os.path.relpath(f, pdir).replace(".sublime-project", "")
-                else:
-                    pname = os.path.basename(f).replace(".sublime-project", "")
-                pd = JsonFile(f).load()
-                if pd and "folders" in pd and pd["folders"]:
-                    folder = pd["folders"][0].get("path", "")
-                else:
-                    folder = ""
-                star = False
-                for w in sublime.windows():
-                    if w.project_file_name() == f:
-                        star = True
-                        break
-                ret[pname] = {
-                    "folder": pabs(folder, f),
-                    "file": f,
-                    "star": star
-                }
+                ret.update(self.get_project_info(f))
         return ret
 
-    def which_projects_dir(self, pfile):
+    def which_project_dir(self, pfile):
         for pdir in self.projects_fpath:
             if (os.path.dirname(pfile)+os.path.sep).startswith(pdir+os.path.sep):
                 return pdir
@@ -228,7 +236,7 @@ class Manager:
             pf = self.window.project_file_name()
             if pd:
                 if pf:
-                    project = os.path.basename(pabs(pd["folders"][0]["path"], pf))
+                    project = os.path.basename(expand_path(pd["folders"][0]["path"], pf))
                 else:
                     project = os.path.basename(pd["folders"][0]["path"])
             else:
@@ -243,7 +251,7 @@ class Manager:
         if not pfile:
             sublime.message_dialog("Project file not found!")
             return
-        if self.which_projects_dir(pfile):
+        if self.which_project_dir(pfile):
             sublime.message_dialog("This project was created by Project Manager!")
             return
         ok = sublime.ok_cancel_dialog("Import %s?" % os.path.basename(pfile))
@@ -282,7 +290,7 @@ class Manager:
     def append_project(self, project):
         self.update_recent(project)
         pd = self.get_project_data(project)
-        paths = [pabs(f.get("path"), self.project_file_name(project)) for f in pd.get("folders")]
+        paths = [expand_path(f.get("path"), self.project_file_name(project)) for f in pd.get("folders")]
         subl(["-a"] + paths)
 
     def switch_project(self, project):
@@ -311,7 +319,7 @@ class Manager:
         ok = sublime.ok_cancel_dialog("Remove project %s from Project Manager?" % project)
         if ok:
             pfile = self.project_file_name(project)
-            if self.which_projects_dir(pfile):
+            if self.which_project_dir(pfile):
                 self.close_project(project)
                 os.unlink(self.project_file_name(project))
                 os.unlink(self.project_workspace(project))
@@ -334,7 +342,7 @@ class Manager:
                 return
             pfile = self.project_file_name(project)
             wsfile = self.project_workspace(project)
-            pdir = self.which_projects_dir(pfile)
+            pdir = self.which_project_dir(pfile)
             if not pdir:
                 pdir = os.path.dirname(pfile)
             new_pfile = os.path.join(pdir, "%s.sublime-project" % new_project)
@@ -350,7 +358,7 @@ class Manager:
                 data["project"] = "%s.sublime-project" % os.path.basename(new_project)
             j.save(data)
 
-            if not self.which_projects_dir(pfile):
+            if not self.which_project_dir(pfile):
                 for pdir in self.projects_fpath:
                     j = JsonFile(os.path.join(pdir, "library.json"))
                     data = j.load([])
