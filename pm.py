@@ -302,9 +302,9 @@ class Manager:
         self.window.run_command("close_workspace")
         self.check_project(project)
         if self.close_project(project) or len(self.window.views()) == 0:
-            sublime.set_timeout_async(lambda: subl([self.project_file_name(project)]), 500)
+            subl([self.project_file_name(project)])
         else:
-            sublime.set_timeout_async(lambda: subl(["-n", self.project_file_name(project)]), 500)
+            subl(["-n", self.project_file_name(project)])
         if close_windows_when_empty:
             sublime.set_timeout_async(
                 lambda: preferences.set("close_windows_when_empty", True), 1000)
@@ -313,7 +313,7 @@ class Manager:
         self.update_recent(project)
         self.check_project(project)
         self.close_project(project)
-        sublime.set_timeout_async(lambda: subl(["-n", self.project_file_name(project)]), 500)
+        subl(["-n", self.project_file_name(project)])
 
     def remove_project(self, project):
         ok = sublime.ok_cancel_dialog("Remove project %s from Project Manager?" % project)
