@@ -290,7 +290,8 @@ class Manager:
     def append_project(self, project):
         self.update_recent(project)
         pd = self.get_project_data(project)
-        paths = [expand_path(f.get("path"), self.project_file_name(project)) for f in pd.get("folders")]
+        paths = [expand_path(f.get("path"), self.project_file_name(project))
+                 for f in pd.get("folders")]
         subl(["-a"] + paths)
 
     def switch_project(self, project):
