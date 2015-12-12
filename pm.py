@@ -212,7 +212,7 @@ class Manager:
         j.remove()
 
     def add_project(self):
-        def on_add(project):
+        def add_callback(project):
             pd = self.window.project_data()
             f = os.path.join(self.primary_dir, "%s.sublime-project" % project)
             if pd:
@@ -241,7 +241,7 @@ class Manager:
                     project = os.path.basename(pd["folders"][0]["path"])
             else:
                 project = "New Project"
-            v = self.window.show_input_panel("Project name:", project, on_add, None, None)
+            v = self.window.show_input_panel("Project name:", project, add_callback, None, None)
             v.run_command("select_all")
 
         sublime.set_timeout(show_input_panel, 100)
@@ -317,20 +317,23 @@ class Manager:
         subl(["-n", self.project_file_name(project)])
 
     def remove_project(self, project):
-        ok = sublime.ok_cancel_dialog("Remove project %s from Project Manager?" % project)
-        if ok:
-            pfile = self.project_file_name(project)
-            if self.which_project_dir(pfile):
-                self.close_project(project)
-                os.unlink(self.project_file_name(project))
-                os.unlink(self.project_workspace(project))
-            else:
-                for pdir in self.projects_fpath:
-                    j = JsonFile(os.path.join(pdir, "library.json"))
-                    data = j.load([])
-                    if pfile in data:
-                        data.remove(pfile)
-                        j.save(data)
+        def remove_callback():
+            ok = sublime.ok_cancel_dialog("Remove project %s from Project Manager?" % project)
+            if ok:
+                pfile = self.project_file_name(project)
+                if self.which_project_dir(pfile):
+                    self.close_project(project)
+                    os.unlink(self.project_file_name(project))
+                    os.unlink(self.project_workspace(project))
+                else:
+                    for pdir in self.projects_fpath:
+                        j = JsonFile(os.path.join(pdir, "library.json"))
+                        data = j.load([])
+                        if pfile in data:
+                            data.remove(pfile)
+                            j.save(data)
+
+        sublime.set_timeout(remove_callback, 100)
 
     def edit_project(self, project):
         def on_open():
@@ -338,7 +341,7 @@ class Manager:
         sublime.set_timeout_async(on_open, 100)
 
     def rename_project(self, project):
-        def on_rename(new_project):
+        def rename_callback(new_project):
             if project == new_project:
                 return
             pfile = self.project_file_name(project)
@@ -373,8 +376,12 @@ class Manager:
                 self.__init__(self.window)
                 self.open_in_new_window(new_project)
 
-        v = self.window.show_input_panel("New project name:", project, on_rename, None, None)
-        v.run_command("select_all")
+        def show_input_panel():
+            v = self.window.show_input_panel("New project name:",
+                                             project, rename_callback, None, None)
+            v.run_command("select_all")
+
+        sublime.set_timeout(show_input_panel, 100)
 
 
 class ProjectManagerAddProject(sublime_plugin.WindowCommand):
@@ -428,16 +435,13 @@ class ProjectManager(sublime_plugin.WindowCommand):
             ["Import Project", "Import current .sublime-project file"],
             ["Clear Recent Projects", "Clear Recent Projects"]
         ]
-        actions = ["switch", "new", "append", "edit", "rename", "remove"]
 
         def callback(a):
             if a < 0:
                 return
             elif a <= 5:
-                self.window.run_command(
-                    "project_manager",
-                    args={"action": actions[a], "caller": "manager"}
-                )
+                actions = ["switch", "new", "append", "edit", "rename", "remove"]
+                self.run(action=actions[a], caller="manager")
             elif a == 6:
                 self.window.run_command("project_manager_add_project")
             elif a == 7:
@@ -467,8 +471,7 @@ class ProjectManager(sublime_plugin.WindowCommand):
 
     def on_remove(self, action):
         if action >= 0:
-            sublime.set_timeout(lambda: self.manager.remove_project(self.projects[action]),
-                                10)
+            self.manager.remove_project(self.projects[action])
         elif action < 0:
             self.on_cancel()
 
@@ -480,11 +483,10 @@ class ProjectManager(sublime_plugin.WindowCommand):
 
     def on_rename(self, action):
         if action >= 0:
-            sublime.set_timeout(lambda: self.manager.rename_project(self.projects[action]),
-                                10)
+            self.manager.rename_project(self.projects[action])
         elif action < 0:
             self.on_cancel()
 
     def on_cancel(self):
         if self.caller == "manager":
-            self.window.run_command("project_manager")
+            self.run()
