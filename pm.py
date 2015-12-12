@@ -79,7 +79,7 @@ def subl(args=[]):
     subprocess.Popen([executable_path] + args)
 
 
-def expand_path(folder, project_file):
+def expand_folder(folder, project_file):
     root = os.path.dirname(project_file)
     if not os.path.isabs(folder):
         folder = os.path.abspath(os.path.join(root, folder))
@@ -151,7 +151,7 @@ class Manager:
                 break
         return {
             pname: {
-                "folder": expand_path(folder, pfile),
+                "folder": expand_folder(folder, pfile),
                 "file": pfile,
                 "star": star
                 }
@@ -237,7 +237,7 @@ class Manager:
             pf = self.window.project_file_name()
             if pd:
                 if pf:
-                    project = os.path.basename(expand_path(pd["folders"][0]["path"], pf))
+                    project = os.path.basename(expand_folder(pd["folders"][0]["path"], pf))
                 else:
                     project = os.path.basename(pd["folders"][0]["path"])
             else:
@@ -291,7 +291,7 @@ class Manager:
     def append_project(self, project):
         self.update_recent(project)
         pd = self.get_project_data(project)
-        paths = [expand_path(f.get("path"), self.project_file_name(project))
+        paths = [expand_folder(f.get("path"), self.project_file_name(project))
                  for f in pd.get("folders")]
         subl(["-a"] + paths)
 
