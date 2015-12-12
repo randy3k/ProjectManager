@@ -167,7 +167,8 @@ class Manager:
 
     def which_project_dir(self, pfile):
         for pdir in self.projects_fpath:
-            if (os.path.dirname(pfile)+os.path.sep).startswith(pdir+os.path.sep):
+            if os.path.realpath(os.path.dirname(pfile)).startswith(
+                    os.path.realpath(pdir)+os.path.sep):
                 return pdir
         return None
 
