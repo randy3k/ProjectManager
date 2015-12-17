@@ -223,10 +223,7 @@ class Manager:
             JsonFile(f.replace(".sublime-project", ".sublime-workspace")).save({})
             self.window.run_command("close_workspace")
             self.window.run_command("close_project")
-            for v in self.window.views():
-                if not v.is_dirty():
-                    self.window.focus_view(v)
-                    self.window.run_command("close")
+            self.window.run_command("close_window")
 
             # reload projects info
             self.__init__(self.window)
@@ -301,12 +298,9 @@ class Manager:
         close_windows_when_empty = preferences.get("close_windows_when_empty")
         preferences.set("close_windows_when_empty", False)
         self.window.run_command("close_workspace")
-        self.window.run_command("close_workspace")
         self.check_project(project)
-        if self.close_project(project) or len(self.window.views()) == 0:
-            subl([self.project_file_name(project)])
-        else:
-            subl(["-n", self.project_file_name(project)])
+        self.close_project(project)
+        subl([self.project_file_name(project)])
         if close_windows_when_empty:
             sublime.set_timeout_async(
                 lambda: preferences.set("close_windows_when_empty", True), 1000)
