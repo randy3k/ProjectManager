@@ -416,6 +416,9 @@ class ProjectManager(sublime_plugin.WindowCommand):
             callback = eval("self.on_" + action)
             self.manager = Manager(self.window)
             self.projects, display = self.manager.display_projects()
+            if not self.projects:
+                sublime.message_dialog("Project list is empty.")
+                return
             self.show_quick_panel(display, callback)
 
     def show_options(self):
