@@ -5,11 +5,11 @@
     },
     {
         "caption": "Project Manager: Add Project",
-        "command": "project_manager_add_project"
+        "command": "project_manager", "args": {"action": "add_project"}
     },
     {
         "caption": "Project Manager: Import .sublime-project File",
-        "command": "project_manager_import_project"
+        "command": "project_manager", "args": {"action": "import_sublime_project"}
     },
     {
         "caption": "Project Manager: Open Project",
@@ -37,6 +37,6 @@
     },
     {
         "caption": "Project Manager: Clear Recent Projects",
-        "command": "project_manager_clear_recent_projects"
+        "command": "project_manager", "args": {"action": "clear_recent_projects"}
     }
 ]

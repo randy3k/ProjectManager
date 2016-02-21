@@ -1,6 +1,6 @@
 {
     // A list of folders containing *.sublime-project files
-    // "projects_fpath": ["path/to/custom/Projects", "another_path/to/Projects"]
+    // "projects_path": ["path/to/custom/Projects", "another_path/to/Projects"]
 
     // Enable local projects directory, such a directory will be named as
     // "Projects - computer_name", where computer_name is your computer hostname.

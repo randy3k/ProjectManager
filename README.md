@@ -36,7 +36,7 @@ To use a different directory for your projects rather than `Packages/Users/Proje
 
 ```
 {
-    "projects_fpath": ["path/to/custom/projects_dir"],
+    "projects_path": ["path/to/custom/projects_dir"],
 }
 ```
 

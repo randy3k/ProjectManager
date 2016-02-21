@@ -7,26 +7,11 @@ import platform
 
 
 def update_settings():
-    keys = [
-            "projects_fpath",
-            "use_local_projects_dir",
-            "show_open_files",
-            "show_recent_projects_first"
-           ]
-
-    s = sublime.load_settings("pm.sublime-settings")
     t = sublime.load_settings("Project Manager.sublime-settings")
-
-    for k in keys:
-        svalue = s.get(k)
-        tvalue = t.get(k)
-        if svalue and tvalue is None:
-            t.set(k, svalue)
-            sublime.save_settings("Project Manager.sublime-settings")
-
-    f = os.path.join(sublime.packages_path(), "User", "pm.sublime-settings")
-    if os.path.exists(f):
-        os.remove(f)
+    projects_path = t.get("projects_fpath")
+    if projects_path:
+        t.set("projects_path", projects_path)
+        sublime.save_settings("Project Manager.sublime-settings")
 
 update_settings()
 
@@ -100,17 +85,17 @@ class Manager:
         settings_file = 'Project Manager.sublime-settings'
         self.settings = sublime.load_settings(settings_file)
         default_projects_dir = os.path.join(sublime.packages_path(), "User", "Projects")
-        self.projects_fpath = self.settings.get(
-            "projects_fpath", [self.settings.get("projects_dir", default_projects_dir)])
+        self.projects_path = self.settings.get(
+            "projects_path", [self.settings.get("projects_dir", default_projects_dir)])
 
-        self.projects_fpath = [os.path.expanduser(d) for d in self.projects_fpath]
+        self.projects_path = [os.path.expanduser(d) for d in self.projects_path]
 
         node = get_node()
         if self.settings.get("use_local_projects_dir", False):
-            self.projects_fpath = \
-                [d + " - " + node for d in self.projects_fpath] + self.projects_fpath
+            self.projects_path = \
+                [d + " - " + node for d in self.projects_path] + self.projects_path
 
-        self.primary_dir = self.projects_fpath[0]
+        self.primary_dir = self.projects_path[0]
         self.projects_info = self.get_projects_info()
 
     def get_project_files(self, folder):
@@ -159,14 +144,14 @@ class Manager:
 
     def get_projects_info(self):
         ret = {}
-        for pdir in self.projects_fpath:
+        for pdir in self.projects_path:
             pfiles = self.get_project_files(pdir)
             for f in pfiles:
                 ret.update(self.get_project_info(f))
         return ret
 
     def which_project_dir(self, pfile):
-        for pdir in self.projects_fpath:
+        for pdir in self.projects_path:
             if (os.path.realpath(os.path.dirname(pfile))+os.path.sep).startswith(
                     os.path.realpath(pdir)+os.path.sep):
                 return pdir
@@ -321,7 +306,7 @@ class Manager:
                     os.unlink(self.project_file_name(project))
                     os.unlink(self.project_workspace(project))
                 else:
-                    for pdir in self.projects_fpath:
+                    for pdir in self.projects_path:
                         j = JsonFile(os.path.join(pdir, "library.json"))
                         data = j.load([])
                         if pfile in data:
@@ -358,7 +343,7 @@ class Manager:
             j.save(data)
 
             if not self.which_project_dir(pfile):
-                for pdir in self.projects_fpath:
+                for pdir in self.projects_path:
                     j = JsonFile(os.path.join(pdir, "library.json"))
                     data = j.load([])
                     if pfile in data:
@@ -379,26 +364,13 @@ class Manager:
         sublime.set_timeout(show_input_panel, 100)
 
 
-class ProjectManagerAddProject(sublime_plugin.WindowCommand):
-
-    def run(self):
-        self.manager = Manager(self.window)
-        self.manager.add_project()
-
-
-class ProjectManagerImportProject(sublime_plugin.WindowCommand):
-
-    def run(self):
-        self.manager = Manager(self.window)
-        self.manager.import_sublime_project()
-
-
-class ProjectManagerClearRecentProjects(sublime_plugin.WindowCommand):
-
-    def run(self):
-        self.manager = Manager(self.window)
-        self.manager.clear_recent_projects()
-        sublime.status_message("Recent Projects cleared.")
+def cancellable(func):
+    def _ret(self, action):
+        if action >= 0:
+            func(self, action)
+        elif action < 0 and self.caller == "manager":
+            sublime.set_timeout(self.run, 10)
+    return _ret
 
 
 class ProjectManager(sublime_plugin.WindowCommand):
@@ -409,12 +381,20 @@ class ProjectManager(sublime_plugin.WindowCommand):
             10)
 
     def run(self, action=None, caller=None):
+        self.manager = Manager(self.window)
+
         if action is None:
             self.show_options()
+        elif action == "add_project":
+            self.manager.add_project()
+        elif action == "import_sublime_project":
+            self.manager.import_sublime_project()
+        elif action == "clear_recent_projects":
+            self.manager.clear_recent_projects()
+            sublime.status_message("Recent Projects cleared.")
         else:
             self.caller = caller
             callback = eval("self.on_" + action)
-            self.manager = Manager(self.window)
             self.projects, display = self.manager.display_projects()
             if not self.projects:
                 sublime.message_dialog("Project list is empty.")
@@ -441,50 +421,34 @@ class ProjectManager(sublime_plugin.WindowCommand):
                 actions = ["switch", "new", "append", "edit", "rename", "remove"]
                 self.run(action=actions[a], caller="manager")
             elif a == 6:
-                self.window.run_command("project_manager_add_project")
+                self.run(action="add_project")
             elif a == 7:
-                self.window.run_command("project_manager_import_project")
+                self.run(action="import_sublime_project")
             elif a == 8:
-                self.window.run_command("project_manager_clear_recent_projects")
+                self.run(action="clear_recent_projects")
 
         self.show_quick_panel(items, callback)
 
+    @cancellable
     def on_new(self, action):
-        if action >= 0:
-            self.manager.open_in_new_window(self.projects[action])
-        elif action < 0:
-            sublime.set_timeout(self.on_cancel, 10)
+        self.manager.open_in_new_window(self.projects[action])
 
+    @cancellable
     def on_switch(self, action):
-        if action >= 0:
-            self.manager.switch_project(self.projects[action])
-        elif action < 0:
-            self.on_cancel()
+        self.manager.switch_project(self.projects[action])
 
+    @cancellable
     def on_append(self, action):
-        if action >= 0:
-            self.manager.append_project(self.projects[action])
-        elif action < 0:
-            self.on_cancel()
+        self.manager.append_project(self.projects[action])
 
+    @cancellable
     def on_remove(self, action):
-        if action >= 0:
-            self.manager.remove_project(self.projects[action])
-        elif action < 0:
-            self.on_cancel()
+        self.manager.remove_project(self.projects[action])
 
+    @cancellable
     def on_edit(self, action):
-        if action >= 0:
-            self.manager.edit_project(self.projects[action])
-        elif action < 0:
-            self.on_cancel()
+        self.manager.edit_project(self.projects[action])
 
+    @cancellable
     def on_rename(self, action):
-        if action >= 0:
-            self.manager.rename_project(self.projects[action])
-        elif action < 0:
-            self.on_cancel()
-
-    def on_cancel(self):
-        if self.caller == "manager":
-            self.run()
+        self.manager.rename_project(self.projects[action])
