@@ -194,8 +194,13 @@ class Manager:
         j.save(recent)
 
     def clear_recent_projects(self):
-        j = JsonFile(os.path.join(self.primary_dir, "recent.json"))
-        j.remove()
+        def clear_callback():
+            ok = sublime.ok_cancel_dialog("Clear Recent Projects?")
+            if ok:
+                j = JsonFile(os.path.join(self.primary_dir, "recent.json"))
+                j.remove()
+
+        sublime.set_timeout(clear_callback, 100)
 
     def add_project(self):
         def add_callback(project):
