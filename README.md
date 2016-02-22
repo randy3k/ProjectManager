@@ -62,11 +62,13 @@ It is know that Subliem Text has a [bug](https://github.com/SublimeTextIssues/Co
 The default value of  `show_open_files ` in Project Manager is `false`. It will make sure that the all the Projects will hide the open file. However, if your view setting is not consistent with the default value (i.e. the view is showing open files), you will still get the issue. 
 
 If you want to show open files, you have to do
+
 ```
 {
     "show_open_files": true,
 }
 ```
+
 in Project Manager settings.
 
 
