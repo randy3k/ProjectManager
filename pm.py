@@ -62,6 +62,11 @@ def subl(args=[]):
         app_path = executable_path[:executable_path.rfind(".app/") + 5]
         executable_path = app_path + "Contents/SharedSupport/bin/subl"
     subprocess.Popen([executable_path] + args)
+    if sublime.platform() == "windows":
+        def fix_focus():
+            window = sublime.active_window()
+            window.run_command('focus_neighboring_group')
+        sublime.set_timeout_async(fix_focus, 300)
 
 
 def expand_folder(folder, project_file):
