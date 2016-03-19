@@ -65,7 +65,9 @@ def subl(args=[]):
     if sublime.platform() == "windows":
         def fix_focus():
             window = sublime.active_window()
+            view = window.active_view()
             window.run_command('focus_neighboring_group')
+            window.focus_view(view)
         sublime.set_timeout_async(fix_focus, 300)
 
 
