@@ -297,16 +297,10 @@ class Manager:
 
     def switch_project(self, project):
         self.update_recent(project)
-        preferences = sublime.load_settings("Preferences.sublime-settings")
-        close_windows_when_empty = preferences.get("close_windows_when_empty")
-        preferences.set("close_windows_when_empty", False)
-        self.window.run_command("close_workspace")
         self.check_project(project)
+        self.window.run_command("close_workspace")
         self.close_project(project)
         subl([self.project_file_name(project)])
-        if close_windows_when_empty:
-            sublime.set_timeout_async(
-                lambda: preferences.set("close_windows_when_empty", True), 1000)
 
     def open_in_new_window(self, project):
         self.update_recent(project)
