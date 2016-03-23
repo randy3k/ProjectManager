@@ -229,15 +229,18 @@ class Manager:
             self.switch_project(project)
 
         def show_input_panel():
+            project = "New Project"
             pd = self.window.project_data()
             pf = self.window.project_file_name()
-            if pd:
+            try:
+                path = pd["folders"][0]["path"]
                 if pf:
-                    project = os.path.basename(expand_folder(pd["folders"][0]["path"], pf))
+                    project = os.path.basename(expand_folder(path, pf))
                 else:
-                    project = os.path.basename(pd["folders"][0]["path"])
-            else:
-                project = "New Project"
+                    project = os.path.basename(path)
+            except:
+                pass
+
             v = self.window.show_input_panel("Project name:", project, add_callback, None, None)
             v.run_command("select_all")
 
