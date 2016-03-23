@@ -103,9 +103,9 @@ class Manager:
                 [d + " - " + node for d in self.projects_path] + self.projects_path
 
         self.primary_dir = self.projects_path[0]
-        self.projects_info = self.get_projects_info()
+        self.projects_info = self.get_all_projects_info()
 
-    def get_project_files(self, folder):
+    def list_project_files(self, folder):
         pfiles = []
         library = os.path.join(folder, "library.json")
         if os.path.exists(library):
@@ -151,10 +151,10 @@ class Manager:
                 }
             }
 
-    def get_projects_info(self):
+    def get_all_projects_info(self):
         ret = {}
         for pdir in self.projects_path:
-            pfiles = self.get_project_files(pdir)
+            pfiles = self.list_project_files(pdir)
             for f in pfiles:
                 ret.update(self.get_project_info(f))
         return ret
