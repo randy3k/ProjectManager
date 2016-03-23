@@ -280,7 +280,8 @@ class Manager:
         for w in sublime.windows():
             if w.project_file_name() == self.project_file_name(project):
                 w.run_command("close_workspace")
-                w.run_command("close_window")
+                if w.id() != sublime.active_window().id():
+                    w.run_command("close_window")
                 return True
         return False
 
