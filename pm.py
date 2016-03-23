@@ -107,12 +107,14 @@ class Manager:
 
     def get_project_files(self, folder):
         pfiles = []
-        j = JsonFile(os.path.join(folder, "library.json"))
-        for f in j.load([]):
-            if os.path.exists(f) and f not in pfiles:
-                pfiles.append(f)
-        pfiles.sort()
-        j.save(pfiles)
+        library = os.path.join(folder, "library.json")
+        if os.path.exists(library):
+            j = JsonFile(library)
+            for f in j.load([]):
+                if os.path.exists(f) and f not in pfiles:
+                    pfiles.append(f)
+            pfiles.sort()
+            j.save(pfiles)
         for path, dirs, files in os.walk(folder, followlinks=True):
             for f in files:
                 f = os.path.join(path, f)
