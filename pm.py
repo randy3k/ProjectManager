@@ -362,12 +362,14 @@ class Manager:
 
             if not self.which_project_dir(pfile):
                 for pdir in self.projects_path:
-                    j = JsonFile(os.path.join(pdir, "library.json"))
-                    data = j.load([])
-                    if pfile in data:
-                        data.remove(pfile)
-                        data.append(new_pfile)
-                        j.save(data)
+                    library = os.path.join(pdir, "library.json")
+                    if os.path.exists(library):
+                        j = JsonFile(library)
+                        data = j.load([])
+                        if pfile in data:
+                            data.remove(pfile)
+                            data.append(new_pfile)
+                            j.save(data)
 
             if reopen:
                 # reload projects info
