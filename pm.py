@@ -68,7 +68,7 @@ def subl(args=[]):
             view = window.active_view()
             window.run_command('focus_neighboring_group')
             window.focus_view(view)
-        sublime.set_timeout_async(fix_focus, 300)
+        sublime.set_timeout(fix_focus, 300)
 
 
 def expand_folder(folder, project_file):
