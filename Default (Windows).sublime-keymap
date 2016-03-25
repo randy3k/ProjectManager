@@ -2,9 +2,5 @@
     {
         "keys": ["ctrl+alt+p"],
         "command": "project_manager", "args": {"action": "switch"}
-    },
-    {
-        "keys": ["ctrl+shift+w"],
-        "command": "project_manager_close_window"
     }
 ]
