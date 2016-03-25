@@ -112,14 +112,14 @@ class Manager:
             j = JsonFile(library)
             for f in j.load([]):
                 if os.path.exists(f) and f not in pfiles:
-                    pfiles.append(f)
+                    pfiles.append(os.path.normpath(f))
             pfiles.sort()
             j.save(pfiles)
         for path, dirs, files in os.walk(folder, followlinks=True):
             for f in files:
                 f = os.path.join(path, f)
                 if f.endswith(".sublime-project") and f not in pfiles:
-                    pfiles.append(f)
+                    pfiles.append(os.path.normpath(f))
             # remove empty directories
             for d in dirs:
                 d = os.path.join(path, d)
