@@ -127,7 +127,7 @@ class Manager:
                     os.rmdir(d)
         return pfiles
 
-    def get_project_info(self, pfile):
+    def get_info_from_project_file(self, pfile):
         pdir = self.which_project_dir(pfile)
         if pdir:
             pname = os.path.relpath(pfile, pdir).replace(".sublime-project", "")
@@ -156,7 +156,7 @@ class Manager:
         for pdir in self.projects_path:
             pfiles = self.list_project_files(pdir)
             for f in pfiles:
-                ret.update(self.get_project_info(f))
+                ret.update(self.get_info_from_project_file(f))
         return ret
 
     def which_project_dir(self, pfile):
