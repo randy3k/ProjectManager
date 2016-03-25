@@ -211,6 +211,40 @@ class Manager:
 
         sublime.set_timeout(clear_callback, 100)
 
+    def get_project_data(self, project):
+        return JsonFile(self.project_file_name(project)).load()
+
+    def check_project(self, project):
+        wsfile = self.project_workspace(project)
+        j = JsonFile(wsfile)
+        if not os.path.exists(wsfile):
+            j.save({})
+        else:
+            show_open_files = self.settings.get("show_open_files", False)
+            data = j.load({})
+            data["show_open_files"] = show_open_files
+            df = data.get("distraction_free", {})
+            df["show_open_files"] = show_open_files
+            data["distraction_free"] = df
+            j.save(data)
+
+    def close_project_by_window(self, window):
+        preferences = sublime.load_settings("Preferences.sublime-settings")
+        close_windows_when_empty = preferences.get("close_windows_when_empty")
+        preferences.set("close_windows_when_empty", False)
+        window.run_command("close_workspace")
+        if close_windows_when_empty:
+            preferences.set("close_windows_when_empty", close_windows_when_empty)
+
+    def close_project_by_name(self, project):
+        for w in sublime.windows():
+            if w.project_file_name() == self.project_file_name(project):
+                self.close_project_by_window(w)
+                if w.id() != sublime.active_window().id():
+                    w.run_command("close_window")
+                return True
+        return False
+
     def add_project(self):
         def add_callback(project):
             pd = self.window.project_data()
@@ -220,7 +254,7 @@ class Manager:
             else:
                 JsonFile(f).save({})
             JsonFile(f.replace(".sublime-project", ".sublime-workspace")).save({})
-            self.window.run_command("close_workspace")
+            self.close_project_by_window(self.window)
             self.window.run_command("close_project")
             self.window.run_command("close_window")
 
@@ -262,32 +296,6 @@ class Manager:
                 data.append(pfile)
                 j.save(data)
 
-    def get_project_data(self, project):
-        return JsonFile(self.project_file_name(project)).load()
-
-    def check_project(self, project):
-        wsfile = self.project_workspace(project)
-        j = JsonFile(wsfile)
-        if not os.path.exists(wsfile):
-            j.save({})
-        else:
-            show_open_files = self.settings.get("show_open_files", False)
-            data = j.load({})
-            data["show_open_files"] = show_open_files
-            df = data.get("distraction_free", {})
-            df["show_open_files"] = show_open_files
-            data["distraction_free"] = df
-            j.save(data)
-
-    def close_project(self, project):
-        for w in sublime.windows():
-            if w.project_file_name() == self.project_file_name(project):
-                w.run_command("close_workspace")
-                if w.id() != sublime.active_window().id():
-                    w.run_command("close_window")
-                return True
-        return False
-
     def append_project(self, project):
         self.update_recent(project)
         pd = self.get_project_data(project)
@@ -298,14 +306,14 @@ class Manager:
     def switch_project(self, project):
         self.update_recent(project)
         self.check_project(project)
-        self.window.run_command("close_workspace")
-        self.close_project(project)
+        self.close_project_by_window(self.window)
+        self.close_project_by_name(project)
         subl([self.project_file_name(project)])
 
     def open_in_new_window(self, project):
         self.update_recent(project)
         self.check_project(project)
-        self.close_project(project)
+        self.close_project_by_name(project)
         subl(["-n", self.project_file_name(project)])
 
     def remove_project(self, project):
@@ -314,7 +322,7 @@ class Manager:
             if ok:
                 pfile = self.project_file_name(project)
                 if self.which_project_dir(pfile):
-                    self.close_project(project)
+                    self.close_project_by_name(project)
                     os.unlink(self.project_file_name(project))
                     os.unlink(self.project_workspace(project))
                 else:
@@ -344,7 +352,7 @@ class Manager:
             new_pfile = os.path.join(pdir, "%s.sublime-project" % new_project)
             new_wsfile = new_pfile.replace(".sublime-project", ".sublime-workspace")
 
-            reopen = self.close_project(project)
+            reopen = self.close_project_by_name(project)
             os.rename(pfile, new_pfile)
             os.rename(wsfile, new_wsfile)
 
