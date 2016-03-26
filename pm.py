@@ -86,6 +86,17 @@ def get_node():
     return node
 
 
+def dont_close_windows_when_empty(func):
+    def f(*args, **kwargs):
+        preferences = sublime.load_settings("Preferences.sublime-settings")
+        close_windows_when_empty = preferences.get("close_windows_when_empty")
+        preferences.set("close_windows_when_empty", False)
+        func(*args, **kwargs)
+        if close_windows_when_empty:
+            preferences.set("close_windows_when_empty", close_windows_when_empty)
+    return f
+
+
 class Manager:
     def __init__(self, window):
         self.window = window
@@ -229,13 +240,9 @@ class Manager:
             data["distraction_free"] = df
             j.save(data)
 
+    @dont_close_windows_when_empty
     def close_project_by_window(self, window):
-        preferences = sublime.load_settings("Preferences.sublime-settings")
-        close_windows_when_empty = preferences.get("close_windows_when_empty")
-        preferences.set("close_windows_when_empty", False)
         window.run_command("close_workspace")
-        if close_windows_when_empty:
-            preferences.set("close_windows_when_empty", close_windows_when_empty)
 
     def close_project_by_name(self, project):
         for w in sublime.windows():
@@ -247,6 +254,10 @@ class Manager:
         return False
 
     def add_project(self):
+        @dont_close_windows_when_empty
+        def close_all_files():
+            self.window.run_command("close_all")
+
         def add_callback(project):
             pd = self.window.project_data()
             f = os.path.join(self.primary_dir, "%s.sublime-project" % project)
@@ -257,7 +268,7 @@ class Manager:
             JsonFile(f.replace(".sublime-project", ".sublime-workspace")).save({})
             self.close_project_by_window(self.window)
             self.window.run_command("close_project")
-            self.window.run_command("close_window")
+            close_all_files()
 
             # reload projects info
             self.__init__(self.window)
