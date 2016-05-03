@@ -18,39 +18,39 @@
                     },
                     { "caption": "-" },
                     {
-                        "caption": "Project Manager: Add Project",
+                        "caption": "Add Project",
                         "command": "project_manager", "args": {"action": "add_project"}
                     },
                     {
-                        "caption": "Project Manager: Import .sublime-project File",
+                        "caption": "Import .sublime-project File",
                         "command": "project_manager", "args": {"action": "import_sublime_project"}
                     },
                     {
-                        "caption": "Project Manager: Open Project",
+                        "caption": "Open Project",
                         "command": "project_manager", "args": {"action": "switch"}
                     },
                     {
-                        "caption": "Project Manager: Open Project in New Window",
+                        "caption": "Open Project in New Window",
                         "command": "project_manager", "args": {"action": "new"}
                     },
                     {
-                        "caption": "Project Manager: Append Project",
+                        "caption": "Append Project",
                         "command": "project_manager", "args": {"action": "append"}
                     },
                     {
-                        "caption": "Project Manager: Remove Project",
+                        "caption": "Remove Project",
                         "command": "project_manager", "args": {"action": "remove"}
                     },
                     {
-                        "caption": "Project Manager: Edit Project",
+                        "caption": "Edit Project",
                         "command": "project_manager", "args": {"action": "edit"}
                     },
                     {
-                        "caption": "Project Manager: Rename Project",
+                        "caption": "Rename Project",
                         "command": "project_manager", "args": {"action": "rename"}
                     },
                     {
-                        "caption": "Project Manager: Clear Recent Projects",
+                        "caption": "Clear Recent Projects",
                         "command": "project_manager", "args": {"action": "clear_recent_projects"}
                     }
                 ]
