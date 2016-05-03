@@ -16,5 +16,6 @@
     // "show_open_files": true
 
     // show recent projects first
-    // "show_recent_projects_first": true
+    // if false, the projects are sorted alphabetically
+    // "show_recent_projects_first": false
 }

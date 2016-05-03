@@ -182,7 +182,7 @@ class Manager:
         plist = [[key, key + "*" if value["star"] else key, value["folder"], value["file"]]
                  for key, value in self.projects_info.items()]
         plist = sorted(plist)
-        if self.settings.get("show_recent_projects_first", False):
+        if self.settings.get("show_recent_projects_first", True):
             j = JsonFile(os.path.join(self.primary_dir, "recent.json"))
             recent = j.load([])
             plist = sorted(plist, key=lambda p: recent.index(p[3]) if p[3] in recent else -1,
