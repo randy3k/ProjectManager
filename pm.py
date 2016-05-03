@@ -328,24 +328,44 @@ class Manager:
         self.close_project_by_name(project)
         subl(["-n", self.project_file_name(project)])
 
-    def remove_project(self, project):
-        def remove_callback():
-            ok = sublime.ok_cancel_dialog("Remove project %s from Project Manager?" % project)
-            if ok:
-                pfile = self.project_file_name(project)
-                if self.which_project_dir(pfile):
-                    self.close_project_by_name(project)
-                    os.unlink(self.project_file_name(project))
-                    os.unlink(self.project_workspace(project))
-                else:
-                    for pdir in self.projects_path:
-                        j = JsonFile(os.path.join(pdir, "library.json"))
-                        data = j.load([])
-                        if pfile in data:
-                            data.remove(pfile)
-                            j.save(data)
+    def _remove_project(self, project):
+        ok = sublime.ok_cancel_dialog("Remove \"%s\" from Project Manager?" % project)
+        if ok:
+            pfile = self.project_file_name(project)
+            if self.which_project_dir(pfile):
+                self.close_project_by_name(project)
+                os.unlink(self.project_file_name(project))
+                os.unlink(self.project_workspace(project))
+            else:
+                for pdir in self.projects_path:
+                    j = JsonFile(os.path.join(pdir, "library.json"))
+                    data = j.load([])
+                    if pfile in data:
+                        data.remove(pfile)
+                        j.save(data)
+            sublime.status_message("Project \"%s\" is removed." % project)
 
-        sublime.set_timeout(remove_callback, 100)
+    def remove_project(self, project):
+        sublime.set_timeout(lambda: self._remove_project(project), 100)
+
+    def clean_dead_projects(self):
+        projects_to_remove = []
+        for pname, pi in self.projects_info.items():
+            folder = pi["folder"]
+            if not os.path.exists(folder):
+                projects_to_remove.append(pname)
+
+        def remove_projects_iteratively():
+            pname = projects_to_remove[0]
+            self._remove_project(pname)
+            projects_to_remove.remove(pname)
+            if len(projects_to_remove) > 0:
+                sublime.set_timeout(remove_projects_iteratively, 100)
+
+        if len(projects_to_remove) > 0:
+            sublime.set_timeout(remove_projects_iteratively, 100)
+        else:
+            sublime.message_dialog("No Dead Projects.")
 
     def edit_project(self, project):
         def on_open():
@@ -425,7 +445,8 @@ class ProjectManager(sublime_plugin.WindowCommand):
             self.manager.import_sublime_project()
         elif action == "clear_recent_projects":
             self.manager.clear_recent_projects()
-            sublime.status_message("Recent Projects cleared.")
+        elif action == "remove_dead_projects":
+            self.manager.clean_dead_projects()
         else:
             self.caller = caller
             callback = eval("self.on_" + action)
@@ -445,7 +466,8 @@ class ProjectManager(sublime_plugin.WindowCommand):
             ["Remove Project", "Remove from Project Manager"],
             ["Add Project", "Add current folders to Project Manager"],
             ["Import Project", "Import current .sublime-project file"],
-            ["Clear Recent Projects", "Clear Recent Projects"]
+            ["Clear Recent Projects", "Clear Recent Projects"],
+            ["Remove Dead Projects", "Remove Dead Projects"]
         ]
 
         def callback(a):
@@ -460,6 +482,8 @@ class ProjectManager(sublime_plugin.WindowCommand):
                 self.run(action="import_sublime_project")
             elif a == 8:
                 self.run(action="clear_recent_projects")
+            elif a == 9:
+                self.run(action="remove_dead_projects")
 
         self.show_quick_panel(items, callback)
 

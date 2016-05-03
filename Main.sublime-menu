@@ -52,6 +52,10 @@
                     {
                         "caption": "Clear Recent Projects",
                         "command": "project_manager", "args": {"action": "clear_recent_projects"}
+                    },
+                    {
+                        "caption": "Remove Dead Projects",
+                        "command": "project_manager", "args": {"action": "remove_dead_projects"}
                     }
                 ]
             }
