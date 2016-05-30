@@ -38,7 +38,7 @@ Options are self-explained, enjoy!
 
 #### Create new project
 
-Just drag some folders to Sublime Text and then "Add Project". The project files will be created in `Packages/Users/Projects/`.
+Just drag some folders to Sublime Text and then "Add Project". The project files will be created in `Packages/User/Projects/`.
 
 #### Add existing projects to Project Manager
 
@@ -49,12 +49,12 @@ If you want to keep the project files (`.sublime-project` and `sublime-workspace
 
 If you want Project Manager manages the project files
 
-- Move your `.sublime-project` and `.sublime-workspace` files in the project directory `Packages/Users/Projects/`. You may need to update the project's folder information of the files.
+- Move your `.sublime-project` and `.sublime-workspace` files in the project directory `Packages/User/Projects/`. You may need to update the project's folder information of the files.
 
 
 #### Custom Projects directory
 
-To use a different directory for your projects rather than `Packages/Users/Projects/`, edit the following in package settings: Preferences -> Package Settings -> Project Manager
+To use a different directory for your projects rather than `Packages/User/Projects/`, edit the following in package settings: Preferences -> Package Settings -> Project Manager
 
 ```
 {
