@@ -231,7 +231,7 @@ class Manager:
         j = JsonFile(wsfile)
         if not os.path.exists(wsfile):
             j.save({})
-        else:
+        elif self.settings.has("show_open_files"):
             show_open_files = self.settings.get("show_open_files", False)
             data = j.load({})
             data["show_open_files"] = show_open_files
