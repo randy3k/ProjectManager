@@ -4,6 +4,7 @@ import subprocess
 import os
 import codecs
 import platform
+import re
 
 
 def update_settings():
@@ -142,9 +143,9 @@ class Manager:
     def get_info_from_project_file(self, pfile):
         pdir = self.which_project_dir(pfile)
         if pdir:
-            pname = os.path.relpath(pfile, pdir).replace(".sublime-project", "")
+            pname = re.sub("\.sublime-project$", "", os.path.relpath(pfile, pdir))
         else:
-            pname = os.path.basename(pfile).replace(".sublime-project", "")
+            pname = re.sub("\.sublime-project$", "", os.path.basename(pfile))
         pd = JsonFile(pfile).load()
         if pd and "folders" in pd and pd["folders"]:
             folder = pd["folders"][0].get("path", "")
@@ -199,7 +200,7 @@ class Manager:
         return self.projects_info[project]["file"]
 
     def project_workspace(self, project):
-        return self.project_file_name(project).replace(".sublime-project", ".sublime-workspace")
+        return re.sub("\.sublime-project$", ".sublime-workspace", self.project_file_name(project))
 
     def update_recent(self, project):
         j = JsonFile(os.path.join(self.primary_dir, "recent.json"))
@@ -265,7 +266,7 @@ class Manager:
                 JsonFile(f).save(pd)
             else:
                 JsonFile(f).save({})
-            JsonFile(f.replace(".sublime-project", ".sublime-workspace")).save({})
+            JsonFile(re.sub("\.sublime-project$", ".sublime-workspace", f)).save({})
             self.close_project_by_window(self.window)
             self.window.run_command("close_project")
             close_all_files()
@@ -382,7 +383,7 @@ class Manager:
             if not pdir:
                 pdir = os.path.dirname(pfile)
             new_pfile = os.path.join(pdir, "%s.sublime-project" % new_project)
-            new_wsfile = new_pfile.replace(".sublime-project", ".sublime-workspace")
+            new_wsfile = re.sub("\.sublime-project$", ".sublime-workspace", new_pfile)
 
             reopen = self.close_project_by_name(project)
             os.rename(pfile, new_pfile)
