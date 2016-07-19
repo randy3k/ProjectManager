@@ -3,7 +3,7 @@ Project Manager for Sublime Text 3
 
 Dont't have any idea what `*.sublime-project` and `*.sublime-workspace` are doing? Forget where the project files are? Project Manager will help organizing the project files for you. It is inspired by Atom's [Project Manager](https://atom.io/packages/project-manager).
 
-![](https://raw.githubusercontent.com/randy3k/Project-Manager/master/pm.png)
+![](pm.png)
 
 If you like it, you could send me some tips via [paypal](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=YAPVT8VB6RR9C&lc=US&item_name=tips&currency_code=USD&bn=PP%2dDonationsBF%3abtn_donateCC_LG%2egif%3aNonHosted) or [gratipay](https://gratipay.com/~randy3k/).
 
@@ -29,8 +29,8 @@ To quick switch between projects, use the hotkey <kbd>Ctrl</kbd>+<kbd>Cmd</kbd>+
 Project Manager also improves the shortcut <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>W</kbd> on Windows and Linux so that it will close the project when the window is closed. On OSX, it is the default behaviour.
 
 
-![](https://raw.githubusercontent.com/randy3k/Project-Manager/master/pm2.png)
-![](https://raw.githubusercontent.com/randy3k/Project-Manager/master/pm3.png)
+![](pm2.png)
+![](pm3.png)
 
 
 Options are self-explained, enjoy!
