@@ -79,12 +79,12 @@
                         [
                             {
                                 "command": "open_file",
-                                "args": {"file": "${packages}/Project Manager/Project Manager.sublime-settings"},
+                                "args": {"file": "${packages}/ProjectManager/project_manager.sublime-settings"},
                                 "caption": "Settings – Default"
                             },
                             {
                                 "command": "open_file",
-                                "args": {"file": "${packages}/User/Project Manager.sublime-settings"},
+                                "args": {"file": "${packages}/User/project_manager.sublime-settings"},
                                 "caption": "Settings – User"
                             },
                             { "caption": "-" }
