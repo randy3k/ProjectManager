@@ -114,7 +114,7 @@ def dont_close_windows_when_empty(func):
 class Manager:
     def __init__(self, window):
         self.window = window
-        settings_file = 'Project Manager.sublime-settings'
+        settings_file = 'project_manager.sublime-settings'
         self.settings = sublime.load_settings(settings_file)
         default_projects_dir = os.path.join(sublime.packages_path(), "User", "Projects")
         self.projects_path = self.settings.get(
