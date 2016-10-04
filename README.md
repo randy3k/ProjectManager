@@ -18,7 +18,7 @@ You can additionally add the following keybind in your user keybind settings fil
 
 ```
 {
-    "keys": ["super+ctrl+o"],
+    "keys": ["super+ctrl+o"], // or ["ctrl+alt+o"] for Windows/Linux
     "command": "project_manager", "args": {"action": "new"}
 }
 ```
