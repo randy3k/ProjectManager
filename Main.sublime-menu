@@ -18,7 +18,7 @@
                     },
                     { "caption": "-" },
                     {
-                        "caption": "Add Project",
+                        "caption": "Add New Project",
                         "command": "project_manager", "args": {"action": "add_project"}
                     },
                     {

@@ -4,7 +4,7 @@
         "command": "project_manager"
     },
     {
-        "caption": "Project Manager: Add Project",
+        "caption": "Project Manager: Add New Project",
         "command": "project_manager", "args": {"action": "add_project"}
     },
     {

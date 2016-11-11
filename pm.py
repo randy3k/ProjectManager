@@ -480,7 +480,7 @@ class ProjectManager(sublime_plugin.WindowCommand):
             ["Edit Project", "Edit project settings"],
             ['Rename Project', "Rename project"],
             ["Remove Project", "Remove from Project Manager"],
-            ["Add Project", "Add current folders to Project Manager"],
+            ["Add New Project", "Add current folders to Project Manager"],
             ["Import Project", "Import current .sublime-project file"],
             ["Clear Recent Projects", "Clear Recent Projects"],
             ["Remove Dead Projects", "Remove Dead Projects"]
