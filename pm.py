@@ -259,12 +259,14 @@ class Manager:
         window.run_command("close_workspace")
 
     def close_project_by_name(self, project):
+        pfile = os.path.realpath(self.project_file_name(project))
         for w in sublime.windows():
-            if w.project_file_name() == self.project_file_name(project):
-                self.close_project_by_window(w)
-                if w.id() != sublime.active_window().id():
-                    w.run_command("close_window")
-                return True
+            if w.project_file_name():
+                if os.path.realpath(w.project_file_name()) == pfile:
+                    self.close_project_by_window(w)
+                    if w.id() != sublime.active_window().id():
+                        w.run_command("close_window")
+                    return True
         return False
 
     def add_project(self):
