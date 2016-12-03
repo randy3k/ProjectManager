@@ -7,7 +7,7 @@
 Dont't have any idea what `*.sublime-project` and `*.sublime-workspace` are doing? Forget where the project files are? Don't worry, Project Manager will help organizing the project files by putting them in a centralized location. (It is inspired by Atom's [Project Manager](https://atom.io/packages/project-manager), but Atom's Project Manager is inspired by the built-in Sublime Text Project Manager,
 so there is a circular reasoning here).
 
-![](pm.png)
+![](https://cloud.githubusercontent.com/assets/1690993/20858319/7f12a6ec-b911-11e6-8fc5-f4cbf6b6f12b.png)
 
 
 ### Installation
@@ -32,8 +32,8 @@ To quick switch between projects, use the hotkey <kbd>Ctrl</kbd>+<kbd>Cmd</kbd>+
 Project Manager also improves the shortcut <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>W</kbd> on Windows and Linux so that it will close the project when the window is closed. On OSX, it is the default behaviour.
 
 
-![](pm2.png)
-![](pm3.png)
+![](https://cloud.githubusercontent.com/assets/1690993/20858332/9f6508ea-b911-11e6-93b9-3cccca1d663e.png)
+![](https://cloud.githubusercontent.com/assets/1690993/20858333/a7a16a1c-b911-11e6-938c-0fe77e2cf405.png)
 
 
 Options are self-explained, enjoy!
