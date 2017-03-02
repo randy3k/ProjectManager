@@ -1,12 +1,9 @@
 [
     {
-        "caption": "Project",
         "id": "project",
         "children":
         [
-            {
-                "caption": "-"
-            },
+            { "caption": "-" },
             {
                 "caption": "Project Manager",
                 "id": "project_manager",
@@ -22,7 +19,7 @@
                         "command": "project_manager", "args": {"action": "add_project"}
                     },
                     {
-                        "caption": "Import .sublime-project File",
+                        "caption": "Import *.sublime-project File",
                         "command": "project_manager", "args": {"action": "import_sublime_project"}
                     },
                     {
@@ -62,14 +59,10 @@
         ]
     },
     {
-        "caption": "Preferences",
-        "mnemonic": "n",
         "id": "preferences",
         "children":
         [
             {
-                "caption": "Package Settings",
-                "mnemonic": "P",
                 "id": "package-settings",
                 "children":
                 [
@@ -78,21 +71,42 @@
                         "children":
                         [
                             {
-                                "command": "open_file",
-                                "args": {"file": "${packages}/ProjectManager/project_manager.sublime-settings"},
-                                "caption": "Settings – Default"
+                                "caption": "Documentation",
+                                "children":
+                                [
+                                    {
+                                        "caption": "Readme",
+                                        "command": "pm_readme"
+                                    },
+                                    {
+                                        "caption": "Changelog",
+                                        "command": "pm_changelog"
+                                    }
+                                ]
+                            },
+                            { "caption": "-" },
+                            {
+                                "caption": "Settings",
+                                "command": "edit_settings",
+                                "args":
+                                {
+                                    "base_file": "${packages}/ProjectManager/settings/project_manager.sublime-settings",
+                                    "default": "{\n\t$0\n}\n"
+                                }
                             },
                             {
-                                "command": "open_file",
-                                "args": {"file": "${packages}/User/project_manager.sublime-settings"},
-                                "caption": "Settings – User"
-                            },
-                            { "caption": "-" }
+                                "caption": "Key Bindings",
+                                "command": "edit_settings",
+                                "args":
+                                {
+                                    "base_file": "${packages}/ProjectManager/input-maps/Default (${platform}).sublime-keymap",
+                                    "default": "[\n\t$0\n]\n"
+                                }
+                            }
                         ]
                     }
                 ]
             }
         ]
     }
-
 ]

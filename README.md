@@ -1,70 +1,74 @@
-# Project Manager for Sublime Text 3
+# [`ProjectManager`](https://github.com/randy3k/ProjectManager) for [Sublime Text](https://www.sublimetext.com)
 
-<a href="https://packagecontrol.io/packages/ProjectManager"><img src="https://packagecontrol.herokuapp.com/downloads/ProjectManager.svg"></a>
-<a href="https://www.paypal.com/cgi-bin/webscr?cmd=_donations&amp;business=Randy%2ecs%2elai%40gmail%2ecom&amp;lc=US&amp;item_name=Package&amp;currency_code=USD&amp;bn=PP%2dDonationsBF%3apaypal%2ddonate%2dyellow%2esvg%3aNonHosted" title="Donate to this project using Paypal"><img src="https://img.shields.io/badge/paypal-donate-blue.svg" /></a>
-<a href="https://gratipay.com/~randy3k/" title="Donate to this project using Gratipay"><img src="https://img.shields.io/badge/gratipay-donate-yellow.svg" /></a>
+[![License](https://img.shields.io/github/license/randy3k/ProjectManager.svg?style=flat-square)](https://github.com/randy3k/ProjectManager/blob/master/LICENSE.txt)
+[![Downloads Package Control](https://img.shields.io/packagecontrol/dt/ProjectManager.svg?style=flat-square)](https://packagecontrol.io/packages/ProjectManager)
+[![Latest release](https://img.shields.io/github/release/randy3k/ProjectManager.svg?style=flat-square)](https://github.com/randy3k/ProjectManager/releases/latest)
+[![Donate via PayPal](https://img.shields.io/badge/paypal-donate-009cde.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=Randy%2ecs%2elai%40gmail%2ecom&lc=US&item_name=Package&currency_code=USD&bn=PP%2dDonationsBF%3apaypal%2ddonate%2dyellow%2esvg%3aNonHosted)
+[![Donate via Gratipay](https://img.shields.io/badge/gratipay-donate-yellow.svg)](https://gratipay.com/~randy3k/)
 
-Dont't have any idea what `*.sublime-project` and `*.sublime-workspace` are doing? Forget where the project files are? Don't worry, Project Manager will help organizing the project files by putting them in a centralized location. (It is inspired by Atom's [Project Manager](https://atom.io/packages/project-manager), but Atom's Project Manager is inspired by the built-in Sublime Text Project Manager,
-so there is a circular reasoning here).
+Dont't have any idea what `*.sublime-project` and `*.sublime-workspace` are doing? Forget where the project files are? Don't worry, Project Manager will help organizing the project files by putting them in a centralized location. (It is inspired by Atom's [Project Manager](https://atom.io/packages/project-manager), but Atom's Project Manager is inspired by the built-in Sublime Text Project Manager, so there is a circular reasoning here).
 
-![](https://cloud.githubusercontent.com/assets/1690993/20858319/7f12a6ec-b911-11e6-8fc5-f4cbf6b6f12b.png)
+![Screenshot](https://cloud.githubusercontent.com/assets/1690993/20858319/7f12a6ec-b911-11e6-8fc5-f4cbf6b6f12b.png)
 
+## Requirements
 
-### Installation
+ProjectManager targets and is tested against the **latest Build** of Sublime Text.
 
-You can install Project Manager via Package Control.
+* [ST3 (stable)](https://www.sublimetext.com/3)
+* [ST3 (dev)](https://www.sublimetext.com/3dev)
 
-You can additionally add the following keybind in your user keybind settings file for "Open project in new window"
+## Installation
 
-```
-{
-    "keys": ["super+ctrl+o"], // or ["ctrl+alt+o"] for Windows/Linux
-    "command": "project_manager", "args": {"action": "new"}
-}
-```
+Using **Package Control** is not required, but recommended as it keeps your packages (with their dependencies) up-to-date!
 
-### Usage
+### Installation via Package Control
 
-To launch the Project Manager, you can either open it under the `Project` menu or via the command palette: `Project Manager: ...`.
+* [Install Package Control](https://packagecontrol.io/installation#st3)
+  * Close and reopen Sublime Text after having installed Package Control.
+* Open the Command Palette (`Tools > Command Palette`).
+* Choose `Package Control: Install Package`.
+* Search for [`ProjectManager` on Package Control](https://packagecontrol.io/packages/ProjectManager) and select to install.
 
-To quick switch between projects, use the hotkey <kbd>Ctrl</kbd>+<kbd>Cmd</kbd>+<kbd>P</kbd> (<kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>P</kbd> for windows/linux).
+## Usage
 
-Project Manager also improves the shortcut <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>W</kbd> on Windows and Linux so that it will close the project when the window is closed. On OSX, it is the default behaviour.
+To launch ProjectManager, use the main menu (`Project > Project Manager`) or the command palette (`Project Manager: ...`).
 
+To quickly switch between projects, use the hotkey <kbd>Ctrl</kbd><kbd>⌘ Cmd</kbd><kbd>P</kbd> on macOS (<kbd>Ctrl</kbd><kbd>Alt</kbd><kbd>P</kbd> on Windows / Linux).
+
+ProjectManager also improves the shortcut <kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>W</kbd> on Windows / Linux so that it will close the project when the window is closed. On OSX, this is the default behaviour.
 
 ![](https://cloud.githubusercontent.com/assets/1690993/20858332/9f6508ea-b911-11e6-93b9-3cccca1d663e.png)
 ![](https://cloud.githubusercontent.com/assets/1690993/20858333/a7a16a1c-b911-11e6-938c-0fe77e2cf405.png)
 
+Options are self-explanatory, enjoy!
 
-Options are self-explained, enjoy!
-
-
-#### Create new project
+### Create new project
 
 Just drag some folders to Sublime Text and then "Add Project". The project files will be created in `Packages/User/Projects/`.
 
-#### Add existing projects to Project Manager
+### Add existing projects to Project Manager
 
-There are two ways to add existing projects to Project Manager. 
-If you want to keep the project files (`.sublime-project` and `sublime-workspace`) in your project directory,
+There are two ways to add existing projects to Project Manager. If you want to keep the project files (`*.sublime-project` and `*.sublime-workspace`) in your project directory,
 
-- Open your project file `.sublime-project`, and then use the import option of Project Manager. This tells Project Manager where `.sublime-project` is located and Project Manager will know where to look when the project is opened. In other words, you can put the `.sublime-project` file in any places.
+- Open your project file `*.sublime-project`, and then use the import option of Project Manager. This tells Project Manager where `*.sublime-project` is located and Project Manager will know where to look when the project is opened. In other words, you can put the `*.sublime-project` file in any places.
 
 If you want Project Manager manages the project files
 
-- Move your `.sublime-project` and `.sublime-workspace` files in the project directory `Packages/User/Projects/`. You may need to update the project's folder information of the files.
+- Move your `*.sublime-project` and `*.sublime-workspace` files in the project directory `Packages/User/Projects/`. You may need to update the project's folder information of the files.
 
+### Custom Projects directory
 
-#### Custom Projects directory
+To use a different directory for your projects rather than `Packages/User/Projects/`, edit the following in package settings: `Preferences > Package Settings > Project Manager`
 
-To use a different directory for your projects rather than `Packages/User/Projects/`, edit the following in package settings: Preferences -> Package Settings -> Project Manager
-
-```
+```json
 {
     "projects_path": ["path/to/custom/projects_dir"],
 }
 ```
 
+## Source code
+
+[github.com/randy3k/ProjectManager](https://www.github.com/randy3k/ProjectManager)
 
 ### License
 
