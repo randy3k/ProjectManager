@@ -1,6 +1,7 @@
 import sublime
 import os
 
+
 class JsonFile:
     def __init__(self, fpath, encoding='utf-8'):
         self.encoding = encoding

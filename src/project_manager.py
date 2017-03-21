@@ -1,5 +1,4 @@
 import sublime
-import sublime_plugin
 import subprocess
 import os
 import platform

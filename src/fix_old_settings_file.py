@@ -1,6 +1,6 @@
 import sublime
-import sublime_plugin
 import os
+
 
 def plugin_loaded():
     t = sublime.load_settings('Project Manager.sublime-settings')

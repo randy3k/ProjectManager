@@ -2,6 +2,7 @@ import sublime
 import sublime_plugin
 from .project_manager import Manager
 
+
 def cancellable(func):
     def _ret(self, action):
         if action >= 0:
