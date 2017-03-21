@@ -8,7 +8,7 @@
         "command": "project_manager", "args": {"action": "add_project"}
     },
     {
-        "caption": "Project Manager: Import .sublime-project File",
+        "caption": "Project Manager: Import *.sublime-project File",
         "command": "project_manager", "args": {"action": "import_sublime_project"}
     },
     {
@@ -42,5 +42,31 @@
     {
         "caption": "Project Manager: Remove Dead Projects",
         "command": "project_manager", "args": {"action": "remove_dead_projects"}
+    },
+    {
+        "caption": "Project Manager: Documentation: Readme",
+        "command": "pm_readme"
+    },
+    {
+        "caption": "Project Manager: Documentation: Changelog",
+        "command": "pm_changelog"
+    },
+    {
+        "caption": "Preferences: Project Manager: Settings",
+        "command": "edit_settings",
+        "args":
+        {
+            "base_file": "${packages}/ProjectManager/settings/project_manager.sublime-settings",
+            "default": "{\n\t$0\n}\n"
+        }
+    },
+    {
+        "caption": "Preferences: Project Manager: Key Bindings",
+        "command": "edit_settings",
+        "args":
+        {
+            "base_file": "${packages}/ProjectManager/input-maps/Default (${platform}).sublime-keymap",
+            "default": "[\n\t$0\n]\n"
+        }
     }
 ]
