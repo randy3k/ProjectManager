@@ -2,7 +2,7 @@
 
 [![License](https://img.shields.io/github/license/randy3k/ProjectManager.svg?style=flat-square)](https://github.com/randy3k/ProjectManager/blob/master/LICENSE.txt)
 [![Downloads Package Control](https://img.shields.io/packagecontrol/dt/ProjectManager.svg?style=flat-square)](https://packagecontrol.io/packages/ProjectManager)
-[![Latest release](https://img.shields.io/github/release/randy3k/ProjectManager.svg?style=flat-square)](https://github.com/randy3k/ProjectManager/releases/latest)
+[![Latest release](https://img.shields.io/github/tag/randy3k/ProjectManager.svg?style=flat-square)](https://github.com/randy3k/ProjectManager/releases/latest)
 [![Donate via PayPal](https://img.shields.io/badge/paypal-donate-009cde.svg?style=flat-square)](https://www.paypal.me/randy3k/5usd)
 [![Donate via Gratipay](https://img.shields.io/badge/gratipay-donate-yellow.svg?style=flat-square)](https://gratipay.com/~randy3k/)
 
@@ -33,7 +33,7 @@ Using **Package Control** is not required, but recommended as it keeps your pack
 
 To launch ProjectManager, use the main menu (`Project > Project Manager`) or the command palette (`Project Manager: ...`).
 
-To quickly switch between projects, use the hotkey <kbd>Ctrl</kbd><kbd>⌘ Cmd</kbd><kbd>P</kbd> on macOS (<kbd>Ctrl</kbd><kbd>Alt</kbd><kbd>P</kbd> on Windows / Linux).
+To quickly switch between projects, use the hotkey <kbd>Ctrl</kbd><kbd>Cmd</kbd><kbd>P</kbd> on macOS (<kbd>Ctrl</kbd><kbd>Alt</kbd><kbd>P</kbd> on Windows / Linux).
 
 ProjectManager also improves the shortcut <kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>W</kbd> on Windows / Linux so that it will close the project when the window is closed. On OSX, this is the default behaviour.
 
@@ -56,11 +56,24 @@ If you want Project Manager manages the project files
 
 - Move your `*.sublime-project` and `*.sublime-workspace` files in the project directory `Packages/User/Projects/`. You may need to update the project's folder information of the files.
 
-### Custom Projects directory
+### FAQ
+
+- _How to open project in a new window with a shortcut?_
+It can be done by adding the following keybind in your user keybind settings file:
+
+```
+{
+    "keys": ["super+ctrl+o"], // or ["ctrl+alt+o"] for Windows/Linux
+    "command": "project_manager", "args": {"action": "new"}
+}
+```
+
+
+- _How to use a different project directory?_
 
 To use a different directory for your projects rather than `Packages/User/Projects/`, edit the following in package settings: `Preferences > Package Settings > Project Manager`
 
-```json
+```
 {
     "projects_path": ["path/to/custom/projects_dir"],
 }
