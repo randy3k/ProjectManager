@@ -1,29 +1,16 @@
 ## CHANGELOG
 
-### Unreleased
+### [0.7.3](https://github.com/randy3k/ProjectManager/compare/0.7.3...0.7.2)
 
-* add `.github/ISSUE_TEMPLATE.md`
-* add `.editorconfig`
-* add `.gitignore`
-* add `.sublimelinterrc`
-* add `CHANGELOG.md`
-* commands
-  * open settings side-by-side
-  * open key bindings side-by-side
-* menus
-  * target default entries by id only
-    * support custom main menus (in other languages)
-  * open setttings side-by-side
-  * open key bindings side-by-side
-* python source
-  * split into files and load as module
-  * put strings in single quotes
-  * no need to `import codecs`
-    * use `with` when accessing files
-      * set newline to `\n` when writing
-  * if dialog `answer is True`
-  * open README and CHANGELOG in a read_only, scratch copy in a new tab
-    * via main menu or command palette
+Changes since 0.7.2:
+
+Other:
+ - Refactor python code
+
+Contributors:
+ - Randy Lai
+ - Johannes Rappen
+
 
 ### [0.7.2](https://github.com/randy3k/ProjectManager/compare/0.7.1...0.7.2)
 
