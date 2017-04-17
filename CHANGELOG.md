@@ -1,6 +1,6 @@
 ## CHANGELOG
 
-### [0.7.3](https://github.com/randy3k/ProjectManager/compare/0.7.3...0.7.2)
+### [0.7.3](https://github.com/randy3k/ProjectManager/compare/0.7.2...0.7.3)
 
 Changes since 0.7.2:
 
