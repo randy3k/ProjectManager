@@ -24,7 +24,7 @@ class JsonFile:
         else:
             with open(self.fpath, mode='w', encoding=self.encoding, newline='\n') as f:
                 data = default
-                f.write(data)
+                f.write(sublime.encode_value(data, True))
         return data
 
     def save(self, data, indent=4):
