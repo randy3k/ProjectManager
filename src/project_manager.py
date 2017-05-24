@@ -189,6 +189,7 @@ class Manager:
             if answer is True:
                 j = JsonFile(os.path.join(self.primary_dir, 'recent.json'))
                 j.remove()
+                self.window.run_command("clear_recent_projects_and_workspaces")
 
         sublime.set_timeout(clear_callback, 100)
 
