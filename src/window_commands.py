@@ -20,8 +20,9 @@ class ProjectManagerCloseWindow(sublime_plugin.WindowCommand):
         else:
             self.window.run_command('close_all')
             # exit if there are dirty views
-            if any([v.is_dirty() for v in self.window.views()]):
-                return
+            for v in self.window.views():
+                if v.is_dirty():
+                    return
             # close the sidebar
             self.window.run_command('close_project')
         # close the window
