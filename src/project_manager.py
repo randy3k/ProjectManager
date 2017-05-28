@@ -8,13 +8,13 @@ import re
 from .json_file import JsonFile
 
 
-def subl(args=[]):
+def subl(*args):
     # learnt from SideBarEnhancements
     executable_path = sublime.executable_path()
     if sublime.platform() == 'osx':
         app_path = executable_path[:executable_path.rfind('.app/') + 5]
         executable_path = app_path + 'Contents/SharedSupport/bin/subl'
-    subprocess.Popen([executable_path] + args)
+    subprocess.Popen([executable_path] + list(args))
 
     def focus():
         # fix focus on windows
@@ -293,20 +293,20 @@ class Manager:
         pd = self.get_project_data(project)
         paths = [expand_folder(f.get('path'), self.project_file_name(project))
                  for f in pd.get('folders')]
-        subl(['-a'] + paths)
+        subl('-a', paths)
 
     def switch_project(self, project):
         self.update_recent(project)
         self.check_project(project)
         self.close_project_by_window(self.window)
         self.close_project_by_name(project)
-        subl([self.project_file_name(project)])
+        subl(self.project_file_name(project))
 
     def open_in_new_window(self, project):
         self.update_recent(project)
         self.check_project(project)
         self.close_project_by_name(project)
-        subl(['-n', self.project_file_name(project)])
+        subl('-n', self.project_file_name(project))
 
     def _remove_project(self, project):
         answer = sublime.ok_cancel_dialog('Remove "%s" from Project Manager?' % project)
