@@ -1,5 +1,25 @@
 ## CHANGELOG
 
+
+### [0.7.5](https://github.com/randy3k/ProjectManager/compare/0.7.3...0.7.5)
+
+Changes since 0.7.3:
+
+  Other:
+   - fix CHANGLOG
+   - need to encode list and trim CR
+   - execute on_activated callbacks when openning projects
+   - remove build-in recent project list when cleaning recent projects
+   - remove fix old settings code
+   - Update README.md
+   - simplify exit logic
+   - add more delay to on_activated events
+   - use tuple arguments
+
+  Contributors:
+   - Randy Lai
+
+
 ### [0.7.3](https://github.com/randy3k/ProjectManager/compare/0.7.2...0.7.3)
 
 Changes since 0.7.2:
