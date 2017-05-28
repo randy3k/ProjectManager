@@ -16,23 +16,19 @@ def subl(*args):
         executable_path = app_path + 'Contents/SharedSupport/bin/subl'
     subprocess.Popen([executable_path] + list(args))
 
-    def focus():
-        # fix focus on windows
-        window = sublime.active_window()
-        view = window.active_view()
-        window.run_command('focus_neighboring_group')
-        window.focus_view(view)
-
     def on_activated():
         window = sublime.active_window()
         view = window.active_view()
+
+        if sublime.platform() == 'windows':
+            # fix focus on windows
+            window.run_command('focus_neighboring_group')
+            window.focus_view(view)
+
         sublime_plugin.on_activated(view.id())
         sublime_plugin.on_activated_async(view.id())
 
-    if sublime.platform() == 'windows':
-        sublime.set_timeout(focus, 300)
-
-    sublime.set_timeout(on_activated, 1000)
+    sublime.set_timeout(on_activated, 300)
 
 
 def expand_folder(folder, project_file):
