@@ -44,15 +44,15 @@
         "command": "project_manager", "args": {"action": "remove_dead_projects"}
     },
     {
-        "caption": "Project Manager: Documentation: Readme",
+        "caption": "Project Manager: Documentation Readme",
         "command": "pm_readme"
     },
     {
-        "caption": "Project Manager: Documentation: Changelog",
+        "caption": "Project Manager: Documentation Changelog",
         "command": "pm_changelog"
     },
     {
-        "caption": "Preferences: Project Manager: Settings",
+        "caption": "Preferences: Project Manager Settings",
         "command": "edit_settings",
         "args":
         {
@@ -61,7 +61,7 @@
         }
     },
     {
-        "caption": "Preferences: Project Manager: Key Bindings",
+        "caption": "Preferences: Project Manager Key Bindings",
         "command": "edit_settings",
         "args":
         {
