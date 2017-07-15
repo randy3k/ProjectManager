@@ -65,7 +65,7 @@
         "command": "edit_settings",
         "args":
         {
-            "base_file": "${packages}/ProjectManager/input-maps/Default (${platform}).sublime-keymap",
+            "base_file": "${packages}/ProjectManager/keybinds/Default (${platform}).sublime-keymap",
             "default": "[\n\t$0\n]\n"
         }
     }
