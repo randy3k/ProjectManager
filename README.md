@@ -1,4 +1,4 @@
-# [`ProjectManager`](https://github.com/randy3k/ProjectManager) for [Sublime Text](https://www.sublimetext.com)
+# Project Manager for [Sublime Text](https://www.sublimetext.com)
 
 [![License](https://img.shields.io/github/license/randy3k/ProjectManager.svg?style=flat-square)](https://github.com/randy3k/ProjectManager/blob/master/LICENSE.txt)
 [![Downloads Package Control](https://img.shields.io/packagecontrol/dt/ProjectManager.svg?style=flat-square)](https://packagecontrol.io/packages/ProjectManager)
@@ -10,12 +10,6 @@ Don't have any idea what `*.sublime-project` and `*.sublime-workspace` are doing
 
 ![Screenshot](https://cloud.githubusercontent.com/assets/1690993/20858319/7f12a6ec-b911-11e6-8fc5-f4cbf6b6f12b.png)
 
-## Requirements
-
-ProjectManager targets and is tested against the **latest Build** of Sublime Text.
-
-* [ST3 (stable)](https://www.sublimetext.com/3)
-* [ST3 (dev)](https://www.sublimetext.com/3dev)
 
 ## Installation
 
@@ -86,10 +80,6 @@ To use a different directory for your projects rather than `Packages/User/Projec
     "projects_path": ["path/to/custom/projects_dir"],
 }
 ```
-
-## Source code
-
-[github.com/randy3k/ProjectManager](https://www.github.com/randy3k/ProjectManager)
 
 ### License
 
