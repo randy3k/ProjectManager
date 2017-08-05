@@ -71,26 +71,11 @@
                         "children":
                         [
                             {
-                                "caption": "Documentation",
-                                "children":
-                                [
-                                    {
-                                        "caption": "Readme",
-                                        "command": "pm_readme"
-                                    },
-                                    {
-                                        "caption": "Changelog",
-                                        "command": "pm_changelog"
-                                    }
-                                ]
-                            },
-                            { "caption": "-" },
-                            {
                                 "caption": "Settings",
                                 "command": "edit_settings",
                                 "args":
                                 {
-                                    "base_file": "${packages}/ProjectManager/settings/project_manager.sublime-settings",
+                                    "base_file": "${packages}/ProjectManager/support/project_manager.sublime-settings",
                                     "default": "{\n\t$0\n}\n"
                                 }
                             },
@@ -99,7 +84,7 @@
                                 "command": "edit_settings",
                                 "args":
                                 {
-                                    "base_file": "${packages}/ProjectManager/input-maps/Default (${platform}).sublime-keymap",
+                                    "base_file": "${packages}/ProjectManager/support/Default (${platform}).sublime-keymap",
                                     "default": "[\n\t$0\n]\n"
                                 }
                             }
