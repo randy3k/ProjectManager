@@ -9,9 +9,9 @@ from .json_file import JsonFile
 
 
 def subl(*args):
-    # learnt from SideBarEnhancements
     executable_path = sublime.executable_path()
     if sublime.platform() == 'osx':
+        # learnt from SideBarEnhancements
         app_path = executable_path[:executable_path.rfind('.app/') + 5]
         executable_path = app_path + 'Contents/SharedSupport/bin/subl'
     subprocess.Popen([executable_path] + list(args))
