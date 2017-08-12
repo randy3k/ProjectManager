@@ -11,24 +11,21 @@ from .json_file import JsonFile
 def subl(*args):
     executable_path = sublime.executable_path()
     if sublime.platform() == 'osx':
-        # learnt from SideBarEnhancements
         app_path = executable_path[:executable_path.rfind('.app/') + 5]
         executable_path = app_path + 'Contents/SharedSupport/bin/subl'
+
     subprocess.Popen([executable_path] + list(args))
 
     def on_activated():
+        if sublime.platform() == 'windows':
+            # refocus sublime text window
+            subprocess.Popen([executable_path, "--command", ""])
         window = sublime.active_window()
         view = window.active_view()
-
-        if sublime.platform() == 'windows':
-            # fix focus on windows
-            window.run_command('focus_neighboring_group')
-            window.focus_view(view)
-
         sublime_plugin.on_activated(view.id())
         sublime_plugin.on_activated_async(view.id())
 
-    sublime.set_timeout(on_activated, 300)
+    sublime.set_timeout(on_activated, 100)
 
 
 def expand_folder(folder, project_file):
