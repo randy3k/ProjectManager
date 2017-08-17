@@ -286,7 +286,7 @@ class Manager:
         pd = self.get_project_data(project)
         paths = [expand_folder(f.get('path'), self.project_file_name(project))
                  for f in pd.get('folders')]
-        subl('-a', paths)
+        subl('-a', *paths)
 
     def switch_project(self, project):
         self.update_recent(project)
