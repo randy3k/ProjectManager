@@ -224,10 +224,6 @@ class Manager:
         return False
 
     def add_project(self):
-        @dont_close_windows_when_empty
-        def close_all_files():
-            self.window.run_command('close_all')
-
         def add_callback(project):
             pd = self.window.project_data()
             f = os.path.join(self.primary_dir, '%s.sublime-project' % project)
@@ -237,8 +233,9 @@ class Manager:
                 JsonFile(f).save({})
             JsonFile(re.sub('\.sublime-project$', '.sublime-workspace', f)).save({})
             self.close_project_by_window(self.window)
+            # nuke the current window by closing sidebar and all files
             self.window.run_command('close_project')
-            close_all_files()
+            self.window.run_command('close_all')
 
             # reload projects info
             self.__init__(self.window)
