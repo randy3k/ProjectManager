@@ -50,7 +50,9 @@ def dont_close_windows_when_empty(func):
         s.set('close_windows_when_empty', False)
         func(*args, **kwargs)
         if close_windows_when_empty:
-            s.set('close_windows_when_empty', close_windows_when_empty)
+            sublime.set_timeout(
+                lambda: s.set('close_windows_when_empty', close_windows_when_empty),
+                1000)
     return f
 
 
