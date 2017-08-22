@@ -209,7 +209,6 @@ class Manager:
             data['distraction_free'] = df
             j.save(data)
 
-    @dont_close_windows_when_empty
     def close_project_by_window(self, window):
         window.run_command('close_workspace')
 
@@ -290,6 +289,7 @@ class Manager:
                  for f in pd.get('folders')]
         subl('-a', *paths)
 
+    @dont_close_windows_when_empty
     def switch_project(self, project):
         self.update_recent(project)
         self.check_project(project)
@@ -297,6 +297,7 @@ class Manager:
         self.close_project_by_name(project)
         subl(self.project_file_name(project))
 
+    @dont_close_windows_when_empty
     def open_in_new_window(self, project):
         self.update_recent(project)
         self.check_project(project)
