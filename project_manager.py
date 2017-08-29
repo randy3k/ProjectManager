@@ -25,7 +25,7 @@ def subl(*args):
         sublime_plugin.on_activated(view.id())
         sublime_plugin.on_activated_async(view.id())
 
-    sublime.set_timeout(on_activated, 100)
+    sublime.set_timeout(on_activated, 300)
 
 
 def expand_folder(folder, project_file):
