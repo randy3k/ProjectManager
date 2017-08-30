@@ -29,10 +29,29 @@ def subl(*args):
 
 
 def expand_folder(folder, project_file):
-    root = os.path.dirname(project_file)
-    if not os.path.isabs(folder):
+    if project_file:
+        root = os.path.dirname(project_file)
+    else:
+        root = None
+    folder = os.path.expanduser(folder)
+    if root and not os.path.isabs(folder):
         folder = os.path.abspath(os.path.join(root, folder))
+    return os.path.realpath(folder)
+
+
+def pretty_folder(folder):
+    user_home = os.path.expanduser('~') + os.sep
+    if folder.startswith(user_home):
+        folder = os.path.join("~", folder[len(user_home):])
     return folder
+
+
+def render_display_item(project_name, info):
+    if info['star']:
+        display_name = project_name + "*"
+    else:
+        display_name = project_name
+    return [project_name, display_name, pretty_folder(info['folder']), info['file']]
 
 
 def get_node():
@@ -144,8 +163,7 @@ class Manager:
         return None
 
     def display_projects(self):
-        plist = [[key, key + '*' if value['star'] else key, value['folder'], value['file']]
-                 for key, value in self.projects_info.items()]
+        plist = [render_display_item(*item) for item in self.projects_info.items()]
         plist = sorted(plist)
         if self.settings.get('show_recent_projects_first', True):
             j = JsonFile(os.path.join(self.primary_dir, 'recent.json'))
@@ -227,6 +245,12 @@ class Manager:
         def add_callback(project):
             pd = self.window.project_data()
             f = os.path.join(self.primary_dir, '%s.sublime-project' % project)
+            # prettify paths
+            if "folders" in pd:
+                for i, folder in enumerate(pd["folders"]):
+                    if "path" in folder:
+                        path = pd["folders"][i]["path"]
+                        pd["folders"][i]["path"] = pretty_folder(path)
             if pd:
                 JsonFile(f).save(pd)
             else:
@@ -247,10 +271,7 @@ class Manager:
             pf = self.window.project_file_name()
             try:
                 path = pd['folders'][0]['path']
-                if pf:
-                    project = os.path.basename(expand_folder(path, pf))
-                else:
-                    project = os.path.basename(path)
+                project = os.path.basename(expand_folder(path, pf))
             except:
                 pass
 
