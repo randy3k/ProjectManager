@@ -173,6 +173,8 @@ class Manager:
         j = JsonFile(os.path.join(self.primary_dir, 'recent.json'))
         recent = j.load([])
         pname = self.project_file_name(project)
+        if sublime.platform() != 'windows':
+            pname = pname.replace(os.path.expanduser('~'), '~')
         if pname not in recent:
             recent.append(pname)
         else:
@@ -226,6 +228,8 @@ class Manager:
     def add_project(self):
         def add_callback(project):
             pd = self.window.project_data()
+            if sublime.platform() != 'windows':
+                pd['folders'][0]['path'] = pd['folders'][0]['path'].replace(os.path.expanduser('~'), '~')
             f = os.path.join(self.primary_dir, '%s.sublime-project' % project)
             if pd:
                 JsonFile(f).save(pd)
