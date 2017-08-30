@@ -36,7 +36,7 @@ def expand_folder(folder, project_file):
     folder = os.path.expanduser(folder)
     if root and not os.path.isabs(folder):
         folder = os.path.abspath(os.path.join(root, folder))
-    return os.path.realpath(folder)
+    return folder
 
 
 def pretty_folder(folder):
