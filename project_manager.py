@@ -273,12 +273,18 @@ class Manager:
         def add_callback(project):
             pd = self.window.project_data()
             f = os.path.join(self.primary_dir, '%s.sublime-project' % project)
+
             # prettify paths
-            if "folders" in pd:
-                for i, folder in enumerate(pd["folders"]):
-                    if "path" in folder:
-                        path = pd["folders"][i]["path"]
-                        pd["folders"][i]["path"] = pretty_path(path)
+            if sublime.platform() == "windows":
+                # on windows, sublime-project doesn't recognize "~"
+                # any hacks?
+                pass
+            else:
+                if "folders" in pd:
+                    for i, folder in enumerate(pd["folders"]):
+                        if "path" in folder:
+                            path = pd["folders"][i]["path"]
+                            pd["folders"][i]["path"] = pretty_path(path)
             if pd:
                 JsonFile(f).save(pd)
             else:
