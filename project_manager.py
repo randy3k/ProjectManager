@@ -28,22 +28,26 @@ def subl(*args):
     sublime.set_timeout(on_activated, 300)
 
 
-def expand_folder(folder, project_file):
-    if project_file:
-        root = os.path.dirname(project_file)
-    else:
-        root = None
-    folder = os.path.expanduser(folder)
-    if root and not os.path.isabs(folder):
-        folder = os.path.abspath(os.path.join(root, folder))
-    return folder
+def expand_path(path, relative_to=None):
+    root = None
+    if relative_to:
+        if os.path.isfile(relative_to):
+            root = os.path.dirname(relative_to)
+        elif os.path.isdir(relative_to):
+            root = relative_to
+
+    if path:
+        path = os.path.expanduser(path)
+        if root and not os.path.isabs(path):
+            path = os.path.abspath(os.path.join(root, path))
+    return path
 
 
-def pretty_folder(folder):
+def pretty_path(path):
     user_home = os.path.expanduser('~') + os.sep
-    if folder.startswith(user_home):
-        folder = os.path.join("~", folder[len(user_home):])
-    return folder
+    if path and path.startswith(user_home):
+        path = os.path.join("~", path[len(user_home):])
+    return path
 
 
 def render_display_item(project_name, info):
@@ -51,7 +55,11 @@ def render_display_item(project_name, info):
         display_name = project_name + "*"
     else:
         display_name = project_name
-    return [project_name, display_name, pretty_folder(info['folder']), info['file']]
+    return [
+        project_name,
+        display_name,
+        pretty_path(info['folder']),
+        pretty_path(info['file'])]
 
 
 def get_node():
@@ -103,8 +111,9 @@ class Manager:
         if os.path.exists(library):
             j = JsonFile(library)
             for f in j.load([]):
-                if os.path.exists(f) and f not in pfiles:
-                    pfiles.append(os.path.normpath(f))
+                pfile = expand_path(f)
+                if os.path.exists(pfile) and pfile not in pfiles:
+                    pfiles.append(os.path.normpath(pfile))
             pfiles.sort()
             j.save(pfiles)
         for path, dirs, files in os.walk(folder, followlinks=True):
@@ -141,7 +150,7 @@ class Manager:
                 break
         return {
             pname: {
-                'folder': expand_folder(folder, pfile),
+                'folder': expand_path(folder, pfile),
                 'file': pfile,
                 'star': star
                 }
@@ -164,20 +173,27 @@ class Manager:
 
     def display_projects(self):
         plist = [render_display_item(*item) for item in self.projects_info.items()]
-        plist = sorted(plist)
+        plist.sort(key=lambda p: p[0])
         if self.settings.get('show_recent_projects_first', True):
-            j = JsonFile(os.path.join(self.primary_dir, 'recent.json'))
-            recent = j.load([])
-            plist = sorted(plist,
-                           key=lambda p: recent.index(p[3]) if p[3] in recent else -1,
-                           reverse=True)
+            self.move_recent_projects_to_top(plist)
 
+        self.move_openning_projects_to_top(plist)
+
+        return [item[0] for item in plist], [[item[1], item[2]] for item in plist]
+
+    def move_recent_projects_to_top(self, plist):
+        j = JsonFile(os.path.join(self.primary_dir, 'recent.json'))
+        recent = j.load([])
+        return plist.sort(
+           key=lambda p: recent.index(p[3]) if p[3] in recent else -1,
+           reverse=True)
+
+    def move_openning_projects_to_top(self, plist):
         count = 0
         for i in range(len(plist)):
             if plist[i][0] is not plist[i][1]:
                 plist.insert(count, plist.pop(i))
                 count = count + 1
-        return [item[0] for item in plist], [[item[1], item[2]] for item in plist]
 
     def project_file_name(self, project):
         return self.projects_info[project]['file']
@@ -190,7 +206,7 @@ class Manager:
     def update_recent(self, project):
         j = JsonFile(os.path.join(self.primary_dir, 'recent.json'))
         recent = j.load([])
-        pname = self.project_file_name(project)
+        pname = pretty_path(self.project_file_name(project))
         if pname not in recent:
             recent.append(pname)
         else:
@@ -250,7 +266,7 @@ class Manager:
                 for i, folder in enumerate(pd["folders"]):
                     if "path" in folder:
                         path = pd["folders"][i]["path"]
-                        pd["folders"][i]["path"] = pretty_folder(path)
+                        pd["folders"][i]["path"] = pretty_path(path)
             if pd:
                 JsonFile(f).save(pd)
             else:
@@ -271,7 +287,7 @@ class Manager:
             pf = self.window.project_file_name()
             try:
                 path = pd['folders'][0]['path']
-                project = os.path.basename(expand_folder(path, pf))
+                project = os.path.basename(expand_path(path, pf))
             except:
                 pass
 
@@ -285,7 +301,7 @@ class Manager:
         sublime.set_timeout(show_input_panel, 100)
 
     def import_sublime_project(self):
-        pfile = self.window.project_file_name()
+        pfile = pretty_path(self.window.project_file_name())
         if not pfile:
             sublime.message_dialog('Project file not found!')
             return
@@ -303,7 +319,7 @@ class Manager:
     def append_project(self, project):
         self.update_recent(project)
         pd = self.get_project_data(project)
-        paths = [expand_folder(f.get('path'), self.project_file_name(project))
+        paths = [expand_path(f.get('path'), self.project_file_name(project))
                  for f in pd.get('folders')]
         subl('-a', *paths)
 
