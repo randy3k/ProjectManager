@@ -4,6 +4,7 @@ import subprocess
 import os
 import platform
 import re
+import operator
 
 from .json_file import JsonFile
 
@@ -50,7 +51,8 @@ def pretty_path(path):
     return path
 
 
-def render_display_item(project_name, info):
+def render_display_item(item):
+    project_name, info = item
     if info['star']:
         display_name = project_name + "*"
     else:
@@ -60,6 +62,18 @@ def render_display_item(project_name, info):
         display_name,
         pretty_path(info['folder']),
         pretty_path(info['file'])]
+
+
+def itemgetter(*index):
+    """
+    A version of itemgetter returning a list
+    """
+    def _itemgetter(a):
+        _ret = operator.itemgetter(*index)(a)
+        if len(index) > 1:
+            _ret = list(_ret)
+        return _ret
+    return _itemgetter
 
 
 def get_node():
@@ -131,13 +145,12 @@ class Manager:
     def get_info_from_project_file(self, pfile):
         pdir = self.which_project_dir(pfile)
         if pdir:
-            pname = re.sub('\.sublime-project$',
-                           '',
-                           os.path.relpath(pfile, pdir))
+            pname = re.sub(
+                '\.sublime-project$', '', os.path.relpath(pfile, pdir))
         else:
-            pname = re.sub('\.sublime-project$',
-                           '',
-                           os.path.basename(pfile))
+            pname = re.sub(
+                '\.sublime-project$', '', os.path.basename(pfile))
+
         pd = JsonFile(pfile).load()
         if pd and 'folders' in pd and pd['folders']:
             folder = pd['folders'][0].get('path', '')
@@ -148,20 +161,20 @@ class Manager:
             if w.project_file_name() == pfile:
                 star = True
                 break
-        return {
-            pname: {
-                'folder': expand_path(folder, pfile),
-                'file': pfile,
-                'star': star
-                }
-            }
+        info = {}
+        info["name"] = pname
+        info["folder"] = expand_path(folder, pfile)
+        info["file"] = pfile
+        info["star"] = star
+        return info
 
     def get_all_projects_info(self):
         ret = {}
         for pdir in self.projects_path:
             pfiles = self.list_project_files(pdir)
             for f in pfiles:
-                ret.update(self.get_info_from_project_file(f))
+                info = self.get_info_from_project_file(f)
+                ret[info["name"]] = info
         return ret
 
     def which_project_dir(self, pfile):
@@ -172,14 +185,13 @@ class Manager:
         return None
 
     def display_projects(self):
-        plist = [render_display_item(*item) for item in self.projects_info.items()]
+        plist = list(map(render_display_item, self.projects_info.items()))
         plist.sort(key=lambda p: p[0])
         if self.settings.get('show_recent_projects_first', True):
             self.move_recent_projects_to_top(plist)
 
         self.move_openning_projects_to_top(plist)
-
-        return [item[0] for item in plist], [[item[1], item[2]] for item in plist]
+        return list(map(itemgetter(0), plist)), list(map(itemgetter(1, 2), plist))
 
     def move_recent_projects_to_top(self, plist):
         j = JsonFile(os.path.join(self.primary_dir, 'recent.json'))
