@@ -196,6 +196,8 @@ class Manager:
     def move_recent_projects_to_top(self, plist):
         j = JsonFile(os.path.join(self.primary_dir, 'recent.json'))
         recent = j.load([])
+        # TODO: it is not needed
+        recent = [pretty_path(p) for p in recent]
         return plist.sort(
            key=lambda p: recent.index(p[3]) if p[3] in recent else -1,
            reverse=True)
@@ -218,6 +220,8 @@ class Manager:
     def update_recent(self, project):
         j = JsonFile(os.path.join(self.primary_dir, 'recent.json'))
         recent = j.load([])
+        # TODO: it is not needed
+        recent = [pretty_path(p) for p in recent]
         pname = pretty_path(self.project_file_name(project))
         if pname not in recent:
             recent.append(pname)
