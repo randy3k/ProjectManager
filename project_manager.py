@@ -250,14 +250,6 @@ class Manager:
         j = JsonFile(wsfile)
         if not os.path.exists(wsfile):
             j.save({})
-        elif self.settings.has('show_open_files'):
-            show_open_files = self.settings.get('show_open_files', False)
-            data = j.load({})
-            data['show_open_files'] = show_open_files
-            df = data.get('distraction_free', {})
-            df['show_open_files'] = show_open_files
-            data['distraction_free'] = df
-            j.save(data)
 
     def close_project_by_window(self, window):
         window.run_command('close_workspace')
@@ -293,7 +285,8 @@ class Manager:
                 JsonFile(f).save(pd)
             else:
                 JsonFile(f).save({})
-            JsonFile(re.sub('\.sublime-project$', '.sublime-workspace', f)).save({})
+
+            self.check_project(project)
             self.close_project_by_window(self.window)
             # nuke the current window by closing sidebar and all files
             self.window.run_command('close_project')
