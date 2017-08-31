@@ -40,7 +40,7 @@ def expand_path(path, relative_to=None):
     if path:
         path = os.path.expanduser(path)
         if root and not os.path.isabs(path):
-            path = os.path.abspath(os.path.join(root, path))
+            path = os.path.normpath(os.path.join(root, path))
     return path
 
 
@@ -166,7 +166,7 @@ class Manager:
     def mark_opening_projects(self, all_info):
         for k, v in all_info.items():
             for w in sublime.windows():
-                if w.project_file_name() == v["file"]:
+                if os.path.realpath(w.project_file_name()) == os.path.realpath(v["file"]):
                     v["star"] = True
                     break
 
