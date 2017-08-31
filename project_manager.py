@@ -53,7 +53,7 @@ def pretty_path(path):
 
 def render_display_item(item):
     project_name, info = item
-    if info['star']:
+    if "star" in info:
         display_name = project_name + "*"
     else:
         display_name = project_name
@@ -119,17 +119,8 @@ class Manager:
         self.primary_dir = self.projects_path[0]
         self.projects_info = self.get_all_projects_info()
 
-    def list_project_files(self, folder):
+    def load_sublime_project_files(self, folder):
         pfiles = []
-        library = os.path.join(folder, 'library.json')
-        if os.path.exists(library):
-            j = JsonFile(library)
-            for f in j.load([]):
-                pfile = expand_path(f)
-                if os.path.exists(pfile) and pfile not in pfiles:
-                    pfiles.append(os.path.normpath(pfile))
-            pfiles.sort()
-            j.save(pfiles)
         for path, dirs, files in os.walk(folder, followlinks=True):
             for f in files:
                 f = os.path.join(path, f)
@@ -142,40 +133,58 @@ class Manager:
                     os.rmdir(d)
         return pfiles
 
+    def load_library(self, folder):
+        pfiles = []
+        library = os.path.join(folder, 'library.json')
+        if os.path.exists(library):
+            j = JsonFile(library)
+            for f in j.load([]):
+                pfile = expand_path(f)
+                if os.path.exists(pfile) and pfile not in pfiles:
+                    pfiles.append(os.path.normpath(pfile))
+            pfiles.sort()
+            j.save(pfiles)
+        return pfiles
+
     def get_info_from_project_file(self, pfile):
         pdir = self.which_project_dir(pfile)
-        if pdir:
-            pname = re.sub(
-                '\.sublime-project$', '', os.path.relpath(pfile, pdir))
-        else:
-            pname = re.sub(
-                '\.sublime-project$', '', os.path.basename(pfile))
+        info = {}
+
+        basename = os.path.relpath(pfile, pdir) if pdir else os.path.basename(pfile)
+        pname = re.sub('\.sublime-project$', '', basename)
 
         pd = JsonFile(pfile).load()
         if pd and 'folders' in pd and pd['folders']:
-            folder = pd['folders'][0].get('path', '')
+            folder = expand_path(pd['folders'][0].get('path', ''), relative_to=pfile)
         else:
             folder = ''
-        star = False
-        for w in sublime.windows():
-            if w.project_file_name() == pfile:
-                star = True
-                break
-        info = {}
         info["name"] = pname
-        info["folder"] = expand_path(folder, pfile)
+        info["folder"] = folder
         info["file"] = pfile
-        info["star"] = star
         return info
 
+    def mark_opening_projects(self, all_info):
+        for k, v in all_info.items():
+            for w in sublime.windows():
+                if w.project_file_name() == v["file"]:
+                    v["star"] = True
+                    break
+
     def get_all_projects_info(self):
-        ret = {}
+        all_info = {}
         for pdir in self.projects_path:
-            pfiles = self.list_project_files(pdir)
-            for f in pfiles:
+            for f in self.load_library(pdir):
                 info = self.get_info_from_project_file(f)
-                ret[info["name"]] = info
-        return ret
+                info["type"] = "library"
+                all_info[info["name"]] = info
+
+            for f in self.load_sublime_project_files(pdir):
+                info = self.get_info_from_project_file(f)
+                info["type"] = "sublime-project"
+                all_info[info["name"]] = info
+
+        self.mark_opening_projects(all_info)
+        return all_info
 
     def which_project_dir(self, pfile):
         for pdir in self.projects_path:
@@ -302,7 +311,7 @@ class Manager:
             pf = self.window.project_file_name()
             try:
                 path = pd['folders'][0]['path']
-                project = os.path.basename(expand_path(path, pf))
+                project = os.path.basename(expand_path(path, relative_to=pf))
             except:
                 pass
 
