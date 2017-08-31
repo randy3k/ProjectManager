@@ -56,7 +56,7 @@
         "command": "edit_settings",
         "args":
         {
-            "base_file": "${packages}/ProjectManager/support/project_manager.sublime-settings",
+            "base_file": "${packages}/ProjectManager/project_manager.sublime-settings",
             "default": "{\n\t$0\n}\n"
         }
     },
