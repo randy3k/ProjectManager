@@ -192,8 +192,8 @@ class Manager:
 
     def which_project_dir(self, pfile):
         for pdir in self.projects_path:
-            if (os.path.realpath(os.path.dirname(pfile))+os.path.sep).startswith(
-                    os.path.realpath(pdir)+os.path.sep):
+            if (os.path.realpath(os.path.dirname(pfile)) + os.path.sep).startswith(
+                    os.path.realpath(pdir) + os.path.sep):
                 return pdir
         return None
 
@@ -212,8 +212,8 @@ class Manager:
         # TODO: it is not needed
         recent = [pretty_path(p) for p in recent]
         return plist.sort(
-           key=lambda p: recent.index(p[3]) if p[3] in recent else -1,
-           reverse=True)
+            key=lambda p: recent.index(p[3]) if p[3] in recent else -1,
+            reverse=True)
 
     def move_openning_projects_to_top(self, plist):
         count = 0
@@ -242,7 +242,7 @@ class Manager:
             recent.append(recent.pop(recent.index(pname)))
         # only keep the most recent 50 records
         if len(recent) > 50:
-            recent = recent[(50-len(recent)):len(recent)]
+            recent = recent[(50 - len(recent)):len(recent)]
         j.save(recent)
 
     def clear_recent_projects(self):
@@ -320,7 +320,7 @@ class Manager:
             try:
                 path = pd['folders'][0]['path']
                 project = os.path.basename(expand_path(path, relative_to=pf))
-            except:
+            except Exception:
                 pass
 
             v = self.window.show_input_panel('Project name:',
