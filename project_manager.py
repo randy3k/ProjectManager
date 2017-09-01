@@ -102,11 +102,12 @@ class Manager:
         self.window = window
         s = 'project_manager.sublime-settings'
         self.settings = sublime.load_settings(s)
-        default_projects_dir = os.path.join(sublime.packages_path(),
-                                            'User',
-                                            'Projects')
-        self.projects_path = self.settings.get(
-            'projects_path', [self.settings.get('projects_dir', default_projects_dir)])
+
+        default_projects_dir = os.path.join(
+            sublime.packages_path(), 'User', 'Projects')
+        self.projects_path = self.settings.get('projects_path')
+        if not self.projects_path:
+            self.projects_path = [default_projects_dir]
 
         self.projects_path = [
             os.path.normpath(os.path.expanduser(d)) for d in self.projects_path]
