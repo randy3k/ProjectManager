@@ -76,7 +76,7 @@ def itemgetter(*index):
     return _itemgetter
 
 
-def get_node():
+def computer_name():
     if sublime.platform() == 'osx':
         node = subprocess.check_output(['scutil', '--get', 'ComputerName']).decode().strip()
     else:
@@ -112,7 +112,7 @@ class Manager:
         self.projects_path = [
             os.path.normpath(os.path.expanduser(d)) for d in self.projects_path]
 
-        node = get_node()
+        node = computer_name()
         if self.settings.get('use_local_projects_dir', False):
             self.projects_path = \
                 [d + ' - ' + node for d in self.projects_path] + self.projects_path
