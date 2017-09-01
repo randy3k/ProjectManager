@@ -281,7 +281,7 @@ class Manager:
     def add_project(self):
         def add_callback(project):
             pd = self.window.project_data()
-            f = os.path.join(self.primary_dir, '%s.sublime-project' % project)
+            pfile = os.path.join(self.primary_dir, '%s.sublime-project' % project)
 
             # prettify paths
             if sublime.platform() == "windows":
@@ -295,11 +295,15 @@ class Manager:
                             path = pd["folders"][i]["path"]
                             pd["folders"][i]["path"] = pretty_path(path)
             if pd:
-                JsonFile(f).save(pd)
+                JsonFile(pfile).save(pd)
             else:
-                JsonFile(f).save({})
+                JsonFile(pfile).save({})
 
-            self.check_project(project)
+            # create workspace file
+            wsfile = re.sub('\.sublime-project$', '.sublime-workspace', pfile)
+            if not os.path.exists(wsfile):
+                JsonFile(wsfile).save({})
+
             self.close_project_by_window(self.window)
             # nuke the current window by closing sidebar and all files
             self.window.run_command('close_project')
