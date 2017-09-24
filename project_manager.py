@@ -105,7 +105,13 @@ class Manager:
 
         default_projects_dir = os.path.join(
             sublime.packages_path(), 'User', 'Projects')
-        self.projects_path = self.settings.get('projects_path')
+        user_projects_dirs = self.settings.get('projects_path')
+
+        self.projects_path = []
+        for folder in user_projects_dirs:
+            if os.path.isdir(folder):
+                self.projects_path.append(folder)
+
         if not self.projects_path:
             self.projects_path = [default_projects_dir]
 
