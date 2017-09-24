@@ -124,6 +124,10 @@ class Manager:
                 [d + ' - ' + node for d in self.projects_path] + self.projects_path
 
         self.primary_dir = self.projects_path[0]
+
+        if not os.path.isdir(self.primary_dir):
+            os.makedirs(self.primary_dir)
+
         self.projects_info = self.get_all_projects_info()
 
     def load_sublime_project_files(self, folder):
