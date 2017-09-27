@@ -18,11 +18,14 @@ def subl(*args):
     subprocess.Popen([executable_path] + list(args))
 
     def on_activated():
-        if sublime.platform() == 'windows':
-            # refocus sublime text window
-            subprocess.Popen([executable_path, "--command", ""])
         window = sublime.active_window()
         view = window.active_view()
+
+        if sublime.platform() == 'windows':
+            # fix focus on windows
+            window.run_command('focus_neighboring_group')
+            window.focus_view(view)
+
         sublime_plugin.on_activated(view.id())
         sublime_plugin.on_activated_async(view.id())
 
