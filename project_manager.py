@@ -296,17 +296,16 @@ class Manager:
             pd = self.window.project_data()
             pf = self.window.project_file_name()
             pfile = os.path.join(self.primary_dir, '%s.sublime-project' % project)
-            if "folders" in pd:
-                for folder in pd["folders"]:
-                    if "path" in folder:
-                        path = folder["path"]
-                        if sublime.platform() == "windows":
-                            folder["path"] = expand_path(path, relative_to=pf)
-                        else:
-                            folder["path"] = pretty_path(
-                                expand_path(path, relative_to=pf))
-
             if pd:
+                if "folders" in pd:
+                    for folder in pd["folders"]:
+                        if "path" in folder:
+                            path = folder["path"]
+                            if sublime.platform() == "windows":
+                                folder["path"] = expand_path(path, relative_to=pf)
+                            else:
+                                folder["path"] = pretty_path(
+                                    expand_path(path, relative_to=pf))
                 JsonFile(pfile).save(pd)
             else:
                 JsonFile(pfile).save({})
