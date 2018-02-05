@@ -178,12 +178,10 @@ class Manager:
         return info
 
     def mark_opening_projects(self, all_info):
-        project_file_names = [
-            os.path.realpath(w.project_file_name())
-            for w in sublime.windows() if w.project_file_name()]
+        project_file_name = self.window.project_file_name()
 
         for v in all_info.values():
-            if os.path.realpath(v["file"]) in project_file_names:
+            if os.path.realpath(v["file"]) == project_file_name:
                 v["star"] = True
                 break
 
