@@ -177,7 +177,7 @@ class Manager:
         info["file"] = pfile
         return info
 
-    def mark_opening_projects(self, all_info):
+    def mark_open_projects(self, all_info):
         project_file_names = [
             os.path.realpath(w.project_file_name())
             for w in sublime.windows() if w.project_file_name()]
@@ -185,7 +185,6 @@ class Manager:
         for v in all_info.values():
             if os.path.realpath(v["file"]) in project_file_names:
                 v["star"] = True
-                break
 
     def get_all_projects_info(self):
         all_info = {}
@@ -200,7 +199,7 @@ class Manager:
                 info["type"] = "sublime-project"
                 all_info[info["name"]] = info
 
-        self.mark_opening_projects(all_info)
+        self.mark_open_projects(all_info)
         return all_info
 
     def which_project_dir(self, pfile):
