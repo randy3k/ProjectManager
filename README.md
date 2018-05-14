@@ -1,10 +1,8 @@
 # Project Manager for [Sublime Text](https://www.sublimetext.com)
 
-[![License](https://img.shields.io/github/license/randy3k/ProjectManager.svg?style=flat-square)](https://github.com/randy3k/ProjectManager/blob/master/LICENSE.txt)
-[![Downloads Package Control](https://img.shields.io/packagecontrol/dt/ProjectManager.svg?style=flat-square)](https://packagecontrol.io/packages/ProjectManager)
-[![Latest release](https://img.shields.io/github/tag/randy3k/ProjectManager.svg?style=flat-square)](https://github.com/randy3k/ProjectManager/releases/latest)
-[![Donate via PayPal](https://img.shields.io/badge/paypal-donate-009cde.svg?style=flat-square)](https://www.paypal.me/randy3k/5usd)
-[![Donate via Gratipay](https://img.shields.io/badge/gratipay-donate-yellow.svg?style=flat-square)](https://gratipay.com/~randy3k/)
+<a href="https://packagecontrol.io/packages/ProjectManager"><img src="https://packagecontrol.herokuapp.com/downloads/ProjectManager.svg"></a>
+<a href="https://www.paypal.me/randy3k/5usd" title="Donate to this project using Paypal"><img src="https://img.shields.io/badge/paypal-donate-blue.svg" /></a>
+
 
 Don't have any idea what `*.sublime-project` and `*.sublime-workspace` are doing? Forget where the project files are? Don't worry, Project Manager will help organizing the project files by putting them in a centralized location. (It is inspired by Atom's [Project Manager](https://atom.io/packages/project-manager), but Atom's Project Manager is inspired by the built-in Sublime Text Project Manager, so there is a circular reasoning here).
 
