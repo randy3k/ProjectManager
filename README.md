@@ -8,6 +8,8 @@ Don't have any idea what `*.sublime-project` and `*.sublime-workspace` are doing
 
 ![Screenshot](https://cloud.githubusercontent.com/assets/1690993/20858319/7f12a6ec-b911-11e6-8fc5-f4cbf6b6f12b.png)
 
+Check [this video](https://laracasts.com/series/professional-php-workflow-in-sublime-text/episodes/9) by [Laracasts](https://laracasts.com/series/professional-php-workflow-in-sublime-text).
+
 
 ## Installation
 
