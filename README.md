@@ -49,12 +49,11 @@ There are two ways to add existing projects to Project Manager.
   `Packages/User/Projects/`. You may need to update the project's folder
   information of the files.
 
-- If you want to keep the project files (`*.sublime-project` and `*.sublime-
-  workspace`) in your project directory: open your project file `*.sublime-
-  project`, and then use the import option of Project Manager. This tells
-  Project Manager where `*.sublime-project` is located and Project Manager
-  will know where to look when the project is opened. In other words, you can
-  put the `*.sublime-project` file in any places.
+- If you want to keep the project files (`*.sublime-project` and `*.sublime-workspace`) in your
+  project directory: open your project file `*.sublime-project`, and then use the import option of
+  Project Manager. This tells Project Manager where `*.sublime-project` is located and Project
+  Manager will know where to look when the project is opened. In other words, you can put the
+  `*.sublime-project` file in any places.
 
 
 
