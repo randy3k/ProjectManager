@@ -112,7 +112,7 @@ class Manager:
 
         self.projects_path = []
         for folder in user_projects_dirs:
-            if os.path.isdir(folder):
+            if os.path.isdir(os.path.expanduser(folder)):
                 self.projects_path.append(folder)
 
         if not self.projects_path:
