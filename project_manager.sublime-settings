@@ -8,7 +8,10 @@
     // It would be useful if Sublime Text settings are synced across different computers.
     "use_local_projects_dir":false,
 
-    // show recent projects first
+    // Show recent projects first
     // if false, the projects are sorted alphabetically
-    "show_recent_projects_first":true
+    "show_recent_projects_first":true,
+
+    // The string to append to indicate an active project.
+    "active_project_indicator": "*"
 }

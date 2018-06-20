@@ -54,19 +54,6 @@ def pretty_path(path):
     return path
 
 
-def render_display_item(item):
-    project_name, info = item
-    if "star" in info:
-        display_name = project_name + "*"
-    else:
-        display_name = project_name
-    return [
-        project_name,
-        display_name,
-        pretty_path(info['folder']),
-        pretty_path(info['file'])]
-
-
 def itemgetter(*index):
     """
     A version of itemgetter returning a list
@@ -209,8 +196,20 @@ class Manager:
                 return pdir
         return None
 
+    def render_display_item(self, item):
+        project_name, info = item
+        if "star" in info:
+            display_name = project_name + str(self.settings.get('active_project_indicator', '*'))
+        else:
+            display_name = project_name
+        return [
+            project_name,
+            display_name,
+            pretty_path(info['folder']),
+            pretty_path(info['file'])]
+
     def display_projects(self):
-        plist = list(map(render_display_item, self.projects_info.items()))
+        plist = list(map(self.render_display_item, self.projects_info.items()))
         plist.sort(key=lambda p: p[0])
         if self.settings.get('show_recent_projects_first', True):
             self.move_recent_projects_to_top(plist)
