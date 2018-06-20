@@ -1,16 +1,19 @@
 {
     // A list of folders containing *.sublime-project files, e.g.,
     // "projects_path": ["path/to/custom/Projects", "another_path/to/Projects"]
-    "projects_path":[],
+    "projects_path": [],
 
     // Enable local projects directory, such a directory will be named as
     // "Projects - computer_name", where computer_name is your computer hostname.
     // It would be useful if Sublime Text settings are synced across different computers.
-    "use_local_projects_dir":false,
+    "use_local_projects_dir": false,
 
     // Show recent projects first
     // if false, the projects are sorted alphabetically
-    "show_recent_projects_first":true,
+    "show_recent_projects_first": true,
+
+    // Show active projects first
+    "show_active_projects_first": true,
 
     // The string to use as the active indicator for the project list.
     "active_project_indicator": "*",

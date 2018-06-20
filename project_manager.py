@@ -219,7 +219,8 @@ class Manager:
         if self.settings.get('show_recent_projects_first', True):
             self.move_recent_projects_to_top(plist)
 
-        self.move_openning_projects_to_top(plist)
+        if self.settings.get('show_active_projects_first', True):
+            self.move_openning_projects_to_top(plist)
         return list(map(itemgetter(0), plist)), list(map(itemgetter(1, 2), plist))
 
     def move_recent_projects_to_top(self, plist):
