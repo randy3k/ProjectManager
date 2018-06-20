@@ -199,11 +199,14 @@ class Manager:
     def render_display_item(self, item):
         project_name, info = item
         active_project_indicator = str(self.settings.get('active_project_indicator', '*'))
-        display_format = str(self.settings.get('project_display_format', '{project_name}{active_project_indicator}'))
+        display_format = str(self.settings.get(
+            'project_display_format', '{project_name}{active_project_indicator}'))
         if "star" in info:
-            display_name = display_format.format(project_name=project_name, active_project_indicator=active_project_indicator)
+            display_name = display_format.format(
+                project_name=project_name, active_project_indicator=active_project_indicator)
         else:
-            display_name = display_format.format(project_name=project_name, active_project_indicator='')
+            display_name = display_format.format(
+                project_name=project_name, active_project_indicator='')
         return [
             project_name,
             display_name.strip(),
@@ -231,7 +234,7 @@ class Manager:
     def move_openning_projects_to_top(self, plist):
         count = 0
         for i in range(len(plist)):
-            if plist[i][0] is not plist[i][1]:
+            if plist[i][0] != plist[i][1]:
                 plist.insert(count, plist.pop(i))
                 count = count + 1
 
