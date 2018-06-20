@@ -12,6 +12,11 @@
     // if false, the projects are sorted alphabetically
     "show_recent_projects_first":true,
 
-    // The string to append to indicate an active project.
-    "active_project_indicator": "*"
+    // The string to use as the active indicator for the project list.
+    "active_project_indicator": "*",
+
+    // How the projects in the project list should be formatted. Supported variables
+    // are "project_name" and "active_project_indicator". For inactive projects
+    // "active_project_indicator" will be an empty string.
+    "project_display_format": "{project_name}{active_project_indicator}"
 }
