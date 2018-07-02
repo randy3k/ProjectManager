@@ -8,6 +8,10 @@
     // It would be useful if Sublime Text settings are synced across different computers.
     "use_local_projects_dir": false,
 
+    // Windows/Linux only
+    // close projecct when the window is closed
+    "close_project_when_close_window": true,
+
     // Show recent projects first
     // if false, the projects are sorted alphabetically
     "show_recent_projects_first": true,

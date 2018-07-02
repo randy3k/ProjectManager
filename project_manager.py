@@ -487,7 +487,7 @@ def cancellable(func):
     return _ret
 
 
-class ProjectManagerCloseWindow(sublime_plugin.WindowCommand):
+class ProjectManagerCloseProject(sublime_plugin.WindowCommand):
     def run(self):
         if self.window.project_file_name():
             # if it is a project, close the project
@@ -500,8 +500,17 @@ class ProjectManagerCloseWindow(sublime_plugin.WindowCommand):
                     return
             # close the sidebar
             self.window.run_command('close_project')
-        # close the window
-        self.window.run_command('close_window')
+
+
+class ProjectManagerEventHandler(sublime_plugin.EventListener):
+
+    def on_window_command(self, window, command_name, args):
+        if sublime.platform() == "osx":
+            return
+        settings = sublime.load_settings('project_manager.sublime-settings')
+        if settings.get("close_project_when_close_window", True) and \
+                command_name == "close_window":
+            window.run_command("project_manager_close_project")
 
 
 class ProjectManager(sublime_plugin.WindowCommand):

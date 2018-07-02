@@ -6,9 +6,5 @@
     // {
     //     "keys": ["ctrl+alt+o"],
     //     "command": "project_manager", "args": {"action": "new"}
-    // },
-    {
-        "keys": ["ctrl+shift+w"],
-        "command": "project_manager_close_window"
-    }
+    // }
 ]
