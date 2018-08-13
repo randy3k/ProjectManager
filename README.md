@@ -55,6 +55,24 @@ There are two ways to add existing projects to Project Manager.
   Manager will know where to look when the project is opened. In other words, you can put the
   `*.sublime-project` file in any places.
 
+### Edit a project
+By default when ProjectManager is executed with the action, `edit`:  
+
+``` JSON
+{
+    "keys": ["alt+p"], 
+    "command": "project_manager", "args": {"action": "edit"}
+}
+```
+
+A list of all projects are displayed in the command palette so the user can chose which project to edit. If the action is `edit_current`, instead, the currently active project will be automatically chosen:  
+
+``` JSON
+{
+    "keys": ["alt+p"], 
+    "command": "project_manager", "args": {"action": "edit_current"}
+}
+```
 
 
 ### FAQ

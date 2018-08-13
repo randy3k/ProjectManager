@@ -32,6 +32,10 @@
         "command": "project_manager", "args": {"action": "edit"}
     },
     {
+        "caption": "Project Manager: Edit Current Project",
+        "command": "project_manager", "args": {"action": "edit_current"}
+    },
+    {
         "caption": "Project Manager: Rename Project",
         "command": "project_manager", "args": {"action": "rename"}
     },

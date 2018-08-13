@@ -522,9 +522,13 @@ class ProjectManager(sublime_plugin.WindowCommand):
 
     def run(self, action=None, caller=None):
         self.manager = Manager(self.window)
-
         if action is None:
             self.show_options()
+        elif action == 'edit_current':
+            for p in self.manager.projects_info.items():
+                project_name, info = p
+                if "star" in info:
+                    self.manager.edit_project(project_name)
         elif action == 'add_project':
             self.manager.add_project()
         elif action == 'import_sublime_project':

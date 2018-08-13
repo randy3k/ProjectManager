@@ -3,6 +3,10 @@
         "keys": ["ctrl+alt+p"],
         "command": "project_manager", "args": {"action": "switch"}
     },
+    {
+        "keys": ["alt+p"],
+        "command": "project_manager", "args": {"action": "edit_current"}
+    },
     // {
     //     "keys": ["ctrl+alt+o"],
     //     "command": "project_manager", "args": {"action": "new"}
