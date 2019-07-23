@@ -376,14 +376,14 @@ class Manager:
         self.check_project(project)
         self.close_project_by_window(self.window)
         self.close_project_by_name(project)
-        subl(self.project_file_name(project))
+        subl(self.project_workspace(project))
 
     @dont_close_windows_when_empty
     def open_in_new_window(self, project):
         self.update_recent(project)
         self.check_project(project)
         self.close_project_by_name(project)
-        subl('-n', self.project_file_name(project))
+        subl('-n', self.project_workspace(project))
 
     def _remove_project(self, project):
         answer = sublime.ok_cancel_dialog('Remove "%s" from Project Manager?' % project)
