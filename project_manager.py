@@ -304,6 +304,10 @@ class Manager:
                 if "folders" in pd:
                     for folder in pd["folders"]:
                         if "path" in folder:
+                            folder["name"] = project
+                            folder["file_exclude_patterns"] = list()
+                            folder["folder_exclude_patterns"] = list()
+                            folder["binary_file_patterns"] = list()
                             path = folder["path"]
                             if sublime.platform() == "windows":
                                 folder["path"] = expand_path(path, relative_to=pf)
@@ -376,14 +380,14 @@ class Manager:
         self.check_project(project)
         self.close_project_by_window(self.window)
         self.close_project_by_name(project)
-        subl(self.project_file_name(project))
+        subl('--project', self.project_workspace(project))
 
     @dont_close_windows_when_empty
     def open_in_new_window(self, project):
         self.update_recent(project)
         self.check_project(project)
         self.close_project_by_name(project)
-        subl('-n', self.project_file_name(project))
+        subl('-n', '--project', self.project_workspace(project))
 
     def _remove_project(self, project):
         answer = sublime.ok_cancel_dialog('Remove "%s" from Project Manager?' % project)
