@@ -42,6 +42,8 @@ def expand_path(path, relative_to=None):
 
     if path:
         path = os.path.expanduser(path)
+        if path.endswith(os.sep):
+            path = path[:-1]
         if root and not os.path.isabs(path):
             path = os.path.normpath(os.path.join(root, path))
     return path
