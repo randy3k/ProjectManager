@@ -154,7 +154,7 @@ class Manager:
         info = {}
 
         basename = os.path.relpath(pfile, pdir) if pdir else os.path.basename(pfile)
-        pname = re.sub('\.sublime-project$', '', basename)
+        pname = re.sub(r'\.sublime-project$', '', basename)
 
         pd = JsonFile(pfile).load()
         if pd and 'folders' in pd and pd['folders']:
@@ -245,7 +245,7 @@ class Manager:
         return self.projects_info[project]['file']
 
     def project_workspace(self, project):
-        return re.sub('\.sublime-project$',
+        return re.sub(r'\.sublime-project$',
                       '.sublime-workspace',
                       self.project_file_name(project))
 
@@ -321,7 +321,7 @@ class Manager:
                 JsonFile(pfile).save({})
 
             # create workspace file
-            wsfile = re.sub('\.sublime-project$', '.sublime-workspace', pfile)
+            wsfile = re.sub(r'\.sublime-project$', '.sublime-workspace', pfile)
             if not os.path.exists(wsfile):
                 JsonFile(wsfile).save({})
 
@@ -445,7 +445,7 @@ class Manager:
             if not pdir:
                 pdir = os.path.dirname(pfile)
             new_pfile = os.path.join(pdir, '%s.sublime-project' % new_project)
-            new_wsfile = re.sub('\.sublime-project$', '.sublime-workspace', new_pfile)
+            new_wsfile = re.sub(r'\.sublime-project$', '.sublime-workspace', new_pfile)
 
             reopen = self.close_project_by_name(project)
             os.rename(pfile, new_pfile)
