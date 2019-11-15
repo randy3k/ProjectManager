@@ -261,7 +261,7 @@ class Manager:
             recent.append(recent.pop(recent.index(pname)))
         # only keep the most recent 50 records
         if len(recent) > 50:
-            recent = recent[(50 - len(recent)):len(recent)]
+            recent = recent[(len(recent)-50):len(recent)]
         j.save(recent)
 
     def clear_recent_projects(self):
