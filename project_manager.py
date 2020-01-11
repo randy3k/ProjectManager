@@ -27,7 +27,7 @@ def subl(*args):
             window.focus_view(view)
 
         sublime_plugin.on_activated(view.id())
-        sublime_plugin.on_activated_async(view.id())
+        sublime.set_timeout_async(lambda: sublime_plugin.on_activated_async(view.id()))
 
     sublime.set_timeout(on_activated, 300)
 
