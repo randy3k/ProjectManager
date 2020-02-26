@@ -22,6 +22,8 @@
     // The string to use as the active indicator for the project list.
     "active_project_indicator": "*",
 
+    "default_workspaces": true,
+
     // How the projects in the project list should be formatted. Supported variables
     // are "project_name" and "active_project_indicator". For inactive projects
     // "active_project_indicator" will be an empty string.
