@@ -2,6 +2,7 @@ import sublime
 import sublime_plugin
 import subprocess
 import os
+import shutil
 import platform
 import re
 import operator
@@ -214,11 +215,7 @@ class Manager:
         Return True if a project is currently opened and it has more
         than one workspace
         """
-        basename = self.window.project_file_name()
-        if not basename or not basename.endswith('.sublime-project'):
-            return False
-
-        pname = os.path.basename(re.sub(r'\.sublime-project$', '', basename))
+        pname = self.get_current_project()
         try:
             pinfo = self.projects_info[pname]
         except KeyError:
@@ -277,7 +274,7 @@ class Manager:
     def get_current_project(self):
         pname = self.window.project_file_name()
         if not pname:
-            return ''
+            return None
         return os.path.basename(re.sub(r'\.sublime-project$', '', pname))
 
     def render_workspace(self, wpath):
@@ -381,14 +378,15 @@ class Manager:
 
     def close_project_by_name(self, project):
         pfile = os.path.realpath(self.project_file_name(project))
+        closed = False
         for w in sublime.windows():
             if w.project_file_name():
                 if os.path.realpath(w.project_file_name()) == pfile:
                     self.close_project_by_window(w)
                     if w.id() != sublime.active_window().id():
                         w.run_command('close_window')
-                    return True
-        return False
+                    closed = True
+        return closed
 
     def add_project(self):
         def add_callback(project):
@@ -446,6 +444,43 @@ class Manager:
 
         sublime.set_timeout(show_input_panel, 100)
 
+    def add_workspace(self):
+        def add_callback(new_workspace):
+            project = self.get_current_project()
+            if not new_workspace:
+                new_workspace = project
+
+            wfile = self.get_default_workspace(project)
+            new_wfile = os.path.join(os.path.dirname(wfile),
+                                     new_workspace + '.sublime-workspace')
+
+            if wfile == new_wfile or os.path.exists(new_wfile):
+                sublime.message_dialog("Another workspace is already named " + new_workspace)
+                return
+
+            # Trick : instead of using obscure undocumented sublime commands, copy
+            # an existing sublime-workspace file and reset its data to get a new one
+            shutil.copy(wfile, new_wfile)
+            j = JsonFile(new_wfile)
+            j.save({'project': project + ".sublime-project"})
+
+            # reload projects info
+            self.__init__(self.window)
+            self.open_in_new_window(None, new_wfile, True)
+
+        def show_input_panel():
+            workspace = 'NewWorkspace'
+            pd = self.window.project_data()
+            pf = self.window.project_file_name()
+            v = self.window.show_input_panel('Workspace name:',
+                                             workspace,
+                                             add_callback,
+                                             None,
+                                             None)
+            v.run_command('select_all')
+
+        sublime.set_timeout(show_input_panel, 100)
+
     def import_sublime_project(self):
         pfile = pretty_path(self.window.project_file_name())
         if not pfile:
@@ -470,7 +505,7 @@ class Manager:
         subl('-a', *paths)
 
     @dont_close_windows_when_empty
-    def switch_project(self, project, workspace):
+    def switch_project(self, project, workspace=None):
         if project is None:
             project = self.get_current_project()
         if workspace is None:
@@ -481,7 +516,7 @@ class Manager:
         subl('--project', workspace)
 
     @dont_close_windows_when_empty
-    def open_in_new_window(self, project, workspace, on_workspace):
+    def open_in_new_window(self, project, workspace=None, on_workspace=False):
         if project is None:
             project = self.get_current_project()
         if workspace is None:
@@ -514,6 +549,24 @@ class Manager:
     def remove_project(self, project):
         sublime.set_timeout(lambda: self._remove_project(project), 100)
 
+    def _remove_workspace(self, wfile):
+        workspace = os.path.basename(re.sub('.sublime-workspace', '', wfile))
+        answer = sublime.ok_cancel_dialog('Remove workspace "%s" from this project?\n'
+                                          'Warning: this will close any window opened '
+                                          'containing the corresponding project' % workspace)
+        if answer is True:
+            project = self.get_current_project()
+            self.close_project_by_name(project)
+            os.remove(wfile)
+            self.__init__(self.window)
+            sublime.status_message('Workspace "%s" is removed.' % project)
+            window = sublime.active_window()
+            if window.folders() == [] and window.sheets() == []:
+                window.run_command('close_window')
+
+    def remove_workspace(self, wfile):
+        sublime.set_timeout(lambda: self._remove_workspace(wfile), 100)
+
     def clean_dead_projects(self):
         projects_to_remove = []
         for pname, pi in self.projects_info.items():
@@ -540,7 +593,7 @@ class Manager:
 
     def rename_project(self, project):
         def rename_callback(new_project):
-            if project == new_project:
+            if not new_project or project == new_project:
                 return
 
             if new_project in self.projects_info.keys():
@@ -607,6 +660,35 @@ class Manager:
 
         sublime.set_timeout(show_input_panel, 100)
 
+    def rename_workspace(self, wfile):
+        workspace = os.path.basename(re.sub('.sublime-workspace', '', wfile))
+        def rename_callback(new_workspace):
+            project = self.get_current_project()
+            if not new_workspace:
+                new_workspace = project
+
+            new_wfile = os.path.join(os.path.dirname(wfile),
+                                     new_workspace + '.sublime-workspace')
+
+            if wfile == new_wfile or os.path.exists(new_wfile):
+                sublime.message_dialog("Another workspace is already named " + new_workspace)
+                return
+
+            self.close_project_by_name(project)
+            os.rename(wfile, new_wfile)
+            self.__init__(self.window)
+            subl('--project', new_wfile)
+
+        def show_input_panel():
+            v = self.window.show_input_panel('New workspace name:',
+                                             workspace,
+                                             rename_callback,
+                                             None,
+                                             None)
+            v.run_command('select_all')
+
+        sublime.set_timeout(show_input_panel, 100)
+
 
 def cancellable(func):
     def _ret(self, action):
@@ -663,13 +745,15 @@ class ProjectManager(sublime_plugin.WindowCommand):
             self.show_options(self.manager.can_switch_workspaces())
         elif action == 'add_project':
             self.manager.add_project()
+        elif action == 'add_workspace':
+            self.manager.add_workspace()
         elif action == 'import_sublime_project':
             self.manager.import_sublime_project()
         elif action == 'clear_recent_projects':
             self.manager.clear_recent_projects()
         elif action == 'remove_dead_projects':
             self.manager.clean_dead_projects()
-        elif action in ('switch_ws', 'new_ws'):
+        elif action.endswith('_ws'):
             self.caller = caller
             self.choose_ws(action)
         else:
@@ -700,7 +784,10 @@ class ProjectManager(sublime_plugin.WindowCommand):
             ['Edit Project', 'Edit project settings'],
             ['Rename Project', 'Rename project'],
             ['Remove Project', 'Remove from Project Manager'],
+            ['Rename Workspace', 'Rename Workspace'],
+            ['Remove Workspace', 'Remove workspace from Project Manager'],
             ['Add New Project', 'Add current folders to Project Manager'],
+            ['Add New Workspace', 'Add a new workspace to the current project'],
             ['Import Project', 'Import current .sublime-project file'],
             ['Clear Recent Projects', 'Clear Recent Projects'],
             ['Remove Dead Projects', 'Remove Dead Projects']
@@ -708,22 +795,31 @@ class ProjectManager(sublime_plugin.WindowCommand):
 
         actions = ['switch', 'new',
                    'switch_ws', 'new_ws',
-                   'append', 'edit', 'rename', 'remove', 'add_project',
+                   'append', 'edit',
+                   'rename', 'remove',
+                   'rename_ws', 'remove_ws',
+                   'add_project', 'add_workspace',
                    'import_sublime_project',
                    'clear_recent_projects',
                    'remove_dead_projects']
 
         if not can_switch_workspaces:
-            items.pop(2)
-            actions.pop(2)
-            items.pop(2)
-            actions.pop(2)
+            for i in range(len(actions)-1, -1, -1):
+                if actions[i].endswith('_ws'):
+                    actions.pop(i)
+                    items.pop(i)
+
+        # Can't add a workspace if no project is currently open
+        if self.manager.get_current_project() is None:
+            index = actions.index('add_workspace')
+            actions.pop(index)
+            items.pop(index)
 
         def callback(a):
             if a < 0:
                 return
             else:
-                if a <= 5 or (can_switch_workspaces and a <= 7):
+                if a <= 5 or (can_switch_workspaces and a <= 9):
                     caller = 'manager'
                 else:
                     caller = None
@@ -734,7 +830,7 @@ class ProjectManager(sublime_plugin.WindowCommand):
 
     @cancellable
     def on_new(self, action):
-        self.manager.open_in_new_window(self.projects[action], None, False)
+        self.manager.open_in_new_window(self.projects[action])
 
     @cancellable
     def on_new_ws(self, action):
@@ -742,7 +838,7 @@ class ProjectManager(sublime_plugin.WindowCommand):
 
     @cancellable
     def on_switch(self, action):
-        self.manager.switch_project(self.projects[action], None)
+        self.manager.switch_project(self.projects[action])
 
     @cancellable
     def on_switch_ws(self, action):
@@ -763,3 +859,11 @@ class ProjectManager(sublime_plugin.WindowCommand):
     @cancellable
     def on_remove(self, action):
         self.manager.remove_project(self.projects[action])
+
+    @cancellable
+    def on_rename_ws(self, action):
+        self.manager.rename_workspace(self.workspaces[action])
+
+    @cancellable
+    def on_remove_ws(self, action):
+        self.manager.remove_workspace(self.workspaces[action])
