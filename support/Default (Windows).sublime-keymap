@@ -4,7 +4,15 @@
         "command": "project_manager", "args": {"action": "switch"}
     },
     // {
-    //     "keys": ["ctrl+alt+o"],
+    //     "keys": ["ctrl+alt+shift+p"],
     //     "command": "project_manager", "args": {"action": "new"}
+    // },
+    // {
+    //     "keys": ["ctrl+alt+o"],
+    //     "command": "project_manager", "args": {"action": "switch_ws"}
+    // },
+    // {
+    //     "keys": ["ctrl+alt+shift+o"],
+    //     "command": "project_manager", "args": {"action": "new_ws"}
     // }
 ]

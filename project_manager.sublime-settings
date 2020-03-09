@@ -8,6 +8,10 @@
     // It would be useful if Sublime Text settings are synced across different computers.
     "use_local_projects_dir": false,
 
+    // Activate workspace management : if True, when opening a project with several
+    // workspaces, ask which one to open
+    "default_workspaces": true,
+
     // Windows/Linux only
     // close projecct when the window is closed
     "close_project_when_close_window": true,
@@ -19,10 +23,14 @@
     // Show active projects first
     "show_active_projects_first": true,
 
+    // Show default workspace (the one with the same name as the project) first
+    "show_default_workspace_first": false,
+
+    // Show recent workspaces first
+    "show_recent_workspaces_first": true,
+
     // The string to use as the active indicator for the project list.
     "active_project_indicator": "*",
-
-    "default_workspaces": true,
 
     // How the projects in the project list should be formatted. Supported variables
     // are "project_name" and "active_project_indicator". For inactive projects

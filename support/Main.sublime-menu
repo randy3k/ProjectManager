@@ -31,6 +31,14 @@
                         "command": "project_manager", "args": {"action": "new"}
                     },
                     {
+                        "caption": "Open Workspace",
+                        "command": "project_manager", "args": {"action": "switch_ws"}
+                    },
+                    {
+                        "caption": "Open Workspace in New Window",
+                        "command": "project_manager", "args": {"action": "new_ws"}
+                    },
+                    {
                         "caption": "Append Project",
                         "command": "project_manager", "args": {"action": "append"}
                     },
@@ -39,12 +47,20 @@
                         "command": "project_manager", "args": {"action": "remove"}
                     },
                     {
+                        "caption": "Remove Workspace",
+                        "command": "project_manager", "args": {"action": "remove_ws"}
+                    },
+                    {
                         "caption": "Edit Project",
                         "command": "project_manager", "args": {"action": "edit"}
                     },
                     {
                         "caption": "Rename Project",
                         "command": "project_manager", "args": {"action": "rename"}
+                    },
+                    {
+                        "caption": "Rename Workspace",
+                        "command": "project_manager", "args": {"action": "rename_ws"}
                     },
                     {
                         "caption": "Clear Recent Projects",

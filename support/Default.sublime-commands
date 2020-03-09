@@ -8,6 +8,10 @@
         "command": "project_manager", "args": {"action": "add_project"}
     },
     {
+        "caption": "Project Manager: Add New Workspace",
+        "command": "project_manager", "args": {"action": "add_workspace"}
+    },
+    {
         "caption": "Project Manager: Import *.sublime-project File",
         "command": "project_manager", "args": {"action": "import_sublime_project"}
     },
@@ -20,6 +24,14 @@
         "command": "project_manager", "args": {"action": "new"}
     },
     {
+        "caption": "Project Manager: Open Workspace",
+        "command": "project_manager", "args": {"action": "switch_ws"}
+    },
+    {
+        "caption": "Project Manager: Open Workspace in New Window",
+        "command": "project_manager", "args": {"action": "new_ws"}
+    },
+    {
         "caption": "Project Manager: Append Project",
         "command": "project_manager", "args": {"action": "append"}
     },
@@ -28,12 +40,20 @@
         "command": "project_manager", "args": {"action": "remove"}
     },
     {
+        "caption": "Project Manager: Remove Workspace",
+        "command": "project_manager", "args": {"action": "remove_ws"}
+    },
+    {
         "caption": "Project Manager: Edit Project",
         "command": "project_manager", "args": {"action": "edit"}
     },
     {
         "caption": "Project Manager: Rename Project",
         "command": "project_manager", "args": {"action": "rename"}
+    },
+    {
+        "caption": "Project Manager: Rename Workspace",
+        "command": "project_manager", "args": {"action": "rename_ws"}
     },
     {
         "caption": "Project Manager: Clear Recent Projects",
