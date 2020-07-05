@@ -386,7 +386,7 @@ class Manager:
 
         j = JsonFile(recent_file)
         recent = j.load([])
-        if project not in recent.keys():
+        if project not in [pw['project'] for pw in recent]:
             return workspaces[0]
         else:
             return recent[project]["workspaces"][-1]
@@ -669,10 +669,21 @@ class Manager:
             os.rename(pfile, new_pfile)
 
             for wfile in self.projects_info[project]['workspaces']:
-                if wfile.endswith('%s.sublime-workspace' % project):
+                if wfile.endswith(os.sep + '%s.sublime-workspace' % project):
                     new_wfile = re.sub(project + r'\.sublime-workspace$',
                                        new_project + '.sublime-workspace',
                                        wfile)
+                    if os.path.exists(new_wfile):
+                        new_wfile = re.sub(project + r'\.sublime-workspace$',
+                                           'Workspace.sublime-workspace',
+                                           wfile)
+                        i = 1
+                        while os.path.exists(new_wfile):
+                            new_wfile = re.sub(project + r'\.sublime-workspace$',
+                                               'Workspace_' + str(i) + '.sublime-workspace',
+                                               wfile)
+                            i += 1
+
                     os.rename(wfile, new_wfile)
 
                 else:
