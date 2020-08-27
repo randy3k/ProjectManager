@@ -29,6 +29,10 @@
     // Show recent workspaces first
     "show_recent_workspaces_first": true,
 
+    // Move the most recent workspace to second place if the current window is from
+    // the same project
+    "show_most_recent_workspace_second": true,
+
     // The string to use as the active indicator for the project list.
     "active_project_indicator": "*",
 

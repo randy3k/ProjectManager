@@ -304,11 +304,11 @@ class Manager:
                 break
         return wlist
 
-    def move_recent_workspaces_to_top(self, project, wlist):
+    def move_recent_workspaces_to_top(self, project, wlist, move_second):
         j = JsonFile(os.path.join(self.primary_dir, 'recent.json'))
         recent = j.load([])
         for obj in recent:
-            pname = os.path.basename(re.sub(r'\.sublime-project', '', obj["project"]))
+            pname = os.path.basename(re.sub(r'\.sublime-project$', '', obj["project"]))
             if pname == project:
                 recent = obj["workspaces"]
                 break
@@ -317,6 +317,18 @@ class Manager:
 
         wlist.sort(key=lambda w: recent.index(w[0]) if w[0] in recent else -1,
                    reverse=True)
+
+        # Only move if the current window is in a project...
+        curr_ppath = sublime.active_window().project_file_name()
+        if move_second and curr_ppath is not None:
+            # ...and this project is the one from which we want to load a workspace
+            curr_pname = os.path.basename(re.sub(r'\.sublime-project$', '', curr_ppath))
+            if curr_pname != project:
+                return wlist
+
+            if wlist[0][0] in recent:
+                wlist[0], wlist[1] = wlist[1], wlist[0]
+
         return wlist
 
     def display_workspaces(self, project):
@@ -330,9 +342,10 @@ class Manager:
         wlist.sort(key=lambda w: w[1])
 
         if self.settings.get('show_recent_workspaces_first', True):
-            wlist = self.move_recent_workspaces_to_top(project, wlist)
+            move_second =  self.settings.get('show_most_recent_workspace_second', True)
+            wlist = self.move_recent_workspaces_to_top(project, wlist, move_second)
 
-        if self.settings.get('show_default_workspace_first', True):
+        if self.settings.get('show_default_workspace_first', False):
             wlist = self.move_default_workspace_to_top(project, wlist)
 
         for i, (wpath, wname, wfolder) in enumerate(wlist):
@@ -397,7 +410,7 @@ class Manager:
         pfile = pretty_path(self.project_file_name(project))
 
         if workspace is None:
-            workspace = re.sub(r'\.sublime-project', '.sublime-workspace', pfile)
+            workspace = re.sub(r'\.sublime-project$', '.sublime-workspace', pfile)
 
         for i, pobject in enumerate(recent):
             if pfile == pobject["project"]:
@@ -832,6 +845,10 @@ class ProjectManager(sublime_plugin.WindowCommand):
             try:
                 self.projects, pdisplays = self.manager.display_projects()
             except ValueError:
+                return
+
+            if not self.projects:
+                sublime.message_dialog('No projects are managed currently.')
                 return
 
             if action in ('switch', 'new') and self.manager.settings.get('default_workspaces', True):
