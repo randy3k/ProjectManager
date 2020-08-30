@@ -19,6 +19,10 @@
                         "command": "project_manager", "args": {"action": "add_project"}
                     },
                     {
+                        "caption": "Add New Workspace",
+                        "command": "project_manager", "args": {"action": "add_workspace"}
+                    },
+                    {
                         "caption": "Import *.sublime-project File",
                         "command": "project_manager", "args": {"action": "import_sublime_project"}
                     },

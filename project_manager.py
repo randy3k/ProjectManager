@@ -702,6 +702,10 @@ class Manager:
     def add_workspace(self):
         def add_callback(new_workspace):
             project = self.curr_pname
+            if not project:
+                sublime.message_dialog("No active project")
+                return
+
             if not new_workspace:
                 new_workspace = project
 
@@ -1033,6 +1037,7 @@ class ProjectManager(sublime_plugin.WindowCommand):
             self.manager.clean_dead_projects()
         elif action.endswith('_ws'):
             if not can_switch_workspaces:
+                sublime.status_message("No workspace to execute this action")
                 return
 
             self.caller = caller
