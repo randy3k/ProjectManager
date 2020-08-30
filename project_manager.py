@@ -22,6 +22,8 @@ def subl(*args):
         window = sublime.active_window()
         view = window.active_view()
 
+        # Automatically close window if no folders nor sheets are open
+        # (this happen when trying to open a workspace already opened in another window)
         if not window.folders() and not window.sheets():
             window.run_command('close_window')
 
@@ -94,10 +96,12 @@ def dont_close_windows_when_empty(func):
 
 
 class Manager:
+    """Main class that takes care of everything project and workspace related"""
+
     def __init__(self, window):
         self.window = window
-        s = 'project_manager.sublime-settings'
-        self.settings = sublime.load_settings(s)
+        settings_file = 'project_manager.sublime-settings'
+        self.settings = sublime.load_settings(settings_file)
 
         default_projects_dir = os.path.join(
             sublime.packages_path(), 'User', 'Projects')
@@ -126,24 +130,72 @@ class Manager:
 
         self.projects_info = self.get_all_projects_info()
 
-        # Store project files in separate folders (because of workspaces)
-        if self.store_files(self.projects_path):
+        # Update file organization and reload info if needed
+        if self.reorganize_files(self.projects_path):
             self.projects_info = self.get_all_projects_info()
 
-    def store_files(self, folders):
+        pname = self.window.project_file_name()
+        if pname:
+            self.curr_pname = os.path.basename(re.sub(r'\.sublime-project$', '', pname))
+        else:
+            self.curr_pname = None
+
+    def reorganize_files(self, project_paths):
+        """Reorganize files in project directories (for compatibility)
+
+        This method reorganize the files in every project directories from
+        ProjectDirectory
+        |  project1.sublime-project
+        |  project1.sublime-workspace
+        |  project2.sublime-project
+        |  project2.sublime-workspace
+
+        to
+        ProjectDirectory
+        |  project1
+        |  |  project1.sublime-project
+        |  |  project1.sublime-workspace
+        |
+        |  project2
+        |  |  project2.sublime-project
+        |  |  project2.sublime-workspace
+
+        This allow one project to have several workspaces that are all placed in the
+        same directory.
+        This function is used for compatibility reasons: as the previous version of
+        ProjectManager organized files differently, we need to automatically update the
+        folder structure to be transparent for the user.
+
+        Args:
+            project_paths : list[str]
+                The list of paths to every folder that contains projects to be managed
+
+        Returns:
+            bool: whether some files were reorganized or not
+        """
+
         modified = False
-        for folder in folders:
-            files = os.listdir(folder)
-            for file in files:
+        for pdir in project_paths:
+            for file in os.listdir(pdir):
+
+                # If there are sublime-project files in a directory, move it into its
+                # folder with all of its workspaces
                 if file.endswith('.sublime-project'):
                     modified = True
-                    pfile = os.path.join(folder, file)
+
+                    # Create project folder
                     pname = re.sub(r'\.sublime-project$', '', file)
-                    directory = os.path.join(folder, pname)
+                    directory = os.path.join(pdir, pname)
                     os.mkdir(directory)
+
+                    # Move all of its existing workspaces files
                     for wfile in self.projects_info[pname]['workspaces']:
                         shutil.move(wfile, directory)
+
+                    # Move the sublime-project file itself
+                    pfile = os.path.join(pdir, file)
                     shutil.move(pfile, directory)
+
         return modified
 
     def load_sublime_project_files(self, folder):
@@ -173,29 +225,49 @@ class Manager:
             j.save(pfiles)
         return pfiles
 
-    def check_workspace(self, project, workspace):
-        """ Check that a workspace is indeed affiliated to a given project """
-        j = JsonFile(workspace).load()
-        if not j:
-            return True
-        return j["project"] == project
+    def is_workspace_affiliated(self, project, wfile):
+        """Check if a workspace corresponds to a workspace of `project`
 
-    def get_project_workspaces(self, project):
-        folder = os.path.dirname(project)
-        pfile = os.path.basename(project)
+        Args:
+            project: str
+                The name of the project file
+            wfile: str
+                The workspace file to check
+
+        Returns:
+            bool: whether the workspace is indeed affiliated with the given project
+        """
+        j = JsonFile(wfile).load()
+        if "project" not in j:
+            return False
+        return os.path.basename(j["project"]) == project
+
+    def get_project_workspaces(self, pfile):
+        """Get list of every workspaces of a given project
+
+        Args:
+            pfile: str
+                The path of the .sublime-project file from which to load workspaces
+
+        Returns:
+            list: the list of .sublime-workspace files associated with the given project
+        """
+        folder = os.path.dirname(pfile)
+        pname = os.path.basename(pfile)
         wfiles = []
 
-        for file in os.listdir(folder):
-            path = os.path.join(folder, file)
+        # Check every file in the same folder as the project file
+        for file in map(lambda file:os.path.join(folder, file), os.listdir(folder)):
             if (file.endswith('.sublime-workspace')
-                    and file not in wfiles
-                    and self.check_workspace(pfile, path)):
-                wfiles.append(os.path.normpath(path))
+                    and self.is_workspace_affiliated(pname, file)):
+                wfiles.append(os.path.normpath(file))
 
+        # If no workspace exists, create a default one
         if not wfiles:
-            wfile = re.sub(r'\.sublime-project$', '.sublime-workspace', project)
+            wfile = re.sub(r'\.sublime-project$', '.sublime-workspace', pfile)
             j = JsonFile(wfile)
-            j.save({'project': pfile})
+            j.save({'project': pname})
+            wfiles.append(os.path.normpath(wfile))
 
         return wfiles
 
@@ -230,16 +302,17 @@ class Manager:
                 v["star"] = True
 
     def can_switch_workspaces(self):
+        """Check if a project in opened in the current window and if it has more than
+        one workspaces
+
+        Returns:
+            bool: whether a project with more than one workspace is currently opened
         """
-        Return True if a project is currently opened and it has more
-        than one workspace
-        """
-        pname = self.get_current_project()
-        try:
-            pinfo = self.projects_info[pname]
-        except KeyError:
+        if self.curr_pname not in self.projects_info:
             return False
-        return ("star" in pinfo.keys() and len(pinfo["workspaces"]) > 1)
+
+        pinfo = self.projects_info[self.curr_pname]
+        return ("star" in pinfo and len(pinfo["workspaces"]) > 1)
 
     def get_all_projects_info(self):
         all_info = {}
@@ -282,31 +355,87 @@ class Manager:
             pretty_path(info['file'])]
 
     def nb_workspaces(self, project):
-        if project in self.projects_info.keys():
+        """Returns the number of workspaces a given project has saved
+
+        Args:
+            project: str
+                The name of the project for which to count workspaces
+        """
+        if project in self.projects_info:
             return len(self.projects_info[project]['workspaces'])
         return 0
 
-    def get_current_project(self):
-        pname = self.window.project_file_name()
-        if not pname:
-            return None
-        return os.path.basename(re.sub(r'\.sublime-project$', '', pname))
+    def render_workspace(self, wfile):
+        """Given a workspace file, returns a tuplet with its file, its name and a
+        prettified path to the file
 
-    def render_workspace(self, wpath):
-        wname = os.path.basename(re.sub(r'\.sublime-workspace$', '', wpath))
-        wfolder = os.path.dirname(wpath)
-        return [wpath, wname, pretty_path(wfolder)]
+        Args:
+            wfile: str
+                The complete path to the workspace file
 
-    def move_default_workspace_to_top(self, pname, wlist):
+        Returns:
+            list[(str, str, str)]: a tuplet composed of the path of the file, the name of
+                the workspace and a prettified path to the file to display to the user
+        """
+        wname = os.path.basename(re.sub(r'\.sublime-workspace$', '', wfile))
+        wfolder = os.path.dirname(wfile)
+        return [wfile, wname, pretty_path(wfolder)]
+
+    def move_default_workspace_to_top(self, project, wlist):
+        """Move the default workspace of a project to the top of the list of workspaces
+
+        The default workspace of a project is defined as the workspace that has the same
+        name of file. For example, the project `test.sublime-project` has for default
+        workspace `test.sublime-workspace`.
+        The default workspace corresponds to the one created by sublime-text by default.
+
+        Args:
+            project: str
+                The name of the project
+            wlist: list[(str, str, str)]
+                A list of information of all of the project's workspaces as given by
+                self.render_workspace (i.e. [(wpath, wname, pretty(wpath))])
+
+        Returns:
+            list[(str, str, str)]: the same workspace list where the default workspace,
+                if found, has been moved to the top of the list
+        """
         for i in range(len(wlist)):
-            if wlist[i][1] == pname:
+            if wlist[i][1] == project:
                 wlist.insert(0, wlist.pop(i))
                 break
+
         return wlist
 
     def move_recent_workspaces_to_top(self, project, wlist, move_second):
+        """Sort a list of workspaces according to their date and time of last opening
+
+        This method sort workspaces according to their index in the `recent.json` file,
+        placing the most recent ones on top of the list.
+        If `move_second` is True, check if this most recent workspace belongs to
+        the project opened in the current window. If it's the case, then switch the
+        first and second items in the list. This is to make sure that when switching
+        workspaces after having opened one, the one opened (and so the most recent one)
+        is not in first position.
+
+        Args:
+            project: str
+                The name of the project from which to sort the workspaces
+            wlist: list[(str, str, str)]
+                A list of information of all of the project's workspaces as given by
+                self.render_workspace (i.e. [(wpath, wname, pretty(wpath))])
+            move_second: bool
+                Whether to move the most recently opened workspace in second position
+
+        Returns:
+            list[(str, str, str)]: the sorted list of workspaces according to their
+                index in the `recent.json` file
+        """
         j = JsonFile(os.path.join(self.primary_dir, 'recent.json'))
         recent = j.load([])
+
+        # We look for the project in the `recent.json` file and extract the list of its
+        # workspaces (sorted by most recently opened)
         for obj in recent:
             pname = os.path.basename(re.sub(r'\.sublime-project$', '', obj["project"]))
             if pname == project:
@@ -315,15 +444,14 @@ class Manager:
         else:
             return wlist
 
+        # Sort workspaces according to their index in the recent list
         wlist.sort(key=lambda w: recent.index(w[0]) if w[0] in recent else -1,
                    reverse=True)
 
-        # Only move if the current window is in a project...
-        curr_ppath = sublime.active_window().project_file_name()
-        if move_second and curr_ppath is not None:
+        # Switch first and second if the current window is in a project...
+        if move_second and self.curr_pname is not None:
             # ...and this project is the one from which we want to load a workspace
-            curr_pname = os.path.basename(re.sub(r'\.sublime-project$', '', curr_ppath))
-            if curr_pname != project:
+            if self.curr_pname != project:
                 return wlist
 
             if wlist[0][0] in recent:
@@ -332,11 +460,38 @@ class Manager:
         return wlist
 
     def display_workspaces(self, project):
+        """Return a list of path to project's workspaces and a list of display elements
+        for each of these workspaces.
+
+        Args:
+            project: str
+                The name of the project from which to list and display workspaces
+                If None, the project opened in the current window (if any) is used
+
+        Returns:
+            (list[str], list[(str, str)]): returns a pair with:
+                - in first element, a list of path to every workspaces belonging to
+                    project
+                - in second element, a list of pair of strings corresponding to the main
+                    display names and the sub-display in the sublime-text selection menu
+
+        Raises:
+            ValueError if the given project is not in the list of managed projects.
+
+        Example: 
+            self.display_workspaces("TestProject") = \
+                    (["/home/test/Projects/TestA.sublime-workspace",
+                        "/home/text/Projects/TestB.sublime-workspace"],
+                     [("TestA", "~/Projects/TestA"),
+                        ("TestB", "~/Projects/TestB")]
+                    )
+        """
         if project is None:
-            project = self.get_current_project()
-        if project not in self.projects_info.keys():
+            project = self.curr_pname
+        if project not in self.projects_info:
             raise ValueError('Project not found !')
 
+        # Load workspaces and their information, then sort them alphabetically
         wfiles = self.projects_info[project]["workspaces"]
         wlist = list(map(self.render_workspace, wfiles))
         wlist.sort(key=lambda w: w[1])
@@ -348,6 +503,7 @@ class Manager:
         if self.settings.get('show_default_workspace_first', False):
             wlist = self.move_default_workspace_to_top(project, wlist)
 
+        # Change name of default workspace (cf. method `get_default_workspace`) to "(Default)"
         for i, (wpath, wname, wfolder) in enumerate(wlist):
             if wname == project:
                 wlist[i] = [wpath, '(Default)', wfolder]
@@ -384,7 +540,23 @@ class Manager:
         return self.projects_info[project]['file']
 
     def get_default_workspace(self, project):
+        """Get the default workspace of a project
+
+        In order, given a project "Example" the default workspace is:
+        - the one with the same name as the project, i.e. Example.sublime-workspace
+        - the one opened the most recently
+        - the first one which exists, in alphabetical order
+
+        Args:
+            project: str
+                The name of the project
+
+        Returns:
+            str: the path of the default workspace file
+        """
+        # Load workspaces and sort them alphabetically
         workspaces = self.projects_info[project]['workspaces']
+        workspaces.sort(key=lambda wfile: os.path.basename(wfile))
 
         # If one of the workspace has default name, return it
         for workspace in workspaces:
@@ -392,7 +564,7 @@ class Manager:
             if wname == project:
                 return workspace
 
-        # Else, get the most recent
+        # Else, try to get the most recent
         recent_file = os.path.join(self.primary_dir, 'recent.json')
         if not os.path.exists(recent_file):
             return workspaces[0]
@@ -404,30 +576,41 @@ class Manager:
         else:
             return recent[project]["workspaces"][-1]
 
-    def update_recent(self, project, workspace=None):
+    def update_recent(self, project, wfile=None):
+        """Update the `recent.json` file to put the given project and workspace in most
+        recent spot
+
+        Args:
+            project: str
+                The name of the project
+            wfile: str
+                The path of the workspace file
+        """
         j = JsonFile(os.path.join(self.primary_dir, 'recent.json'))
         recent = j.load([])
         pfile = pretty_path(self.project_file_name(project))
 
-        if workspace is None:
-            workspace = re.sub(r'\.sublime-project$', '.sublime-workspace', pfile)
+        # If no workspace is given, take the default one
+        if wfile is None:
+            wfile = re.sub(r'\.sublime-project$', '.sublime-workspace', pfile)
 
+        # Run through the recent file to find the given project and move the given
+        # workspace to the end of the wlist
         for i, pobject in enumerate(recent):
             if pfile == pobject["project"]:
                 wlist = pobject["workspaces"]
-                if workspace not in wlist:
-                    wlist.append(workspace)
-                else:
-                    wlist.remove(workspace)
-                    wlist.append(workspace)
+                if wfile in wlist:
+                    wlist.remove(wfile)
+                wlist.append(wfile)
                 recent.pop(i)
                 break
         else:
-            wlist = [workspace]
+            wlist = [wfile]
 
+        # Move the project to the end of the recent list
         recent.append({"project": pfile, "workspaces": wlist})
 
-        # only keep the most recent 50 records
+        # Only keep the most recent 50 records
         if len(recent) > 50:
             recent = recent[(50 - len(recent)):len(recent)]
         j.save(recent)
@@ -518,7 +701,7 @@ class Manager:
 
     def add_workspace(self):
         def add_callback(new_workspace):
-            project = self.get_current_project()
+            project = self.curr_pname
             if not new_workspace:
                 new_workspace = project
 
@@ -530,13 +713,14 @@ class Manager:
                 sublime.message_dialog("Another workspace is already named " + new_workspace)
                 return
 
-            # Trick : instead of using obscure undocumented sublime commands, copy
-            # an existing sublime-workspace file and reset its data to get a new one
+            # Trick: instead of using obscure undocumented sublime commands to create a
+            # new workspace file, copy # an existing sublime-workspace file and reset
+            # its data to get a new one
             shutil.copy(wfile, new_wfile)
             j = JsonFile(new_wfile)
             j.save({'project': project + ".sublime-project"})
 
-            # reload projects info
+            # Reload projects info
             self.__init__(self.window)
             self.open_in_new_window(None, new_wfile, False)
 
@@ -577,7 +761,7 @@ class Manager:
     @dont_close_windows_when_empty
     def switch_project(self, project, workspace=None):
         if project is None:
-            project = self.get_current_project()
+            project = self.curr_pname
         if workspace is None:
             workspace = self.get_default_workspace(project)
         self.update_recent(project, workspace)
@@ -587,7 +771,7 @@ class Manager:
     @dont_close_windows_when_empty
     def open_in_new_window(self, project, workspace=None, close_project=True):
         if project is None:
-            project = self.get_current_project()
+            project = self.curr_pname
         if workspace is None:
             workspace = self.get_default_workspace(project)
         self.update_recent(project, workspace)
@@ -624,7 +808,7 @@ class Manager:
                                           'Warning: this will close any window opened '
                                           'containing the corresponding project' % workspace)
         if answer is True:
-            project = self.get_current_project()
+            project = self.curr_pname
             self.close_project_by_name(project)
             os.remove(wfile)
             self.__init__(self.window)
@@ -665,7 +849,7 @@ class Manager:
             if not new_project or project == new_project:
                 return
 
-            if new_project in self.projects_info.keys():
+            if new_project in self.projects_info:
                 sublime.message_dialog("Another project is already called like this")
                 return
 
@@ -742,7 +926,7 @@ class Manager:
 
     def rename_workspace(self, wfile):
         def rename_callback(new_workspace):
-            project = self.get_current_project()
+            project = self.curr_pname
             if not new_workspace:
                 new_workspace = project
 
@@ -814,7 +998,16 @@ class ProjectManager(sublime_plugin.WindowCommand):
             10)
 
     def choose_ws(self, action, project=None):
+        """Display a sublime-text quick panel to choose a workspace from a list
+
+        Args:
+            action: str
+                An action from the list of basic possible actions (cf self.show_options)
+            project: str
+                The name of the project from which to choose the workspace
+        """
         self.project = project
+
         try:
             self.workspaces, wdisplays = self.manager.display_workspaces(project)
         except ValueError:
@@ -825,8 +1018,9 @@ class ProjectManager(sublime_plugin.WindowCommand):
     def run(self, action=None, caller=None):
         self.manager = Manager(self.window)
 
+        can_switch_workspaces = self.manager.can_switch_workspaces()
         if action is None:
-            self.show_options(self.manager.can_switch_workspaces())
+            self.show_options(can_switch_workspaces)
         elif action == 'add_project':
             self.manager.add_project()
         elif action == 'add_workspace':
@@ -838,6 +1032,9 @@ class ProjectManager(sublime_plugin.WindowCommand):
         elif action == 'remove_dead_projects':
             self.manager.clean_dead_projects()
         elif action.endswith('_ws'):
+            if not can_switch_workspaces:
+                return
+
             self.caller = caller
             self.choose_ws(action)
         else:
@@ -851,17 +1048,26 @@ class ProjectManager(sublime_plugin.WindowCommand):
                 sublime.message_dialog('No projects are managed currently.')
                 return
 
-            if action in ('switch', 'new') and self.manager.settings.get('default_workspaces', True):
+            # If the `default_workspaces` option is True, the action `switch` and `new`
+            # automatically asks on which one of the project's workspaces to act
+            if action in ('switch', 'new') and can_switch_workspaces and \
+                    self.manager.settings.get('default_workspaces', True):
                 def callback(a):
-                    if a < 0 and self.caller == 'manager':
-                        sublime.set_timeout(self.run, 10)
+                    # User cancelled at the project choice step
+                    if a < 0:
+                        if self.caller == 'manager':
+                            sublime.set_timeout(self.run, 10)
                         return
+
                     project = self.projects[a]
+                    # If the project only has one workspace, no need to ask the user
                     if self.manager.nb_workspaces(project) < 2:
                         eval('self.on_'+action)(a)
                     else:
                         self.choose_ws(action+'_ws', project)
+
                 self.show_quick_panel(pdisplays, callback)
+
             else:
                 callback = eval('self.on_' + action)
                 self.show_quick_panel(pdisplays, callback)
@@ -895,67 +1101,67 @@ class ProjectManager(sublime_plugin.WindowCommand):
                    'clear_recent_projects',
                    'remove_dead_projects']
 
+        # If the current project cannot switch workspace (either because workspace
+        # management is off or because there is only one workspace), we remove the
+        # actions on workspace (switch, switch in new window, rename and remove)
         if not can_switch_workspaces:
             for i in range(len(actions)-1, -1, -1):
                 if actions[i].endswith('_ws'):
                     actions.pop(i)
                     items.pop(i)
 
-        # Can't add a workspace if no project is currently open
-        if self.manager.get_current_project() is None:
+        # Can't add a workspace if no project is currently opened
+        if self.manager.curr_pname is None:
             index = actions.index('add_workspace')
             actions.pop(index)
             items.pop(index)
 
         def callback(a):
+            # Invalid action, user cancelled
             if a < 0:
                 return
-            else:
-                if a <= 5 or (can_switch_workspaces and a <= 9):
-                    caller = 'manager'
-                else:
-                    caller = None
 
-                self.run(action=actions[a], caller=caller)
+            caller = 'manager' if a <= actions.index('add_project') - 1 else None
+            self.run(action=actions[a], caller=caller)
 
         self.show_quick_panel(items, callback)
 
     @cancellable
-    def on_new(self, action):
-        self.manager.open_in_new_window(self.projects[action])
+    def on_new(self, action_id):
+        self.manager.open_in_new_window(self.projects[action_id])
 
     @cancellable
-    def on_new_ws(self, action):
-        self.manager.open_in_new_window(self.project, self.workspaces[action], False)
+    def on_new_ws(self, action_id):
+        self.manager.open_in_new_window(self.project, self.workspaces[action_id], False)
 
     @cancellable
-    def on_switch(self, action):
-        self.manager.switch_project(self.projects[action])
+    def on_switch(self, action_id):
+        self.manager.switch_project(self.projects[action_id])
 
     @cancellable
-    def on_switch_ws(self, action):
-        self.manager.switch_project(self.project, self.workspaces[action])
+    def on_switch_ws(self, action_id):
+        self.manager.switch_project(self.project, self.workspaces[action_id])
 
     @cancellable
-    def on_append(self, action):
-        self.manager.append_project(self.projects[action])
+    def on_append(self, action_id):
+        self.manager.append_project(self.projects[action_id])
 
     @cancellable
-    def on_edit(self, action):
-        self.manager.edit_project(self.projects[action])
+    def on_edit(self, action_id):
+        self.manager.edit_project(self.projects[action_id])
 
     @cancellable
-    def on_rename(self, action):
-        self.manager.rename_project(self.projects[action])
+    def on_rename(self, action_id):
+        self.manager.rename_project(self.projects[action_id])
 
     @cancellable
-    def on_remove(self, action):
-        self.manager.remove_project(self.projects[action])
+    def on_remove(self, action_id):
+        self.manager.remove_project(self.projects[action_id])
 
     @cancellable
-    def on_rename_ws(self, action):
-        self.manager.rename_workspace(self.workspaces[action])
+    def on_rename_ws(self, action_id):
+        self.manager.rename_workspace(self.workspaces[action_id])
 
     @cancellable
-    def on_remove_ws(self, action):
-        self.manager.remove_workspace(self.workspaces[action])
+    def on_remove_ws(self, action_id):
+        self.manager.remove_workspace(self.workspaces[action_id])
