@@ -130,6 +130,13 @@ class Manager:
 
         self.projects_info = self.get_all_projects_info()
 
+        # Clear recent projects file if it doesn't support workspaces
+        json_file = JsonFile(os.path.join(self.primary_dir, 'recent.json'))
+        recent_files = json_file.load([])
+        if recent_files and type(recent_files[0]) != dict:
+            json_file.remove()
+            self.window.run_command("clear_recent_projects_and_workspaces")
+
         # Update file organization and reload info if needed
         if self.reorganize_files(self.projects_path):
             self.projects_info = self.get_all_projects_info()
@@ -257,7 +264,7 @@ class Manager:
         wfiles = []
 
         # Check every file in the same folder as the project file
-        for file in map(lambda file:os.path.join(folder, file), os.listdir(folder)):
+        for file in map(lambda file: os.path.join(folder, file), os.listdir(folder)):
             if (file.endswith('.sublime-workspace')
                     and self.is_workspace_affiliated(pname, file)):
                 wfiles.append(os.path.normpath(file))
@@ -478,7 +485,7 @@ class Manager:
         Raises:
             ValueError if the given project is not in the list of managed projects.
 
-        Example: 
+        Example:
             self.display_workspaces("TestProject") = \
                     (["/home/test/Projects/TestA.sublime-workspace",
                         "/home/text/Projects/TestB.sublime-workspace"],
@@ -497,7 +504,7 @@ class Manager:
         wlist.sort(key=lambda w: w[1])
 
         if self.settings.get('show_recent_workspaces_first', True):
-            move_second =  self.settings.get('show_most_recent_workspace_second', True)
+            move_second = self.settings.get('show_most_recent_workspace_second', True)
             wlist = self.move_recent_workspaces_to_top(project, wlist, move_second)
 
         if self.settings.get('show_default_workspace_first', False):
