@@ -193,15 +193,23 @@ class Manager:
                     # Create project folder
                     pname = re.sub(r'\.sublime-project$', '', file)
                     directory = os.path.join(pdir, pname)
-                    os.mkdir(directory)
+                    if not os.path.exists(directory):
+                        os.mkdir(directory)
 
                     # Move all of its existing workspaces files
                     for wfile in self.projects_info[pname]['workspaces']:
-                        shutil.move(wfile, directory)
+                        try:
+                            shutil.move(wfile, directory)
+                        except Exception:
+                            sublime.message_dialog('Please remove the existing file %s to be able to load projects.' % wfile)
+                            raise
 
                     # Move the sublime-project file itself
                     pfile = os.path.join(pdir, file)
-                    shutil.move(pfile, directory)
+                    try:
+                        shutil.move(pfile, directory)
+                    except Exception:
+                        sublime.message_dialog('Please remove the existing file %s to be able to load projects.' % pfile)
 
         return modified
 
