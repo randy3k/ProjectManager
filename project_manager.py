@@ -301,10 +301,19 @@ class Manager:
             folder = expand_path(pd['folders'][0].get('path', ''), relative_to=pfile)
         else:
             folder = ''
+
+        if pdir:
+            pfolder = os.path.dirname(pfile)
+            pfolder = pfolder.rsplit(os.sep, 1)[0] + os.sep
+            group = pfolder.replace(pdir + os.sep, '')
+        else:
+            group = ''
+
         info["name"] = pname
         info["folder"] = folder
         info["file"] = pfile
         info["workspaces"] = self.get_project_workspaces(pfile)
+        info["group"] = group
         return info
 
     def mark_open_projects(self, all_info):
@@ -347,22 +356,22 @@ class Manager:
 
     def which_project_dir(self, pfile):
         for pdir in self.projects_path:
-            if (os.path.realpath(os.path.dirname(pfile)) + os.path.sep).startswith(
-                    os.path.realpath(pdir) + os.path.sep):
+            if (os.path.realpath(os.path.dirname(pfile)) + os.sep).startswith(
+                    os.path.realpath(pdir) + os.sep):
                 return pdir
         return None
 
     def render_display_item(self, item):
         project_name, info = item
         active_project_indicator = str(self.settings.get('active_project_indicator', '*'))
+        if "star" not in info:
+            active_project_indicator=''
+
         display_format = str(self.settings.get(
-            'project_display_format', '{project_name}{active_project_indicator}'))
-        if "star" in info:
-            display_name = display_format.format(
-                project_name=project_name, active_project_indicator=active_project_indicator)
-        else:
-            display_name = display_format.format(
-                project_name=project_name, active_project_indicator='')
+            'project_display_format', '{project_group}{project_name}{active_project_indicator}'))
+        display_name = display_format.format(project_name=project_name,
+                                             project_group=info["group"],
+                                             active_project_indicator=active_project_indicator)
         return [
             project_name,
             display_name.strip(),
@@ -873,12 +882,7 @@ class Manager:
                 return
 
             pfile = self.project_file_name(project)
-            pdir = self.which_project_dir(pfile)
-            in_project_dir = pdir is not None
-            if in_project_dir:
-                pdir = os.path.join(pdir, project)
-            else:
-                pdir = os.path.dirname(pfile)
+            pdir = os.path.dirname(pfile)
 
             new_pfile = os.path.join(pdir, '%s.sublime-project' % new_project)
             reopen = self.close_project_by_name(project)
@@ -910,7 +914,7 @@ class Manager:
                 data['project'] = '%s.sublime-project' % os.path.basename(new_project)
                 j.save(data)
 
-            if in_project_dir:
+            if self.which_project_dir(pfile) is not None:
                 try:
                     path = os.path.dirname(pfile)
                     new_path = os.path.join(os.path.dirname(path), new_project)
@@ -1070,8 +1074,7 @@ class ProjectManager(sublime_plugin.WindowCommand):
 
             # If the `default_workspaces` option is True, the action `switch` and `new`
             # automatically asks on which one of the project's workspaces to act
-            if action in ('switch', 'new') and can_switch_workspaces and \
-                    self.manager.settings.get('default_workspaces', True):
+            if self.manager.settings.get('default_workspaces', True) and action in ('switch', 'new'):
                 def callback(a):
                     # User cancelled at the project choice step
                     if a < 0:
