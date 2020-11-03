@@ -533,7 +533,7 @@ class ProjectManager(sublime_plugin.WindowCommand):
             if os.path.isfile(os.path.join(self.manager.primary_dir, '%s.sublime-project' % project)):
                self.manager.open_in_new_window(project)
             else:
-                sublime.status_message("🆘 '%s' project not found" % project)
+                sublime.status_message("'%s' project not found" % project)
         elif action is None:
             self.show_options()
             self.show_options()
