@@ -1,6 +1,9 @@
 {
     // A list of folders containing *.sublime-project files, e.g.,
     // "projects_path": ["path/to/custom/Projects", "another_path/to/Projects"]
+    // please note that they shall be the folders containing solely *.sublime-project or
+    // *.sublimn-workspace files. It is not intended to be used for automatic project
+    // discovery.
     "projects_path": [],
 
     // Enable local projects directory, such a directory will be named as
@@ -9,7 +12,7 @@
     "use_local_projects_dir": false,
 
     // Windows/Linux only
-    // close projecct when the window is closed
+    // close project when the window is closed
     "close_project_when_close_window": true,
 
     // Show recent projects first
