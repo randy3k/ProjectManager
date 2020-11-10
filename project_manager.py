@@ -22,9 +22,10 @@ def subl(*args):
         window = sublime.active_window()
         view = window.active_view()
 
-        # Automatically close window if no folders nor sheets are open
+        # Automatically close window if no folders nor sheets are open BUT there is
+        # still project data -> that means the workspace was opened elsewhere
         # (this happen when trying to open a workspace already opened in another window)
-        if not window.folders() and not window.sheets():
+        if window.project_data() and not window.folders() and not window.sheets():
             window.run_command('close_window')
 
         if sublime.platform() == 'windows':
@@ -732,6 +733,9 @@ class Manager:
 
             if not new_workspace:
                 new_workspace = project
+            elif '/' in new_workspace:
+                sublime.message_dialog("Invalid name: can't contain a '\\'")
+                return
 
             wfile = self.get_default_workspace(project)
             new_wfile = os.path.join(os.path.dirname(wfile),
@@ -742,9 +746,13 @@ class Manager:
                 return
 
             # Trick: instead of using obscure undocumented sublime commands to create a
-            # new workspace file, copy # an existing sublime-workspace file and reset
+            # new workspace file, copy an existing sublime-workspace file and reset
             # its data to get a new one
-            shutil.copy(wfile, new_wfile)
+            try:
+                shutil.copy(wfile, new_wfile)
+            except OSError as err:
+                sublime.message_dialog(str(err))
+                return
             j = JsonFile(new_wfile)
             j.save({'project': project + ".sublime-project"})
 
