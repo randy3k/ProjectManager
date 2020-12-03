@@ -526,10 +526,16 @@ class ProjectManager(sublime_plugin.WindowCommand):
             lambda: self.window.show_quick_panel(items, on_done),
             10)
 
-    def run(self, action=None, caller=None):
+    def run(self, action=None, caller=None, project=None):
         self.manager = Manager(self.window)
 
-        if action is None:
+        if project is not None:
+            if os.path.isfile(os.path.join(self.manager.primary_dir, '%s.sublime-project' % project)):
+               self.manager.open_in_new_window(project)
+            else:
+                sublime.status_message("'%s' project not found" % project)
+        elif action is None:
+            self.show_options()
             self.show_options()
         elif action == 'add_project':
             self.manager.add_project()
