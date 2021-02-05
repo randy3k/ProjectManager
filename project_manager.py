@@ -366,7 +366,7 @@ class Manager:
         project_name, info = item
         active_project_indicator = str(self.settings.get('active_project_indicator', '*'))
         if "star" not in info:
-            active_project_indicator=''
+            active_project_indicator = ''
 
         display_format = str(self.settings.get(
             'project_display_format', '{project_group}{project_name}{active_project_indicator}'))
@@ -403,8 +403,17 @@ class Manager:
                 the workspace and a prettified path to the file to display to the user
         """
         wname = os.path.basename(re.sub(r'\.sublime-workspace$', '', wfile))
-        wfolder = os.path.dirname(wfile)
-        return [wfile, wname, pretty_path(wfolder)]
+        wbuffer_list = JsonFile(wfile).load()["buffers"]
+        wbuffers_names = []
+        for buffer in wbuffer_list:
+            buffer_file = buffer['file']
+            buffer_name = buffer_file.rsplit(os.sep, 1)[1]
+            wbuffers_names.append(buffer_name)
+
+        wbuffers = " / ".join(wbuffers_names)
+        if len(wbuffers) > 85:
+            wbuffers = wbuffers[:85] + " [...] (" + str(wbuffers[80:].count('/')) + " more)"
+        return [wfile, wname, wbuffers]
 
     def move_default_workspace_to_top(self, project, wlist):
         """Move the default workspace of a project to the top of the list of workspaces
@@ -448,7 +457,7 @@ class Manager:
                 The name of the project from which to sort the workspaces
             wlist: list[(str, str, str)]
                 A list of information of all of the project's workspaces as given by
-                self.render_workspace (i.e. [(wpath, wname, pretty(wpath))])
+                self.render_workspace (i.e. [(wpath, wname, wbuffers)])
             move_second: bool
                 Whether to move the most recently opened workspace in second position
 
@@ -529,9 +538,9 @@ class Manager:
             wlist = self.move_default_workspace_to_top(project, wlist)
 
         # Change name of default workspace (cf. method `get_default_workspace`) to "(Default)"
-        for i, (wpath, wname, wfolder) in enumerate(wlist):
+        for i, (wpath, wname, wbuffers) in enumerate(wlist):
             if wname == project:
-                wlist[i] = [wpath, '(Default)', wfolder]
+                wlist[i] = [wpath, '(Default)', wbuffers]
 
         return list(map(itemgetter(0), wlist)), list(map(itemgetter(1, 2), wlist))
 
@@ -672,7 +681,11 @@ class Manager:
         def add_callback(project):
             pd = self.window.project_data()
             pf = self.window.project_file_name()
-            pfile = os.path.join(self.primary_dir, project, '%s.sublime-project' % project)
+            if os.sep in project:
+                groups, project = project.rsplit(os.sep, 1)
+            else:
+                groups = ''
+            pfile = os.path.join(self.primary_dir, groups, project, '%s.sublime-project' % project)
             if pd:
                 if "folders" in pd:
                     for folder in pd["folders"]:
