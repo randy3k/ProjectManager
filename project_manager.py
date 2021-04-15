@@ -19,6 +19,11 @@ def plugin_loaded():
     all_info = AllProjectsInfo()
 
 
+def plugin_unloaded():
+    global all_info
+    all_info = None
+
+
 def subl(*args):
     executable_path = sublime.executable_path()
     if sublime.platform() == 'osx':
