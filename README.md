@@ -69,17 +69,6 @@ It can be done by adding the following keybind in your user keybind settings fil
 }
 ```
 
-
-- _How to use a different project directory?_
-
-To use a different directory for your projects rather than `Packages/User/Projects/`, edit the following in package settings: `Preferences > Package Settings > Project Manager`
-
-```
-{
-    "projects_path": ["path/to/custom/projects_dir"],
-}
-```
-
 ### License
 
 Project Manager is MIT licensed.

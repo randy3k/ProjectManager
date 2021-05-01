@@ -117,10 +117,14 @@ class AllProjectsInfo:
     def primary_dir(self):
         return self._primary_dir
 
+    def default_dir(self):
+        return self._default_dir
+
     def projects_info(self):
         return self._projects_info
 
     def which_project_dir(self, pfile):
+        pfile = expand_path(pfile)
         for pdir in self._projects_path:
             if (os.path.realpath(os.path.dirname(pfile)) + os.path.sep).startswith(
                     os.path.realpath(pdir) + os.path.sep):
@@ -130,24 +134,32 @@ class AllProjectsInfo:
     def reload_projects(self):
         self._settings = sublime.load_settings(SETTINGS_FILENAME)
 
-        default_projects_dir = os.path.join(
+        self._default_dir = os.path.join(
             sublime.packages_path(), 'User', 'Projects')
-        user_projects_dirs = self._settings.get('projects_path')
 
         self._projects_path = []
+
+        user_projects_dirs = self._settings.get('projects')
+
+        if isinstance(user_projects_dirs, dict):
+            if resolved_computer_name in user_projects_dirs:
+                user_projects_dirs = user_projects_dirs[resolved_computer_name]
+            else:
+                user_projects_dirs = []
+
+        if isinstance(user_projects_dirs, str):
+            user_projects_dirs = [user_projects_dirs]
+
         for folder in user_projects_dirs:
-            if os.path.isdir(os.path.expanduser(folder)):
-                self._projects_path.append(folder)
+            p = expand_path(folder)
+            p = p.replace("$default", self._default_dir)
+            p = p.replace("$hostname", resolved_computer_name)
+            self._projects_path.append(p)
 
-        if not self._projects_path:
-            self._projects_path = [default_projects_dir]
+        if self._default_dir not in self._projects_path:
+            self._projects_path.append(self._default_dir)
 
-        self._projects_path = [
-            os.path.normpath(os.path.expanduser(d)) for d in self._projects_path]
-
-        if self._settings.get('use_local_projects_dir', False):
-            self._projects_path = \
-                [d + ' - ' + resolved_computer_name for d in self._projects_path] + self._projects_path
+        self._projects_path = [expand_path(d) for d in self._projects_path]
 
         self._primary_dir = self._projects_path[0]
 
@@ -329,11 +341,33 @@ class Manager:
                     return True
         return False
 
+    def prompt_directory(self, callback):
+        primary_dir = all_info.primary_dir()
+        default_dir = all_info.default_dir()
+        if all_info.settings().get("prompt_project_location", True):
+            if primary_dir != default_dir:
+                items = [
+                    ("Primiary", "To: " + pretty_path(primary_dir)),
+                    ("Default", "To: " + pretty_path(default_dir))
+                ]
+
+                def _on_select(index):
+                    if index == 0:
+                        sublime.set_timeout(lambda: callback(primary_dir), 100)
+                    else:
+                        sublime.set_timeout(lambda: callback(default_dir), 100)
+
+                self.window.show_quick_panel(items, _on_select)
+                return
+
+        # fallback
+        sublime.set_timeout(lambda: callback(primary_dir), 100)
+
     def add_project(self):
-        def add_callback(project):
+        def add_callback(project, pdir):
             pd = self.window.project_data()
             pf = self.window.project_file_name()
-            pfile = os.path.join(all_info.primary_dir(), '%s.sublime-project' % project)
+            pfile = os.path.join(pdir, '%s.sublime-project' % project)
             if pd:
                 if "folders" in pd:
                     for folder in pd["folders"]:
@@ -365,7 +399,7 @@ class Manager:
             all_info.reload_projects()
             self.switch_project(project)
 
-        def show_input_panel():
+        def _ask_project_name(pdir):
             project = 'New Project'
             pd = self.window.project_data()
             pf = self.window.project_file_name()
@@ -377,29 +411,33 @@ class Manager:
 
             v = self.window.show_input_panel('Project name:',
                                              project,
-                                             add_callback,
+                                             lambda x: add_callback(x, pdir),
                                              None,
                                              None)
             v.run_command('select_all')
 
-        sublime.set_timeout(show_input_panel, 100)
+        self.prompt_directory(_ask_project_name)
 
     def import_sublime_project(self):
-        pfile = pretty_path(self.window.project_file_name())
-        if not pfile:
-            sublime.message_dialog('Project file not found!')
-            return
-        if all_info.which_project_dir(pfile):
-            sublime.message_dialog('This project was created by Project Manager!')
-            return
-        answer = sublime.ok_cancel_dialog('Import %s?' % os.path.basename(pfile))
-        if answer is True:
-            j = JsonFile(os.path.join(all_info.primary_dir(), 'library.json'))
-            data = j.load([])
-            if pfile not in data:
-                data.append(pfile)
-                j.save(data)
-            all_info.reload_projects()
+        def _import_sublime_project(pdir):
+            pfile = pretty_path(self.window.project_file_name())
+            if not pfile:
+                sublime.message_dialog('Project file not found!')
+                return
+            if all_info.which_project_dir(pfile):
+                sublime.message_dialog('This project was created by Project Manager!')
+                return
+            answer = sublime.ok_cancel_dialog('Import %s?' % os.path.basename(pfile))
+            if answer is True:
+                j = JsonFile(os.path.join(pdir, 'library.json'))
+                data = j.load([])
+                if pfile not in data:
+                    data.append(pfile)
+                    j.save(data)
+
+                all_info.reload_projects()
+
+        self.prompt_directory(_import_sublime_project)
 
     def append_project(self, project):
         self.update_recent(project)
@@ -508,7 +546,7 @@ class Manager:
 
             all_info.reload_projects()
 
-        def show_input_panel():
+        def _ask_project_name():
             v = self.window.show_input_panel('New project name:',
                                              project,
                                              rename_callback,
@@ -516,7 +554,7 @@ class Manager:
                                              None)
             v.run_command('select_all')
 
-        sublime.set_timeout(show_input_panel, 100)
+        sublime.set_timeout(_ask_project_name, 100)
 
 
 def cancellable(func):
