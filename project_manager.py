@@ -636,6 +636,8 @@ class ProjectManager(sublime_plugin.WindowCommand):
             self.manager.add_project()
         elif action == 'import_sublime_project':
             self.manager.import_sublime_project()
+        elif action == 'refresh_projects':
+            all_info.reload_projects()
         elif action == 'clear_recent_projects':
             self.manager.clear_recent_projects()
         elif action == 'remove_dead_projects':
@@ -659,6 +661,7 @@ class ProjectManager(sublime_plugin.WindowCommand):
             ['Remove Project', 'Remove from Project Manager'],
             ['Add New Project', 'Add current folders to Project Manager'],
             ['Import Project', 'Import current .sublime-project file'],
+            ['Refresh Projects', 'Refresh Projects'],
             ['Clear Recent Projects', 'Clear Recent Projects'],
             ['Remove Dead Projects', 'Remove Dead Projects']
         ]
@@ -674,8 +677,10 @@ class ProjectManager(sublime_plugin.WindowCommand):
             elif a == 7:
                 self.run(action='import_sublime_project')
             elif a == 8:
-                self.run(action='clear_recent_projects')
+                self.run(action='refresh_projects')
             elif a == 9:
+                self.run(action='clear_recent_projects')
+            elif a == 10:
                 self.run(action='remove_dead_projects')
 
         self.show_quick_panel(items, callback)
