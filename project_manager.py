@@ -18,9 +18,12 @@ def preferences_migrator():
     projects_path = pm_settings.get("projects_path", [])
 
     if pm_settings.get("use_local_projects_dir", False):
-        pm_settings.set("projects",
-            [p + " - $hostname" for p in projects_path] + projects_path +
-            ["$default - $hostname", "$default"])
+        if projects_path:
+            pm_settings.set("projects",
+                [p + " - $hostname" for p in projects_path] + projects_path +
+                ["$default - $hostname", "$default"])
+        else:
+            pm_settings.set("projects", "$default - $hostname")
     elif projects_path:
         if len(projects_path) > 1:
             pm_settings.set("projects", projects_path)
