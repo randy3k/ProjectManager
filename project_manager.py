@@ -11,16 +11,40 @@ from .json_file import JsonFile
 SETTINGS_FILENAME = 'project_manager.sublime-settings'
 resolved_computer_name = ''
 all_info = None
+pm_settings = None
+
+
+def preferences_migrator():
+    projects_path = pm_settings.get("projects_path", [])
+
+    if pm_settings.get("use_local_projects_dir", False):
+        pm_settings.set("projects",
+            [p + " - $hostname" for p in projects_path] + projects_path +
+            ["$default - $hostname", "$default"])
+    elif projects_path:
+        if len(projects_path) > 1:
+            pm_settings.set("projects", projects_path)
+        else:
+            pm_settings.set("projects", projects_path[0])
+
+    pm_settings.erase("projects_path")
+    pm_settings.erase("use_local_projects_dir")
+    sublime.save_settings(SETTINGS_FILENAME)
 
 
 def plugin_loaded():
-    global resolved_computer_name, all_info
+    global resolved_computer_name, all_info, pm_settings
+    pm_settings = sublime.load_settings(SETTINGS_FILENAME)
+    if pm_settings.has("projects_path") and pm_settings.get("projects") == "$default":
+        preferences_migrator()
     resolved_computer_name = computer_name()
     all_info = AllProjectsInfo()
+    pm_settings.add_on_change("reload_projects", all_info.reload_projects)
 
 
 def plugin_unloaded():
     global all_info
+    pm_settings.clear_on_change("reload_projects")
     all_info = None
 
 
@@ -108,9 +132,6 @@ class AllProjectsInfo:
     def __init__(self):
         self.reload_projects()
 
-    def settings(self):
-        return self._settings
-
     def projects_path(self):
         return self._projects_path
 
@@ -132,14 +153,12 @@ class AllProjectsInfo:
         return None
 
     def reload_projects(self):
-        self._settings = sublime.load_settings(SETTINGS_FILENAME)
-
         self._default_dir = os.path.join(
             sublime.packages_path(), 'User', 'Projects')
 
         self._projects_path = []
 
-        user_projects_dirs = self._settings.get('projects')
+        user_projects_dirs = pm_settings.get('projects')
 
         if isinstance(user_projects_dirs, dict):
             if resolved_computer_name in user_projects_dirs:
@@ -163,8 +182,11 @@ class AllProjectsInfo:
 
         self._primary_dir = self._projects_path[0]
 
+        if not os.path.isdir(self._default_dir):
+            os.makedirs(self._default_dir)
+
         if not os.path.isdir(self._primary_dir):
-            os.makedirs(self._primary_dir)
+            raise Exception("Directory \"{}\" does not exists.".format(self._primary_dir))
 
         self._projects_info = self._get_all_projects_info()
 
@@ -244,8 +266,8 @@ class Manager:
 
     def render_display_item(self, item):
         project_name, info = item
-        active_project_indicator = str(all_info.settings().get('active_project_indicator', '*'))
-        display_format = str(all_info.settings().get(
+        active_project_indicator = str(pm_settings.get('active_project_indicator', '*'))
+        display_format = str(pm_settings.get(
             'project_display_format', '{project_name}{active_project_indicator}'))
         if "star" in info:
             display_name = display_format.format(
@@ -262,10 +284,10 @@ class Manager:
     def display_projects(self):
         plist = list(map(self.render_display_item, all_info.projects_info().items()))
         plist.sort(key=lambda p: p[0])
-        if all_info.settings().get('show_recent_projects_first', True):
+        if pm_settings.get('show_recent_projects_first', True):
             self.move_recent_projects_to_top(plist)
 
-        if all_info.settings().get('show_active_projects_first', True):
+        if pm_settings.get('show_active_projects_first', True):
             self.move_openning_projects_to_top(plist)
         return list(map(itemgetter(0), plist)), list(map(itemgetter(1, 2), plist))
 
@@ -344,10 +366,10 @@ class Manager:
     def prompt_directory(self, callback):
         primary_dir = all_info.primary_dir()
         default_dir = all_info.default_dir()
-        if all_info.settings().get("prompt_project_location", True):
+        if pm_settings.get("prompt_project_location", True):
             if primary_dir != default_dir:
                 items = [
-                    ("Primiary", "To: " + pretty_path(primary_dir)),
+                    ("User", "To: " + pretty_path(primary_dir)),
                     ("Default", "To: " + pretty_path(default_dir))
                 ]
 
