@@ -9,8 +9,6 @@ import operator
 from .json_file import JsonFile
 
 SETTINGS_FILENAME = 'project_manager.sublime-settings'
-resolved_computer_name = ''
-all_info = None
 pm_settings = None
 
 
@@ -36,19 +34,16 @@ def preferences_migrator():
 
 
 def plugin_loaded():
-    global resolved_computer_name, all_info, pm_settings
+    global pm_settings
     pm_settings = sublime.load_settings(SETTINGS_FILENAME)
     if pm_settings.has("projects_path") and pm_settings.get("projects") == "$default":
         preferences_migrator()
-    resolved_computer_name = computer_name()
-    all_info = AllProjectsInfo()
-    pm_settings.add_on_change("reload_projects", all_info.reload_projects)
+    projects_info = ProjectsInfo.get_instance()
+    pm_settings.add_on_change("refresh_projects", projects_info.refresh_projects)
 
 
 def plugin_unloaded():
-    global all_info
-    pm_settings.clear_on_change("reload_projects")
-    all_info = None
+    pm_settings.clear_on_change("refresh_projects")
 
 
 def subl(*args):
@@ -110,11 +105,18 @@ def itemgetter(*index):
     return _itemgetter
 
 
+_computer_name = []
+
 def computer_name():
-    if sublime.platform() == 'osx':
-        node = subprocess.check_output(['scutil', '--get', 'ComputerName']).decode().strip()
+    if _computer_name:
+        node = _computer_name[0]
     else:
-        node = platform.node().split('.')[0]
+        if sublime.platform() == 'osx':
+            node = subprocess.check_output(['scutil', '--get', 'ComputerName']).decode().strip()
+        else:
+            node = platform.node().split('.')[0]
+        _computer_name.append(node)
+
     return node
 
 
@@ -131,9 +133,17 @@ def dont_close_windows_when_empty(func):
     return f
 
 
-class AllProjectsInfo:
+class ProjectsInfo:
+    _instance = None
+
     def __init__(self):
-        self.reload_projects()
+        self.refresh_projects()
+
+    @classmethod
+    def get_instance(cls):
+        if not cls._instance:
+            cls._instance = cls()
+        return cls._instance
 
     def projects_path(self):
         return self._projects_path
@@ -144,8 +154,8 @@ class AllProjectsInfo:
     def default_dir(self):
         return self._default_dir
 
-    def projects_info(self):
-        return self._projects_info
+    def info(self):
+        return self._info
 
     def which_project_dir(self, pfile):
         pfile = expand_path(pfile)
@@ -155,17 +165,18 @@ class AllProjectsInfo:
                 return pdir
         return None
 
-    def reload_projects(self):
+    def refresh_projects(self):
         self._default_dir = os.path.join(
             sublime.packages_path(), 'User', 'Projects')
 
         self._projects_path = []
 
         user_projects_dirs = pm_settings.get('projects')
+        node = computer_name()
 
         if isinstance(user_projects_dirs, dict):
-            if resolved_computer_name in user_projects_dirs:
-                user_projects_dirs = user_projects_dirs[resolved_computer_name]
+            if node in user_projects_dirs:
+                user_projects_dirs = user_projects_dirs[node]
             else:
                 user_projects_dirs = []
 
@@ -175,7 +186,7 @@ class AllProjectsInfo:
         for folder in user_projects_dirs:
             p = expand_path(folder)
             p = p.replace("$default", self._default_dir)
-            p = p.replace("$hostname", resolved_computer_name)
+            p = p.replace("$hostname", node)
             self._projects_path.append(p)
 
         if self._default_dir not in self._projects_path:
@@ -191,7 +202,7 @@ class AllProjectsInfo:
         if not os.path.isdir(self._primary_dir):
             raise Exception("Directory \"{}\" does not exists.".format(self._primary_dir))
 
-        self._projects_info = self._get_all_projects_info()
+        self._info = self._get_all_projects_info()
 
     def _get_all_projects_info(self):
         all_projects_info = {}
@@ -239,12 +250,12 @@ class AllProjectsInfo:
         info["file"] = pfile
         return info
 
-    def _mark_open_projects(self, all_info):
+    def _mark_open_projects(self, info):
         project_file_names = [
             os.path.realpath(w.project_file_name())
             for w in sublime.windows() if w.project_file_name()]
 
-        for v in all_info.values():
+        for v in info.values():
             if os.path.realpath(v["file"]) in project_file_names:
                 v["star"] = True
 
@@ -266,6 +277,7 @@ class AllProjectsInfo:
 class Manager:
     def __init__(self, window):
         self.window = window
+        self.projects_info = ProjectsInfo.get_instance()
 
     def render_display_item(self, item):
         project_name, info = item
@@ -285,7 +297,7 @@ class Manager:
             pretty_path(info['file'])]
 
     def display_projects(self):
-        plist = list(map(self.render_display_item, all_info.projects_info().items()))
+        plist = list(map(self.render_display_item, self.projects_info.info().items()))
         plist.sort(key=lambda p: p[0])
         if pm_settings.get('show_recent_projects_first', True):
             self.move_recent_projects_to_top(plist)
@@ -295,7 +307,7 @@ class Manager:
         return list(map(itemgetter(0), plist)), list(map(itemgetter(1, 2), plist))
 
     def move_recent_projects_to_top(self, plist):
-        j = JsonFile(os.path.join(all_info.primary_dir(), 'recent.json'))
+        j = JsonFile(os.path.join(self.projects_info.primary_dir(), 'recent.json'))
         recent = j.load([])
         # TODO: it is not needed
         recent = [pretty_path(p) for p in recent]
@@ -311,7 +323,7 @@ class Manager:
                 count = count + 1
 
     def project_file_name(self, project):
-        return all_info.projects_info()[project]['file']
+        return self.projects_info.info()[project]['file']
 
     def project_workspace(self, project):
         return re.sub(r'\.sublime-project$',
@@ -319,7 +331,7 @@ class Manager:
                       self.project_file_name(project))
 
     def update_recent(self, project):
-        j = JsonFile(os.path.join(all_info.primary_dir(), 'recent.json'))
+        j = JsonFile(os.path.join(self.projects_info.primary_dir(), 'recent.json'))
         recent = j.load([])
         # TODO: it is not needed
         recent = [pretty_path(p) for p in recent]
@@ -337,7 +349,7 @@ class Manager:
         def clear_callback():
             answer = sublime.ok_cancel_dialog('Clear Recent Projects?')
             if answer is True:
-                j = JsonFile(os.path.join(all_info.primary_dir(), 'recent.json'))
+                j = JsonFile(os.path.join(self.projects_info.primary_dir(), 'recent.json'))
                 j.remove()
                 self.window.run_command("clear_recent_projects_and_workspaces")
 
@@ -367,8 +379,8 @@ class Manager:
         return False
 
     def prompt_directory(self, callback):
-        primary_dir = all_info.primary_dir()
-        default_dir = all_info.default_dir()
+        primary_dir = self.projects_info.primary_dir()
+        default_dir = self.projects_info.default_dir()
         if pm_settings.get("prompt_project_location", True):
             if primary_dir != default_dir:
                 items = [
@@ -421,7 +433,7 @@ class Manager:
             self.window.run_command('close_project')
             self.window.run_command('close_all')
 
-            all_info.reload_projects()
+            self.projects_info.refresh_projects()
             self.switch_project(project)
 
         def _ask_project_name(pdir):
@@ -449,7 +461,7 @@ class Manager:
             if not pfile:
                 sublime.message_dialog('Project file not found!')
                 return
-            if all_info.which_project_dir(pfile):
+            if self.projects_info.which_project_dir(pfile):
                 sublime.message_dialog('This project was created by Project Manager!')
                 return
             answer = sublime.ok_cancel_dialog('Import %s?' % os.path.basename(pfile))
@@ -460,7 +472,7 @@ class Manager:
                     data.append(pfile)
                     j.save(data)
 
-                all_info.reload_projects()
+                self.projects_info.refresh_projects()
 
         self.prompt_directory(_import_sublime_project)
 
@@ -478,7 +490,7 @@ class Manager:
         self.close_project_by_window(self.window)
         self.close_project_by_name(project)
         subl('--project', self.project_workspace(project))
-        all_info.reload_projects()
+        self.projects_info.refresh_projects()
 
     @dont_close_windows_when_empty
     def open_in_new_window(self, project):
@@ -486,32 +498,32 @@ class Manager:
         self.check_project(project)
         self.close_project_by_name(project)
         subl('-n', '--project', self.project_workspace(project))
-        all_info.reload_projects()
+        self.projects_info.refresh_projects()
 
     def _remove_project(self, project):
         answer = sublime.ok_cancel_dialog('Remove "%s" from Project Manager?' % project)
         if answer is True:
             pfile = self.project_file_name(project)
-            if all_info.which_project_dir(pfile):
+            if self.projects_info.which_project_dir(pfile):
                 self.close_project_by_name(project)
                 os.remove(self.project_file_name(project))
                 os.remove(self.project_workspace(project))
             else:
-                for pdir in all_info.projects_path():
+                for pdir in self.projects_info.projects_path():
                     j = JsonFile(os.path.join(pdir, 'library.json'))
                     data = j.load([])
                     if pfile in data:
                         data.remove(pfile)
                         j.save(data)
             sublime.status_message('Project "%s" is removed.' % project)
-            all_info.reload_projects()
+            self.projects_info.refresh_projects()
 
     def remove_project(self, project):
         sublime.set_timeout(lambda: self._remove_project(project), 100)
 
     def clean_dead_projects(self):
         projects_to_remove = []
-        for pname, pi in all_info.projects_info().items():
+        for pname, pi in self.projects_info.info().items():
             folder = pi['folder']
             if not os.path.exists(folder):
                 projects_to_remove.append(pname)
@@ -539,7 +551,7 @@ class Manager:
                 return
             pfile = self.project_file_name(project)
             wsfile = self.project_workspace(project)
-            pdir = all_info.which_project_dir(pfile)
+            pdir = self.projects_info.which_project_dir(pfile)
             if not pdir:
                 pdir = os.path.dirname(pfile)
             new_pfile = os.path.join(pdir, '%s.sublime-project' % new_project)
@@ -555,8 +567,8 @@ class Manager:
                 data['project'] = '%s.sublime-project' % os.path.basename(new_project)
             j.save(data)
 
-            if not all_info.which_project_dir(pfile):
-                for pdir in all_info.projects_path():
+            if not self.projects_info.which_project_dir(pfile):
+                for pdir in self.projects_info.projects_path():
                     library = os.path.join(pdir, 'library.json')
                     if os.path.exists(library):
                         j = JsonFile(library)
@@ -569,7 +581,7 @@ class Manager:
             if reopen:
                 self.open_in_new_window(new_project)
 
-            all_info.reload_projects()
+            self.projects_info.refresh_projects()
 
         def _ask_project_name():
             v = self.window.show_input_panel('New project name:',
@@ -617,13 +629,16 @@ class ProjectManagerEventHandler(sublime_plugin.EventListener):
             window.run_command("project_manager_close_project")
 
     def on_new_window_async(self, window):
-        all_info.reload_projects()
+        projects_info = ProjectsInfo.get_instance()
+        projects_info.refresh_projects()
 
     def on_pre_close_window(self, window):
-        sublime.set_timeout(all_info.reload_projects)
+        projects_info = ProjectsInfo.get_instance()
+        sublime.set_timeout(projects_info.refresh_projects)
 
 
 class ProjectManager(sublime_plugin.WindowCommand):
+    manager = None
 
     def show_quick_panel(self, items, on_done):
         sublime.set_timeout(
@@ -631,7 +646,8 @@ class ProjectManager(sublime_plugin.WindowCommand):
             10)
 
     def run(self, action=None, caller=None):
-        self.manager = Manager(self.window)
+        if not self.manager:
+            self.manager = Manager(self.window)
 
         if action is None:
             self.show_options()
@@ -640,7 +656,7 @@ class ProjectManager(sublime_plugin.WindowCommand):
         elif action == 'import_sublime_project':
             self.manager.import_sublime_project()
         elif action == 'refresh_projects':
-            all_info.reload_projects()
+            self.manager.projects_info.refresh_projects()
         elif action == 'clear_recent_projects':
             self.manager.clear_recent_projects()
         elif action == 'remove_dead_projects':
