@@ -107,6 +107,7 @@ def itemgetter(*index):
 
 _computer_name = []
 
+
 def computer_name():
     if _computer_name:
         node = _computer_name[0]
