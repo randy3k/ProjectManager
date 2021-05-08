@@ -170,7 +170,6 @@ class ProjectsInfo:
         return None
 
     def refresh_projects(self):
-        print("refresh_projects")
         self._default_dir = os.path.join(
             sublime.packages_path(), 'User', 'Projects')
 
