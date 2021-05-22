@@ -426,10 +426,6 @@ class Manager:
                 if "folders" in pd:
                     for folder in pd["folders"]:
                         if "path" in folder:
-                            folder["name"] = project
-                            folder["file_exclude_patterns"] = list()
-                            folder["folder_exclude_patterns"] = list()
-                            folder["binary_file_patterns"] = list()
                             path = folder["path"]
                             if sublime.platform() == "windows":
                                 folder["path"] = expand_path(path, relative_to=pf)
