@@ -387,18 +387,29 @@ class Manager:
     def prompt_directory(self, callback):
         primary_dir = self.projects_info.primary_dir()
         default_dir = self.projects_info.default_dir()
+        remaining_path = self.projects_info.projects_path()
+        if primary_dir in remaining_path:
+            remaining_path.remove(primary_dir)
+        if default_dir in remaining_path:
+            remaining_path.remove(default_dir)
+
         if pm_settings.get("prompt_project_location", True):
             if primary_dir != default_dir:
                 items = [
-                    ("User", "To: " + pretty_path(primary_dir)),
-                    ("Default", "To: " + pretty_path(default_dir))
-                ]
+                        ("Primary Directory", pretty_path(primary_dir)),
+                        ("Default Directory", pretty_path(default_dir))
+                    ] + [
+                        (os.path.basename(p), pretty_path(p))
+                        for p in remaining_path
+                    ]
 
                 def _on_select(index):
                     if index == 0:
                         sublime.set_timeout(lambda: callback(primary_dir), 100)
-                    else:
+                    elif index == 1:
                         sublime.set_timeout(lambda: callback(default_dir), 100)
+                    elif index >= 2:
+                        sublime.set_timeout(lambda: callback(remaining_path[index - 2]), 100)
 
                 self.window.show_quick_panel(items, _on_select)
                 return
