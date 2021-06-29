@@ -67,6 +67,10 @@
                         "command": "project_manager", "args": {"action": "rename_ws"}
                     },
                     {
+                        "caption": "Refresh Projects",
+                        "command": "project_manager", "args": {"action": "refresh_projects"}
+                    },
+                    {
                         "caption": "Clear Recent Projects",
                         "command": "project_manager", "args": {"action": "clear_recent_projects"}
                     },

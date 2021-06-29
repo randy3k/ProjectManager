@@ -47,7 +47,7 @@ There are two ways to add existing projects to Project Manager.
 - If you want Project Manager manages the project files: move your `*.sublime-
   project` and `*.sublime-workspace` files in the project directory
   `Packages/User/Projects/`. You may need to update the project's folder
-  information of the files.
+  information of the files. Don't forget to run `Project Manager: Refresh Projects` after it.
 
 - If you want to keep the project files (`*.sublime-project` and `*.sublime-workspace`) in your
   project directory: open your project file `*.sublime-project`, and then use the import option of
@@ -66,17 +66,6 @@ It can be done by adding the following keybind in your user keybind settings fil
 {
     "keys": ["super+ctrl+o"], // or ["ctrl+alt+o"] for Windows/Linux
     "command": "project_manager", "args": {"action": "new"}
-}
-```
-
-
-- _How to use a different project directory?_
-
-To use a different directory for your projects rather than `Packages/User/Projects/`, edit the following in package settings: `Preferences > Package Settings > Project Manager`
-
-```
-{
-    "projects_path": ["path/to/custom/projects_dir"],
 }
 ```
 
