@@ -917,6 +917,9 @@ class Manager:
 
         sublime.set_timeout(_ask_workspace_name, 100)
 
+    def add_folder(self):
+        self.window.run_command("prompt_add_folder")
+
     def import_sublime_project(self):
         def _import_sublime_project(pdir):
             pfile = pretty_path(self.window.project_file_name())
@@ -1047,6 +1050,10 @@ class Manager:
     def rename_project(self, project):
         def rename_callback(new_project):
             if not new_project or project == new_project:
+                return
+
+            if os.sep in new_project:
+                sublime.message_dialog("Invalid name: can't have a '/' in the new name")
                 return
 
             if new_project in self.projects_info.info():
@@ -1231,6 +1238,8 @@ class ProjectManager(sublime_plugin.WindowCommand):
             self.manager.add_project()
         elif action == 'add_workspace':
             self.manager.add_workspace()
+        elif action == 'add_folder':
+            self.manager.add_folder()
         elif action == 'import_sublime_project':
             self.manager.import_sublime_project()
         elif action == 'refresh_projects':
@@ -1295,6 +1304,7 @@ class ProjectManager(sublime_plugin.WindowCommand):
             ['Remove Workspace', 'Remove workspace from Project Manager'],
             ['Add New Project', 'Add current folders to Project Manager'],
             ['Add New Workspace', 'Add a new workspace to the current project'],
+            ['Add Folder to Project', 'Add a folder to the current project'],
             ['Import Project', 'Import current .sublime-project file'],
             ['Refresh Projects', 'Refresh Projects'],
             ['Clear Recent Projects', 'Clear Recent Projects'],
@@ -1307,6 +1317,7 @@ class ProjectManager(sublime_plugin.WindowCommand):
                    'rename', 'remove',
                    'rename_ws', 'remove_ws',
                    'add_project', 'add_workspace',
+                   'add_folder',
                    'import_sublime_project',
                    'refresh_projects',
                    'clear_recent_projects',
