@@ -13,7 +13,7 @@
     // The variable `$default` will expand to to `PATH/TO/Packages/Users/Projects`,
     // and `$hostname` will expand to the computer name.
     // Please note that they shall be the folders containing solely *.sublime-project or
-    // *.sublimn-workspace files. It is not intended to be used for automatic project discovery.
+    // *.sublime-workspace files. It is not intended to be used for automatic project discovery.
     "projects": "$default",
 
     // If there are more than one directory, prompt which directory to save the project files.
@@ -21,7 +21,7 @@
 
     // Activate workspace management : if True, when opening a project with several
     // workspaces, ask which one to open
-    "default_workspaces": true,
+    "activate_workspaces": true,
 
     // Windows/Linux only
     // close project when the window is closed
@@ -47,8 +47,13 @@
     // The string to use as the active indicator for the project list.
     "active_project_indicator": "*",
 
-    // How the projects in the project list should be formatted. Supported variables
-    // are "project_name" and "active_project_indicator". For inactive projects
-    // "active_project_indicator" will be an empty string.
+    // The string to use as the active indicator for the workspace list.
+    "active_workspace_indicator": "*",
+
+    // How the projects in the project list should be formatted. Supported variables are:
+    // - project_group: the directory containing the project
+    // - project_name: the name of the project
+    // - active_project_indicator: the character appended to projects' name to indicate
+    //   it is currently open in a sublime window
     "project_display_format": "{project_group}{project_name}{active_project_indicator}"
 }

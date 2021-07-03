@@ -190,6 +190,8 @@ class ProjectsInfo:
         if isinstance(user_projects_dirs, dict):
             if node in user_projects_dirs:
                 user_projects_dirs = user_projects_dirs[node]
+            elif '$hostname' in user_projects_dirs:
+                user_projects_dirs = user_projects_dirs['$hostname']
             else:
                 user_projects_dirs = []
 
@@ -261,6 +263,9 @@ class ProjectsInfo:
 
         modified = False
         for pdir in self._projects_path:
+            if not os.path.exists(pdir):
+                continue
+
             for file in os.listdir(pdir):
 
                 # If there are sublime-project files in a directory, move it into its
@@ -488,6 +493,13 @@ class Manager:
         else:
             return recent[project]["workspaces"][-1]
 
+    def is_workspace_open(self, ws_file):
+        open_workspaces = [
+            os.path.realpath(w.workspace_file_name())
+            for w in sublime.windows() if w.workspace_file_name()]
+
+        return ws_file in open_workspaces
+
     def display_projects(self):
         info = copy.deepcopy(self.projects_info.info())
         self.mark_open_projects(info)
@@ -536,8 +548,9 @@ class Manager:
 
     def move_opened_projects_to_top(self, plist):
         count = 0
+        active_project_indicator = str(pm_settings.get('active_project_indicator', '*'))
         for i in range(len(plist)):
-            if plist[i][0] != plist[i][1]:
+            if plist[i][1].endswith(active_project_indicator):
                 plist.insert(count, plist.pop(i))
                 count = count + 1
 
@@ -588,10 +601,17 @@ class Manager:
         if pm_settings.get('show_default_workspace_first', False):
             self.move_default_workspace_to_top(project, wlist)
 
-        # Change name of default workspace (cf. method `get_default_workspace`) to "(Default)"
+        # Change name of default workspace (cf. method `get_default_workspace`) to
+        # "(Default)" ; and mark open workspaces
+        workspaces_file_names = [os.path.realpath(w.workspace_file_name())
+                                 for w in sublime.windows() if w.workspace_file_name()]
+        active_workspace_indicator = str(pm_settings.get('active_workspace_indicator', '*'))
         for i, (wpath, wname, wbuffers) in enumerate(wlist):
             if wname == project:
-                wlist[i] = [wpath, '(Default)', wbuffers]
+                wname = '(Default)'
+            if wpath in workspaces_file_names:
+                wname += active_workspace_indicator
+            wlist[i] = [wpath, wname, wbuffers]
 
         return list(map(itemgetter(0), wlist)), list(map(itemgetter(1, 2), wlist))
 
@@ -608,7 +628,11 @@ class Manager:
                 the workspace and a prettified path to the file to display to the user
         """
         wname = os.path.basename(re.sub(r'\.sublime-workspace$', '', wfile))
-        wbuffer_list = JsonFile(wfile).load()["buffers"]
+        winfo = JsonFile(wfile).load()
+        if "buffers" not in winfo:
+            return [wfile, wname, wfile]
+
+        wbuffer_list = winfo["buffers"]
         wbuffers_names = []
         for buffer in wbuffer_list:
             buffer_file = buffer['file']
@@ -752,6 +776,9 @@ class Manager:
                         w.run_command('close_window')
                     closed = True
         return closed
+
+    def close_window(self, window):
+        window.run_command('close')
 
     def prompt_directory(self, callback):
         primary_dir = self.projects_info.primary_dir()
@@ -924,6 +951,8 @@ class Manager:
             workspace = self.get_default_workspace(project)
         self.update_recent(project, workspace)
         self.close_project_by_window(self.window)
+        if self.is_workspace_open(workspace):
+            self.close_window(self.window)
         subl('--project', workspace)
         self.projects_info.refresh_projects()
 
@@ -934,9 +963,15 @@ class Manager:
         if workspace is None:
             workspace = self.get_default_workspace(project)
         self.update_recent(project, workspace)
-        if close_project:
-            self.close_project_by_name(project)
-        subl('-n', '--project', workspace)
+        if self.is_workspace_open(workspace):
+            sublime.status_message("Can't open the same workspace in several windows!")
+            subl('--project', workspace)
+
+        else:
+            if close_project:
+                self.close_project_by_name(project)
+            subl('-n', '--project', workspace)
+
         self.projects_info.refresh_projects()
 
     def _remove_project(self, project):
@@ -1097,10 +1132,17 @@ class Manager:
                 sublime.message_dialog("Another workspace is already named " + new_workspace)
                 return
 
+            focused_wfile = self.window.workspace_file_name()
+            project_ws = self.projects_info.info()[project]["workspaces"]
+            if focused_wfile != wfile and focused_wfile in project_ws:
+                wfile_to_reopen = focused_wfile
+            else:
+                wfile_to_reopen = new_wfile
+
             self.close_project_by_name(project)
             os.rename(wfile, new_wfile)
             self.projects_info.refresh_projects()
-            subl('--project', new_wfile)
+            subl('--project', wfile_to_reopen)
 
         workspace = os.path.basename(re.sub(r'\.sublime-workspace$', '', wfile))
 
@@ -1191,6 +1233,9 @@ class ProjectManager(sublime_plugin.WindowCommand):
             self.manager.add_workspace()
         elif action == 'import_sublime_project':
             self.manager.import_sublime_project()
+        elif action == 'refresh_projects':
+            self.manager.projects_info.refresh_projects()
+            sublime.status_message("Projects refreshed !")
         elif action == 'clear_recent_projects':
             self.manager.clear_recent_projects()
         elif action == 'remove_dead_projects':
@@ -1213,9 +1258,9 @@ class ProjectManager(sublime_plugin.WindowCommand):
                 sublime.message_dialog('No projects are managed currently.')
                 return
 
-            # If the `default_workspaces` option is True, the action `switch` and `new`
+            # If the `activate_workspaces` option is True, the action `switch` and `new`
             # automatically asks on which one of the project's workspaces to act
-            if pm_settings.get('default_workspaces', True) and action in ('switch', 'new'):
+            if pm_settings.get('activate_workspaces', True) and action in ('switch', 'new'):
                 def callback(a):
                     # User cancelled at the project choice step
                     if a < 0:
