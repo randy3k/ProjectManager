@@ -47,6 +47,11 @@ def plugin_loaded():
     projects_info.workspace_version_migrator()
     pm_settings.add_on_change("refresh_projects", projects_info.refresh_projects)
 
+    if pm_settings.get("display_in_status_bar", False):
+        for window in sublime.windows():
+            for view in window.views():
+                show_project_status_bar(view)
+
 
 def plugin_unloaded():
     pm_settings.clear_on_change("refresh_projects")
@@ -131,6 +136,41 @@ def computer_name():
         _computer_name.append(node)
 
     return node
+
+
+def show_project_status_bar(view):
+    project_file = view.window().project_file_name()
+    workspace_file = view.window().workspace_file_name()
+    if project_file:
+        projects_info = ProjectsInfo.get_instance()
+        project_name = os.path.splitext(os.path.basename(project_file))[0]
+        workspace_name = os.path.splitext(os.path.basename(workspace_file))[0]
+        project_info = projects_info.info()[project_name]
+        project_group = project_info.get("group", "")
+
+        display_name = '['
+        display_name += project_group
+        if project_name != workspace_name:
+            display_name += project_name + ':'
+        display_name += workspace_name
+        display_name += ']'
+
+        view.set_status("00ProjectManager_project_name", display_name)
+
+
+# Display the current project name in the status bar
+class ProjectInStatusbar(sublime_plugin.EventListener):
+    # When you create a new empty file
+    def on_new(self, view):
+        show_project_status_bar(view)
+
+    # When you load an existing file
+    def on_load(self, view):
+        show_project_status_bar(view)
+
+    # When you use File > New view into file on an existing file
+    def on_clone(self, view):
+        show_project_status_bar(view)
 
 
 def dont_close_windows_when_empty(func):

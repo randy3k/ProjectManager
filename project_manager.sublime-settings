@@ -51,9 +51,12 @@
     "active_workspace_indicator": "*",
 
     // How the projects in the project list should be formatted. Supported variables are:
-    // - project_group: the directory containing the project
-    // - project_name: the name of the project
-    // - active_project_indicator: the character appended to projects' name to indicate
-    //   it is currently open in a sublime window
-    "project_display_format": "{project_group}{project_name}{active_project_indicator}"
+    // - project_group: directory containing the project
+    // - project_name: name of the project
+    // - active_project_indicator: character appended to projects' name to indicate it
+    //   is currently open in a sublime window
+    "project_display_format": "{project_group}{project_name}{active_project_indicator}",
+
+    // Display the name of the currently opened project in the status bar
+    "display_in_status_bar": false,
 }
