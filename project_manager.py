@@ -140,19 +140,22 @@ def computer_name():
 
 def show_project_status_bar(view):
     project_file = view.window().project_file_name()
-    workspace_file = view.window().workspace_file_name()
     if project_file:
         projects_info = ProjectsInfo.get_instance()
         project_name = os.path.splitext(os.path.basename(project_file))[0]
-        workspace_name = os.path.splitext(os.path.basename(workspace_file))[0]
         project_info = projects_info.info()[project_name]
         project_group = project_info.get("group", "")
 
         display_name = '['
         display_name += project_group
-        if project_name != workspace_name:
-            display_name += project_name + ':'
-        display_name += workspace_name
+        display_name += project_name
+
+        if sublime.version() >= '4050':
+            workspace_file = view.window().workspace_file_name()
+            workspace_name = os.path.splitext(os.path.basename(workspace_file))[0]
+            if project_name != workspace_name:
+                display_name += ':' + workspace_name
+
         display_name += ']'
 
         view.set_status("00ProjectManager_project_name", display_name)
@@ -230,8 +233,6 @@ class ProjectsInfo:
         if isinstance(user_projects_dirs, dict):
             if node in user_projects_dirs:
                 user_projects_dirs = user_projects_dirs[node]
-            elif '$hostname' in user_projects_dirs:
-                user_projects_dirs = user_projects_dirs['$hostname']
             else:
                 user_projects_dirs = []
 
@@ -534,6 +535,9 @@ class Manager:
             return recent[project]["workspaces"][-1]
 
     def is_workspace_open(self, ws_file):
+        if sublime.version() < '4050':
+            return False
+
         open_workspaces = [
             os.path.realpath(w.workspace_file_name())
             for w in sublime.windows() if w.workspace_file_name()]
@@ -643,8 +647,11 @@ class Manager:
 
         # Change name of default workspace (cf. method `get_default_workspace`) to
         # "(Default)" ; and mark open workspaces
-        workspaces_file_names = [os.path.realpath(w.workspace_file_name())
-                                 for w in sublime.windows() if w.workspace_file_name()]
+        workspaces_file_names = []
+        if sublime.version() >= '4050':
+            workspaces_file_names = [os.path.realpath(w.workspace_file_name())
+                                     for w in sublime.windows() if w.workspace_file_name()]
+
         active_workspace_indicator = str(pm_settings.get('active_workspace_indicator', '*'))
         for i, (wpath, wname, wbuffers) in enumerate(wlist):
             if wname == project:
@@ -1179,10 +1186,13 @@ class Manager:
                 sublime.message_dialog("Another workspace is already named " + new_workspace)
                 return
 
-            focused_wfile = self.window.workspace_file_name()
-            project_ws = self.projects_info.info()[project]["workspaces"]
-            if focused_wfile != wfile and focused_wfile in project_ws:
-                wfile_to_reopen = focused_wfile
+            if sublime.version() > '4050':
+                focused_wfile = self.window.workspace_file_name()
+                project_ws = self.projects_info.info()[project]["workspaces"]
+                if focused_wfile != wfile and focused_wfile in project_ws:
+                    wfile_to_reopen = focused_wfile
+                else:
+                    wfile_to_reopen = new_wfile
             else:
                 wfile_to_reopen = new_wfile
 
