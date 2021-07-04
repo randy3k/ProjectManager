@@ -44,7 +44,8 @@ def plugin_loaded():
         preferences_migrator()
     projects_info = ProjectsInfo.get_instance()
 
-    projects_info.workspace_version_migrator()
+    # Run with timeout so that `window.run_command("close_workspace")` works
+    sublime.set_timeout(projects_info.workspace_version_migrator, 0)
     pm_settings.add_on_change("refresh_projects", projects_info.refresh_projects)
 
     if pm_settings.get("display_in_status_bar", False):
@@ -256,7 +257,7 @@ class ProjectsInfo:
             os.makedirs(self._default_dir)
 
         if not os.path.isdir(self._primary_dir):
-            raise Exception("Directory \"{}\" does not exists.".format(self._primary_dir))
+            raise Exception("Directory \"{}\" does not exist.".format(self._primary_dir))
 
         self._info = self._get_all_projects_info()
 
@@ -266,7 +267,7 @@ class ProjectsInfo:
         recent_files = json_file.load([])
         if recent_files and type(recent_files[0]) != dict:
             json_file.remove()
-            self.window.run_command("clear_recent_projects_and_workspaces")
+            sublime.run_command("clear_recent_projects_and_workspaces")
 
         # Update file organization and reload info if needed
         if self._reorganize_files():
@@ -302,6 +303,7 @@ class ProjectsInfo:
             bool: whether some files were reorganized or not
         """
 
+        active_window = sublime.active_window()
         modified = False
         for pdir in self._projects_path:
             if not os.path.exists(pdir):
@@ -320,6 +322,18 @@ class ProjectsInfo:
                     if not os.path.exists(directory):
                         os.mkdir(directory)
 
+                    # If one of the workspace is open, we must close it before moving
+                    # the workspace file
+                    to_reopen = None
+                    pfile = os.path.join(pdir, file)
+                    if active_window.project_file_name() == pfile:
+                        if sublime.version() >= '4050':
+                            wfile = os.path.basename(active_window.workspace_file_name())
+                            to_reopen = os.path.join(directory, wfile)
+                        else:
+                            to_reopen = pfile
+                        active_window.run_command("close_workspace")
+
                     # Move all of its existing workspaces files
                     for wfile in self._info[pname]['workspaces']:
                         try:
@@ -334,6 +348,9 @@ class ProjectsInfo:
                         shutil.move(pfile, directory)
                     except Exception:
                         sublime.message_dialog('Please remove the existing file %s to be able to load projects.' % pfile)
+
+                    if to_reopen:
+                        subl("--project", to_reopen)
 
         return modified
 
@@ -1033,7 +1050,8 @@ class Manager:
                 os.remove(self.project_file_name(project))
                 for workspace in self.projects_info.info()[project]['workspaces']:
                     os.remove(workspace)
-                os.removedirs(os.path.dirname(pfile))
+                if not os.listdir(os.path.dirname(pfile)):
+                    os.removedirs(os.path.dirname(pfile))
 
             else:
                 for pdir in self.projects_info.projects_path():
