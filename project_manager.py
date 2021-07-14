@@ -699,6 +699,9 @@ class Manager:
         wbuffer_list = winfo["buffers"]
         wbuffers_names = []
         for buffer in wbuffer_list:
+            if 'file' not in buffer:
+                continue
+
             buffer_file = buffer['file']
             buffer_name = buffer_file.rsplit(os.sep, 1)[1]
             wbuffers_names.append(buffer_name)
