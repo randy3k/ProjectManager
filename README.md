@@ -6,7 +6,7 @@
 
 Don't have any idea what `*.sublime-project` and `*.sublime-workspace` are doing? Forget where the project files are? Don't worry, Project Manager will help organizing the project files by putting them in a centralized location. (It is inspired by Atom's [Project Manager](https://atom.io/packages/project-manager), but Atom's Project Manager is inspired by the built-in Sublime Text Project Manager, so there is a circular reasoning here).
 
-![Screenshot](https://cloud.githubusercontent.com/assets/1690993/20858319/7f12a6ec-b911-11e6-8fc5-f4cbf6b6f12b.png)
+![Screenshot](https://user-images.githubusercontent.com/1690993/141353224-d1d98169-bf8e-4302-a882-3d4961223507.png)
 
 Check [this video](https://laracasts.com/series/professional-php-workflow-in-sublime-text/episodes/9) by [Laracasts](https://laracasts.com/series/professional-php-workflow-in-sublime-text).
 
