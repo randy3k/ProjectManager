@@ -100,7 +100,7 @@ def format_directory(item, folder):
     if hasattr(sublime, "QuickPanelItem"):
         return sublime.QuickPanelItem(
             item,
-            '<a href=\'subl:project_manager_open_folder {"folder": "%s"}\'>%s</a>' % (
+            '<a href=\'subl:open_dir {"dir": "%s"}\'>%s</a>' % (
                 folder, pretty_path(folder)))
     else:
         return (item, pretty_path(folder))
@@ -629,11 +629,6 @@ def cancellable(func):
         elif action < 0 and self.caller == 'manager':
             sublime.set_timeout(self.run, 10)
     return _ret
-
-
-class ProjectManagerOpenFolderCommand(sublime_plugin.WindowCommand):
-    def run(self, folder):
-        self.window.run_command('open_dir', {'dir': folder})
 
 
 class ProjectManagerCloseProject(sublime_plugin.WindowCommand):
