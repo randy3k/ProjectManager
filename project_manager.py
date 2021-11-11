@@ -96,6 +96,16 @@ def pretty_path(path):
     return path
 
 
+def format_directory(item, folder):
+    if hasattr(sublime, "QuickPanelItem"):
+        return sublime.QuickPanelItem(
+            item,
+            '<a href=\'subl:project_manager_open_folder {"folder": "%s"}\'>%s</a>' % (
+                folder, pretty_path(folder)))
+    else:
+        return (item, pretty_path(folder))
+
+
 def itemgetter(*index):
     """
     A version of itemgetter returning a list
@@ -284,7 +294,7 @@ class Manager:
         if pm_settings.get('show_active_projects_first', True):
             self.move_openning_projects_to_top(plist)
 
-        return list(map(itemgetter(0), plist)), list(map(itemgetter(1, 2), plist))
+        return list(map(itemgetter(0), plist)), [format_directory(p[1], p[2]) for p in plist]
 
     def mark_open_projects(self, info):
         project_file_names = [
@@ -309,7 +319,7 @@ class Manager:
         return [
             project_name,
             display_name.strip(),
-            pretty_path(info['folder']),
+            info['folder'],
             pretty_path(info['file'])]
 
     def move_recent_projects_to_top(self, plist):
@@ -396,10 +406,10 @@ class Manager:
         if pm_settings.get("prompt_project_location", True):
             if primary_dir != default_dir:
                 items = [
-                        ("Primary Directory", pretty_path(primary_dir)),
-                        ("Default Directory", pretty_path(default_dir))
+                        format_directory("Primary Directory", primary_dir),
+                        format_directory("Default Directory", default_dir)
                     ] + [
-                        (os.path.basename(p), pretty_path(p))
+                        format_directory(os.path.basename(p), p)
                         for p in remaining_path
                     ]
 
@@ -619,6 +629,11 @@ def cancellable(func):
         elif action < 0 and self.caller == 'manager':
             sublime.set_timeout(self.run, 10)
     return _ret
+
+
+class ProjectManagerOpenFolderCommand(sublime_plugin.WindowCommand):
+    def run(self, folder):
+        self.window.run_command('open_dir', {'dir': folder})
 
 
 class ProjectManagerCloseProject(sublime_plugin.WindowCommand):
