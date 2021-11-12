@@ -19,18 +19,21 @@ class TestTable(TempDirectoryTestCase):
     @classmethod
     def setUpClass(cls):
         yield from super().setUpClass()
+        # need to remove my own preference for local testing
         cls.pm_settings_path = os.path.join(sublime.packages_path(), "User", SETTINGS_FILENAME)
         cls.new_pm_settings_path = os.path.join(
             sublime.packages_path(), "User", SETTINGS_FILENAME + ".bak")
         if os.path.exists(cls.pm_settings_path):
             shutil.move(cls.pm_settings_path, cls.new_pm_settings_path)
-        yield lambda: sublime.load_settings(SETTINGS_FILENAME).get("projects") is None
+            with open(cls.pm_settings_path, "w") as f:
+                f.write("{}")
+            yield lambda: sublime.load_settings(SETTINGS_FILENAME).get("projects") == "$default"
         cls.project_name = os.path.basename(cls._temp_dir)
         cls.manager = Manager(cls.window)
 
     @classmethod
     def tearDownClass(cls):
-        if os.path.exists(cls.pm_settings_path):
+        if os.path.exists(cls.new_pm_settings_path):
             shutil.move(cls.new_pm_settings_path, cls.pm_settings_path)
         super().tearDownClass()
 
