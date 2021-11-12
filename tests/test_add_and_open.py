@@ -48,7 +48,7 @@ class TestTable(TempDirectoryTestCase):
         sublime_plugin.load_module(m)
 
         self.window.run_command("project_manager", {"action": "add_project"})
-        yield lambda: last_view[0] and last_view[0].element() == "input:input"
+        yield lambda: last_view[0] and last_view[0].settings().get("is_widget")
         self.window.run_command("select")
 
         yield lambda: self.window.project_file_name() is not None
@@ -63,7 +63,7 @@ class TestTable(TempDirectoryTestCase):
         self.assertTrue(self.window.project_file_name() is None)
 
         self.window.run_command("project_manager", {"action": "switch"})
-        yield lambda: last_view[0] and last_view[0].element() == "quick_panel:input"
+        yield lambda: last_view[0] and last_view[0].settings().get("is_widget")
         last_view[0].run_command("insert", {"characters": self.project_name})
         self.window.run_command("select")
 
@@ -75,7 +75,7 @@ class TestTable(TempDirectoryTestCase):
         sublime.ok_cancel_dialog = lambda _: True
 
         self.window.run_command("project_manager", {"action": "remove"})
-        yield lambda: last_view[0] and last_view[0].element() == "quick_panel:input"
+        yield lambda: last_view[0] and last_view[0].settings().get("is_widget")
         last_view[0].run_command("insert", {"characters": self.project_name})
         self.window.run_command("select")
 
