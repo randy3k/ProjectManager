@@ -103,7 +103,7 @@ def format_directory(item, folder):
             '<a href=\'subl:open_dir {"dir": "%s"}\'>%s</a>' % (
                 folder, pretty_path(folder)))
     else:
-        return (item, pretty_path(folder))
+        return [item, pretty_path(folder)]
 
 
 def itemgetter(*index):
