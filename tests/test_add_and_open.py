@@ -11,7 +11,7 @@ import imp
 SETTINGS_FILENAME = 'project_manager.sublime-settings'
 
 
-class TestTable(TempDirectoryTestCase):
+class TestBasicFeatures(TempDirectoryTestCase):
     pm_settings_path = None
     new_pm_settings_path = None
     project_name = None

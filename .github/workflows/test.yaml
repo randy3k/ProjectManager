@@ -12,11 +12,11 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
-      - uses: SublimeText/UnitTesting/actions/setup@v1
+      - uses: SublimeText/UnitTesting/actions/setup@master
         with:
           sublime-text-version: ${{ matrix.st-version }}
           display: turbovnc
-      - uses: SublimeText/UnitTesting/actions/run-tests@v1
+      - uses: SublimeText/UnitTesting/actions/run-tests@master
         with:
           coverage: true
           codecov-upload: true
