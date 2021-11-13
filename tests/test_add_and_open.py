@@ -7,6 +7,7 @@ from ProjectManager.project_manager import Manager
 import os
 import shutil
 import imp
+import unittest
 
 SETTINGS_FILENAME = 'project_manager.sublime-settings'
 
@@ -37,6 +38,9 @@ class TestBasicFeatures(TempDirectoryTestCase):
             shutil.move(cls.new_pm_settings_path, cls.pm_settings_path)
         super().tearDownClass()
 
+    @unittest.skipIf(
+        sublime.version() < "4000",
+        "The `select` command is only avaiable in Sublime Text 4.")
     def test_add_and_open(self):
         last_view = [None]
         capture_widget = type(
