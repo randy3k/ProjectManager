@@ -7,6 +7,7 @@ from ProjectManager.project_manager import Manager
 import os
 import imp
 import unittest
+import unittest.mock
 
 
 class TestBasicFeatures(TempDirectoryTestCase, OverridePreferencesTestCase):
@@ -14,9 +15,19 @@ class TestBasicFeatures(TempDirectoryTestCase, OverridePreferencesTestCase):
         "project_manager.sublime-settings": {}
     }
     project_name = None
+    last_view = [None]
 
     @classmethod
     def setUpClass(cls):
+        capture_event_listener = type(
+            "capture_event_listener",
+            (sublime_plugin.EventListener,),
+            {"on_activated": lambda self, view: cls.last_view.__setitem__(0, view)})
+        capture_module = imp.new_module("capture")
+        capture_module.capture_event_listener = capture_event_listener
+        sublime_plugin.load_module(capture_module)
+        cls.capture_module = capture_module
+        yield 100
         yield from TempDirectoryTestCase.setUpClass.__func__(cls)
         yield from OverridePreferencesTestCase.setUpClass.__func__(cls)
         cls.project_name = os.path.basename(cls._temp_dir)
@@ -24,24 +35,25 @@ class TestBasicFeatures(TempDirectoryTestCase, OverridePreferencesTestCase):
 
     @classmethod
     def tearDownClass(cls):
+        sublime_plugin.unload_module(cls.capture_module)
         TempDirectoryTestCase.tearDownClass.__func__(cls)
         OverridePreferencesTestCase.tearDownClass.__func__(cls)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.last_view[0] = None
+
+    def active_widget_view(self):
+        yield lambda: self.last_view[0] and self.last_view[0].settings().get("is_widget")
+        return self.last_view[0]
 
     @unittest.skipIf(
         sublime.version() < "4000",
         "The `select` command is only avaiable in Sublime Text 4.")
     def test_add_and_open(self):
-        last_view = [None]
-        capture_widget = type(
-            "capture_widget",
-            (sublime_plugin.EventListener,),
-            {"on_activated": lambda self, view: last_view.__setitem__(0, view)})
-        m = imp.new_module("capture_widget")
-        m.capture_widget = capture_widget
-        sublime_plugin.load_module(m)
-        yield 3000
+        yield 4000  # some warm up time
         self.window.run_command("project_manager", {"action": "add_project"})
-        yield lambda: last_view[0] and last_view[0].settings().get("is_widget")
+        yield from self.active_widget_view()
         self.window.run_command("select")
 
         yield lambda: self.window.project_file_name() is not None
@@ -56,23 +68,24 @@ class TestBasicFeatures(TempDirectoryTestCase, OverridePreferencesTestCase):
         self.assertTrue(self.window.project_file_name() is None)
 
         self.window.run_command("project_manager", {"action": "open_project"})
-        yield lambda: last_view[0] and last_view[0].settings().get("is_widget")
-        last_view[0].run_command("insert", {"characters": self.project_name})
+        view = yield from self.active_widget_view()
+        view.run_command("insert", {"characters": self.project_name})
         self.window.run_command("select")
 
         yield lambda: self.window.project_file_name() is not None
 
         self.assertEqual(os.path.basename(self.window.folders()[0]), self.project_name)
 
-        original_ok_cancel_dialog = sublime.ok_cancel_dialog
-        sublime.ok_cancel_dialog = lambda _: True
+        with unittest.mock.patch("sublime.ok_cancel_dialog", return_value=True):
 
-        self.window.run_command("project_manager", {"action": "remove_project"})
-        yield lambda: last_view[0] and last_view[0].settings().get("is_widget")
-        last_view[0].run_command("insert", {"characters": self.project_name})
-        self.window.run_command("select")
+            self.window.run_command("project_manager", {"action": "remove_project"})
+            view = yield from self.active_widget_view()
+            view.run_command("insert", {"characters": self.project_name})
+            self.window.run_command("select")
 
-        yield lambda: self.window.project_file_name() is None
+            yield lambda: self.window.project_file_name() is None
 
-        sublime.ok_cancel_dialog = original_ok_cancel_dialog
-        sublime_plugin.unload_module(m)
+
+
+    def test_empty(self):
+        self.assertTrue(True)
