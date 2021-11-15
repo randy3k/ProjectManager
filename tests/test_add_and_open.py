@@ -66,7 +66,7 @@ class TestBasicFeatures(TempDirectoryTestCase):
 
         self.assertTrue(self.window.project_file_name() is None)
 
-        self.window.run_command("project_manager", {"action": "switch"})
+        self.window.run_command("project_manager", {"action": "open_project"})
         yield lambda: last_view[0] and last_view[0].settings().get("is_widget")
         last_view[0].run_command("insert", {"characters": self.project_name})
         self.window.run_command("select")
@@ -78,7 +78,7 @@ class TestBasicFeatures(TempDirectoryTestCase):
         original_ok_cancel_dialog = sublime.ok_cancel_dialog
         sublime.ok_cancel_dialog = lambda _: True
 
-        self.window.run_command("project_manager", {"action": "remove"})
+        self.window.run_command("project_manager", {"action": "remove_project"})
         yield lambda: last_view[0] and last_view[0].settings().get("is_widget")
         last_view[0].run_command("insert", {"characters": self.project_name})
         self.window.run_command("select")

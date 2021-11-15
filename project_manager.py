@@ -489,6 +489,17 @@ class Manager:
 
         self.prompt_directory(_import_sublime_project, on_cancel=on_cancel)
 
+    def prompt_project(self, callback, on_cancel=None):
+        projects, display = self.display_projects()
+
+        def _(i):
+            if i >= 0:
+                callback(projects[i])
+            elif on_cancel:
+                on_cancel()
+
+        sublime.set_timeout(lambda: self.window.show_quick_panel(display, _), 100)
+
     def append_project(self, project):
         self.update_recent(project)
         pd = self.get_project_data(project)
@@ -638,28 +649,8 @@ class ProjectManagerEventHandler(sublime_plugin.EventListener):
             window.run_command("project_manager_close_project")
 
 
-def prompt_projects(action):
-    def _ret(self):
-        projects, display = self.manager.display_projects()
-
-        def callback(i):
-            if i >= 0:
-                action(self, projects[i])
-            elif self.caller == "manager":
-                sublime.set_timeout(self.run, 100)
-
-        self.show_quick_panel(display, callback)
-
-    return _ret
-
-
 class ProjectManager(sublime_plugin.WindowCommand):
     manager = None
-
-    def show_quick_panel(self, items, on_done):
-        sublime.set_timeout(
-            lambda: self.window.show_quick_panel(items, on_done),
-            10)
 
     def run(self, action=None, caller=None):
         self.caller = caller
@@ -719,37 +710,40 @@ class ProjectManager(sublime_plugin.WindowCommand):
                 return
             self.run(action=actions[i], caller="manager")
 
-        self.show_quick_panel(items, callback)
+        sublime.set_timeout(
+            lambda: self.window.show_quick_panel(items, callback),
+            100)
 
-    @prompt_projects
-    def open_project(self, x):
-        self.manager.switch_project(x)
+    def _prompt_project(self, callback):
+        self.manager.prompt_project(callback, on_cancel=self._on_cancel)
 
-    @prompt_projects
-    def open_project_in_new_window(self, x):
-        self.manager.open_in_new_window(x)
+    def _on_cancel(self):
+        if self.caller == "manager":
+            sublime.set_timeout(self.run, 100)
 
-    @prompt_projects
-    def append_project(self, x):
-        self.manager.append_project(x)
+    def open_project(self):
+        self._prompt_project(self.manager.switch_project)
 
-    @prompt_projects
-    def edit_project(self, x):
-        self.manager.edit_project(x)
+    def open_project_in_new_window(self):
+        self._prompt_project(self.manager.open_in_new_window)
 
-    @prompt_projects
-    def rename_project(self, x):
-        self.manager.rename_project(x)
+    def append_project(self):
+        self._prompt_project(self.manager.append_project)
 
-    @prompt_projects
-    def remove_project(self, x):
-        self.manager.remove_project(x)
+    def edit_project(self):
+        self._prompt_project(self.manager.edit_project)
+
+    def rename_project(self):
+        self._prompt_project(self.manager.rename_project)
+
+    def remove_project(self):
+        self._prompt_project(self.manager.remove_project)
 
     def add_project(self):
-        self.manager.add_project(on_cancel=lambda: sublime.set_timeout(self.run, 100))
+        self.manager.add_project(on_cancel=self._on_cancel)
 
     def import_sublime_project(self):
-        self.manager.import_sublime_project(on_cancel=lambda: sublime.set_timeout(self.run, 100))
+        self.manager.import_sublime_project(on_cancel=self._on_cancel)
 
     def refresh_projects(self):
         self.manager.projects_info.refresh_projects()
