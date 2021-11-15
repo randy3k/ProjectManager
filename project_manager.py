@@ -4,7 +4,6 @@ import subprocess
 import os
 import platform
 import re
-import operator
 import copy
 
 
@@ -104,18 +103,6 @@ def format_directory(item, folder):
                 folder, pretty_path(folder)))
     else:
         return [item, pretty_path(folder)]
-
-
-def itemgetter(*index):
-    """
-    A version of itemgetter returning a list
-    """
-    def _itemgetter(a):
-        _ret = operator.itemgetter(*index)(a)
-        if len(index) > 1:
-            _ret = list(_ret)
-        return _ret
-    return _itemgetter
 
 
 _computer_name = []
@@ -294,7 +281,7 @@ class Manager:
         if pm_settings.get('show_active_projects_first', True):
             self.move_openning_projects_to_top(plist)
 
-        return list(map(itemgetter(0), plist)), [format_directory(p[1], p[2]) for p in plist]
+        return [p[0] for p in plist], [format_directory(p[1], p[2]) for p in plist]
 
     def mark_open_projects(self, info):
         project_file_names = [
