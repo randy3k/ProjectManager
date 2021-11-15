@@ -39,7 +39,7 @@ class TestBasicFeatures(TempDirectoryTestCase, OverridePreferencesTestCase):
         m = imp.new_module("capture_widget")
         m.capture_widget = capture_widget
         sublime_plugin.load_module(m)
-
+        yield 3000
         self.window.run_command("project_manager", {"action": "add_project"})
         yield lambda: last_view[0] and last_view[0].settings().get("is_widget")
         self.window.run_command("select")
