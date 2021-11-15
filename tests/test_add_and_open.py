@@ -51,7 +51,6 @@ class TestBasicFeatures(TempDirectoryTestCase, OverridePreferencesTestCase):
         sublime.version() < "4000",
         "The `select` command is only avaiable in Sublime Text 4.")
     def test_add_and_open(self):
-        yield 4000  # some warm up time
         self.window.run_command("project_manager", {"action": "add_project"})
         yield from self.active_widget_view()
         self.window.run_command("select")
