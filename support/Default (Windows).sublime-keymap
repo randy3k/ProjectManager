@@ -1,10 +1,10 @@
 [
     {
         "keys": ["ctrl+alt+p"],
-        "command": "project_manager", "args": {"action": "switch"}
+        "command": "project_manager", "args": {"action": "open_project"}
     },
     // {
     //     "keys": ["ctrl+alt+o"],
-    //     "command": "project_manager", "args": {"action": "new"}
+    //     "command": "project_manager", "args": {"action": "open_project_in_new_window"}
     // }
 ]

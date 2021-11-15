@@ -13,27 +13,27 @@
     },
     {
         "caption": "Project Manager: Open Project",
-        "command": "project_manager", "args": {"action": "switch"}
+        "command": "project_manager", "args": {"action": "open_project"}
     },
     {
         "caption": "Project Manager: Open Project in New Window",
-        "command": "project_manager", "args": {"action": "new"}
+        "command": "project_manager", "args": {"action": "open_project_in_new_window"}
     },
     {
         "caption": "Project Manager: Append Project",
-        "command": "project_manager", "args": {"action": "append"}
+        "command": "project_manager", "args": {"action": "append_project"}
     },
     {
         "caption": "Project Manager: Remove Project",
-        "command": "project_manager", "args": {"action": "remove"}
+        "command": "project_manager", "args": {"action": "remove_project"}
     },
     {
         "caption": "Project Manager: Edit Project",
-        "command": "project_manager", "args": {"action": "edit"}
+        "command": "project_manager", "args": {"action": "edit_project"}
     },
     {
         "caption": "Project Manager: Rename Project",
-        "command": "project_manager", "args": {"action": "rename"}
+        "command": "project_manager", "args": {"action": "rename_project"}
     },
     {
         "caption": "Project Manager: Refresh Projects",

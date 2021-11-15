@@ -394,7 +394,7 @@ class Manager:
                     return True
         return False
 
-    def prompt_directory(self, callback):
+    def prompt_directory(self, callback, on_cancel=None):
         primary_dir = self.projects_info.primary_dir()
         default_dir = self.projects_info.default_dir()
         remaining_path = self.projects_info.projects_path()
@@ -414,7 +414,10 @@ class Manager:
                     ]
 
                 def _on_select(index):
-                    if index == 0:
+                    if index < 0:
+                        if on_cancel:
+                            on_cancel()
+                    elif index == 0:
                         sublime.set_timeout(lambda: callback(primary_dir), 100)
                     elif index == 1:
                         sublime.set_timeout(lambda: callback(default_dir), 100)
@@ -427,7 +430,7 @@ class Manager:
         # fallback
         sublime.set_timeout(lambda: callback(primary_dir), 100)
 
-    def add_project(self):
+    def add_project(self, on_cancel=None):
         def add_callback(project, pdir):
             pd = self.window.project_data()
             pf = self.window.project_file_name()
@@ -476,9 +479,9 @@ class Manager:
                                              None)
             v.run_command('select_all')
 
-        self.prompt_directory(_ask_project_name)
+        self.prompt_directory(_ask_project_name, on_cancel=on_cancel)
 
-    def import_sublime_project(self):
+    def import_sublime_project(self, on_cancel=None):
         def _import_sublime_project(pdir):
             pfile = pretty_path(self.window.project_file_name())
             if not pfile:
@@ -497,7 +500,7 @@ class Manager:
 
                 self.projects_info.refresh_projects()
 
-        self.prompt_directory(_import_sublime_project)
+        self.prompt_directory(_import_sublime_project, on_cancel=on_cancel)
 
     def append_project(self, project):
         self.update_recent(project)
@@ -622,15 +625,6 @@ class Manager:
         sublime.set_timeout(_ask_project_name, 100)
 
 
-def cancellable(func):
-    def _ret(self, action):
-        if action >= 0:
-            func(self, action)
-        elif action < 0 and self.caller == 'manager':
-            sublime.set_timeout(self.run, 10)
-    return _ret
-
-
 class ProjectManagerCloseProject(sublime_plugin.WindowCommand):
     def run(self):
         if self.window.project_file_name():
@@ -657,6 +651,21 @@ class ProjectManagerEventHandler(sublime_plugin.EventListener):
             window.run_command("project_manager_close_project")
 
 
+def prompt_projects(action):
+    def _ret(self):
+        projects, display = self.manager.display_projects()
+
+        def callback(i):
+            if i >= 0:
+                action(self, projects[i])
+            elif self.caller == "manager":
+                sublime.set_timeout(self.run, 100)
+
+        self.show_quick_panel(display, callback)
+
+    return _ret
+
+
 class ProjectManager(sublime_plugin.WindowCommand):
     manager = None
 
@@ -666,29 +675,28 @@ class ProjectManager(sublime_plugin.WindowCommand):
             10)
 
     def run(self, action=None, caller=None):
+        self.caller = caller
+        if action is None:
+            self.show_options()
+            return
+
         if not self.manager:
             self.manager = Manager(self.window)
 
-        if action is None:
-            self.show_options()
-        elif action == 'add_project':
-            self.manager.add_project()
-        elif action == 'import_sublime_project':
-            self.manager.import_sublime_project()
-        elif action == 'refresh_projects':
-            self.manager.projects_info.refresh_projects()
-        elif action == 'clear_recent_projects':
-            self.manager.clear_recent_projects()
-        elif action == 'remove_dead_projects':
-            self.manager.clean_dead_projects()
-        else:
-            self.caller = caller
-            callback = eval('self.on_' + action)
-            self.projects, display = self.manager.display_projects()
-            if not self.projects:
-                sublime.message_dialog('Project list is empty.')
-                return
-            self.show_quick_panel(display, callback)
+        old_action_mapping = {
+            "switch": "open_project",
+            "new": "open_project_in_new_window",
+            "append": "append_project",
+            "edit": "edit_project",
+            "rename": "rename_project",
+            "remove": "remove_project"
+        }
+        try:
+            action = old_action_mapping[action]
+        except KeyError:
+            pass
+
+        getattr(self, action)()
 
     def show_options(self):
         items = [
@@ -705,45 +713,62 @@ class ProjectManager(sublime_plugin.WindowCommand):
             ['Remove Dead Projects', 'Remove Dead Projects']
         ]
 
-        def callback(a):
-            if a < 0:
+        actions = [
+            "open_project",
+            "open_in_new_window",
+            "append_project",
+            "edit_project",
+            "rename_project",
+            "remove_project",
+            "add_project",
+            "import_sublime_project",
+            "refresh_projects",
+            "clear_recent_projects",
+            "remove_dead_project"
+        ]
+
+        def callback(i):
+            if i < 0:
                 return
-            elif a <= 5:
-                actions = ['switch', 'new', 'append', 'edit', 'rename', 'remove']
-                self.run(action=actions[a], caller='manager')
-            elif a == 6:
-                self.run(action='add_project')
-            elif a == 7:
-                self.run(action='import_sublime_project')
-            elif a == 8:
-                self.run(action='refresh_projects')
-            elif a == 9:
-                self.run(action='clear_recent_projects')
-            elif a == 10:
-                self.run(action='remove_dead_projects')
+            self.run(action=actions[i], caller="manager")
 
         self.show_quick_panel(items, callback)
 
-    @cancellable
-    def on_new(self, action):
-        self.manager.open_in_new_window(self.projects[action])
+    @prompt_projects
+    def open_project(self, x):
+        self.manager.switch_project(x)
 
-    @cancellable
-    def on_switch(self, action):
-        self.manager.switch_project(self.projects[action])
+    @prompt_projects
+    def open_project_in_new_window(self, x):
+        self.manager.open_in_new_window(x)
 
-    @cancellable
-    def on_append(self, action):
-        self.manager.append_project(self.projects[action])
+    @prompt_projects
+    def append_project(self, x):
+        self.manager.append_project(x)
 
-    @cancellable
-    def on_remove(self, action):
-        self.manager.remove_project(self.projects[action])
+    @prompt_projects
+    def edit_project(self, x):
+        self.manager.edit_project(x)
 
-    @cancellable
-    def on_edit(self, action):
-        self.manager.edit_project(self.projects[action])
+    @prompt_projects
+    def rename_project(self, x):
+        self.manager.rename_project(x)
 
-    @cancellable
-    def on_rename(self, action):
-        self.manager.rename_project(self.projects[action])
+    @prompt_projects
+    def remove_project(self, x):
+        self.manager.remove_project(x)
+
+    def add_project(self):
+        self.manager.add_project(on_cancel=lambda: sublime.set_timeout(self.run, 100))
+
+    def import_sublime_project(self):
+        self.manager.import_sublime_project(on_cancel=lambda: sublime.set_timeout(self.run, 100))
+
+    def refresh_projects(self):
+        self.manager.projects_info.refresh_projects()
+
+    def clear_recent_projects(self):
+        self.manager.clear_recent_projects()
+
+    def remove_dead_projects(self):
+        self.manager.clean_dead_projects()

@@ -65,7 +65,7 @@ It can be done by adding the following keybind in your user keybind settings fil
 ```
 {
     "keys": ["super+ctrl+o"], // or ["ctrl+alt+o"] for Windows/Linux
-    "command": "project_manager", "args": {"action": "new"}
+    "command": "project_manager", "args": {"action": "open_project_in_new_window"}
 }
 ```
 
