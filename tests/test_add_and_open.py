@@ -1,42 +1,31 @@
 import sublime
 import sublime_plugin
-from unittesting.helpers import TempDirectoryTestCase
+from unittesting.helpers import TempDirectoryTestCase, OverridePreferencesTestCase
 from ProjectManager.project_manager import Manager
 
 
 import os
-import shutil
 import imp
 import unittest
 
-SETTINGS_FILENAME = 'project_manager.sublime-settings'
 
-
-class TestBasicFeatures(TempDirectoryTestCase):
-    pm_settings_path = None
-    new_pm_settings_path = None
+class TestBasicFeatures(TempDirectoryTestCase, OverridePreferencesTestCase):
+    override_preferences = {
+        "project_manager.sublime-settings": {}
+    }
     project_name = None
 
     @classmethod
     def setUpClass(cls):
-        yield from super().setUpClass()
-        # need to remove my own preference for local testing
-        cls.pm_settings_path = os.path.join(sublime.packages_path(), "User", SETTINGS_FILENAME)
-        cls.new_pm_settings_path = os.path.join(
-            sublime.packages_path(), "User", SETTINGS_FILENAME + ".bak")
-        if os.path.exists(cls.pm_settings_path):
-            shutil.move(cls.pm_settings_path, cls.new_pm_settings_path)
-            with open(cls.pm_settings_path, "w") as f:
-                f.write("{}")
-            yield lambda: sublime.load_settings(SETTINGS_FILENAME).get("projects") == "$default"
+        yield from TempDirectoryTestCase.setUpClass.__func__(cls)
+        yield from OverridePreferencesTestCase.setUpClass.__func__(cls)
         cls.project_name = os.path.basename(cls._temp_dir)
         cls.manager = Manager(cls.window)
 
     @classmethod
     def tearDownClass(cls):
-        if os.path.exists(cls.new_pm_settings_path):
-            shutil.move(cls.new_pm_settings_path, cls.pm_settings_path)
-        super().tearDownClass()
+        TempDirectoryTestCase.tearDownClass.__func__(cls)
+        OverridePreferencesTestCase.tearDownClass.__func__(cls)
 
     @unittest.skipIf(
         sublime.version() < "4000",
