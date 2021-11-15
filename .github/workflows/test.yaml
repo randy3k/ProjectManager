@@ -15,6 +15,7 @@ jobs:
       - uses: SublimeText/UnitTesting/actions/setup@master
         with:
           sublime-text-version: ${{ matrix.st-version }}
+          unittesting-version: master
       - uses: SublimeText/UnitTesting/actions/run-tests@master
         with:
           coverage: true
