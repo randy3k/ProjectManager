@@ -10,8 +10,10 @@ import imp
 from unittest import skipIf
 from unittest.mock import patch
 
+from unittesting import AWAIT_WORKER
 
-SELECT_NOT_AVALIABLE = "Only work well in ST4 macOS and Windows."
+
+SELECT_NOT_AVALIABLE = "`select` command is ST 4 only."
 
 
 class TestBasicFeatures(TempDirectoryTestCase, OverridePreferencesTestCase):
@@ -31,7 +33,10 @@ class TestBasicFeatures(TempDirectoryTestCase, OverridePreferencesTestCase):
         capture_module.capture_event_listener = capture_event_listener
         sublime_plugin.load_module(capture_module)
         cls.capture_module = capture_module
-        yield 100
+        yield
+        yield
+        yield AWAIT_WORKER
+        yield AWAIT_WORKER
         yield from TempDirectoryTestCase.setUpClass.__func__(cls)
         yield from OverridePreferencesTestCase.setUpClass.__func__(cls)
         cls.project_name = os.path.basename(cls._temp_dir)
@@ -50,7 +55,7 @@ class TestBasicFeatures(TempDirectoryTestCase, OverridePreferencesTestCase):
         yield lambda: self.last_view[0] and self.last_view[0].settings().get("is_widget")
         return self.last_view[0]
 
-    @skipIf(sublime.version() < "4000" or sublime.platform() == "linux", SELECT_NOT_AVALIABLE)
+    @skipIf(sublime.version() < "4000", SELECT_NOT_AVALIABLE)
     def test_add_and_open(self):
         self.window.run_command("project_manager", {"action": "add_project"})
         yield from self.active_widget_view()
