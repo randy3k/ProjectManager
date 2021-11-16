@@ -10,8 +10,6 @@ import imp
 from unittest import skipIf
 from unittest.mock import patch
 
-from unittesting import AWAIT_WORKER
-
 
 SELECT_NOT_AVALIABLE = "`select` command is ST 4 only."
 
@@ -54,9 +52,6 @@ class TestBasicFeatures(TempDirectoryTestCase, OverridePreferencesTestCase):
 
     @skipIf(sublime.version() < "4000", SELECT_NOT_AVALIABLE)
     def test_add_and_open(self):
-        if sublime.platform() == "linux":
-            yield 5000
-
         self.window.run_command("project_manager", {"action": "add_project"})
         yield from self.active_widget_view()
         self.window.run_command("select")

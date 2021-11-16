@@ -13,8 +13,10 @@ jobs:
         with:
           sublime-text-version: 4
           unittesting-version: master
-          display: turbovnc
           # we need xfce for the subl command to work in st3
+          display: turbovnc
           window-manager: xfce
       - uses: SublimeText/UnitTesting/actions/run-tests@master
-  
+      - if: failure()
+        name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
