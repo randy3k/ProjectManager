@@ -93,6 +93,7 @@ class TestBasicFeatures(TempDirectoryTestCase, OverridePreferencesTestCase):
             return Mock()
 
         with patch.object(self.manager.window, "show_input_panel", _show_input_panel):
+            yield 3000
             self.window.run_command("project_manager", {"action": "add_project"})
             yield lambda: self.window.project_file_name() is not None
 
