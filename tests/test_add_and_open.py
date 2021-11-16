@@ -7,6 +7,7 @@ from ProjectManager.project_manager import Manager
 
 import os
 import imp
+from unittest import skipIf
 from unittest.mock import patch
 
 
@@ -49,38 +50,38 @@ class TestBasicFeatures(TempDirectoryTestCase, OverridePreferencesTestCase):
         yield lambda: self.last_view[0] and self.last_view[0].settings().get("is_widget")
         return self.last_view[0]
 
-    # @unittest.skipIf(sublime.version() < "4000", SELECT_NOT_AVALIABLE)
-    # def test_add_and_open(self):
-    #     self.window.run_command("project_manager", {"action": "add_project"})
-    #     yield from self.active_widget_view()
-    #     self.window.run_command("select")
+    @skipIf(sublime.version() < "4000", SELECT_NOT_AVALIABLE)
+    def test_add_and_open(self):
+        self.window.run_command("project_manager", {"action": "add_project"})
+        yield from self.active_widget_view()
+        self.window.run_command("select")
 
-    #     yield lambda: self.window.project_file_name() is not None
+        yield lambda: self.window.project_file_name() is not None
 
-    #     projects_info = self.manager.projects_info.info()
+        projects_info = self.manager.projects_info.info()
 
-    #     self.assertTrue(self.project_name in projects_info)
+        self.assertTrue(self.project_name in projects_info)
 
-    #     # clear sidebar
-    #     self.window.run_command('close_workspace')
+        # clear sidebar
+        self.window.run_command('close_workspace')
 
-    #     self.assertTrue(self.window.project_file_name() is None)
+        self.assertTrue(self.window.project_file_name() is None)
 
-    #     self.window.run_command("project_manager", {"action": "open_project"})
-    #     view = yield from self.active_widget_view()
-    #     view.run_command("insert", {"characters": self.project_name})
-    #     self.window.run_command("select")
+        self.window.run_command("project_manager", {"action": "open_project"})
+        view = yield from self.active_widget_view()
+        view.run_command("insert", {"characters": self.project_name})
+        self.window.run_command("select")
 
-    #     yield lambda: self.window.project_file_name() is not None
+        yield lambda: self.window.project_file_name() is not None
 
-    #     self.assertEqual(os.path.basename(self.window.folders()[0]), self.project_name)
+        self.assertEqual(os.path.basename(self.window.folders()[0]), self.project_name)
 
-    #     with patch("sublime.ok_cancel_dialog", return_value=True):
-    #         self.window.run_command("project_manager", {"action": "remove_project"})
-    #         view = yield from self.active_widget_view()
-    #         view.run_command("insert", {"characters": self.project_name})
-    #         self.window.run_command("select")
-    #         yield lambda: self.window.project_file_name() is None
+        with patch("sublime.ok_cancel_dialog", return_value=True):
+            self.window.run_command("project_manager", {"action": "remove_project"})
+            view = yield from self.active_widget_view()
+            view.run_command("insert", {"characters": self.project_name})
+            self.window.run_command("select")
+            yield lambda: self.window.project_file_name() is None
 
     def test_add_and_open_with_mock(self):
         def _window_show_input_panel(wid, caption, initial_text, on_done, on_change, on_cancel):
