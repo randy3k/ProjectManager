@@ -37,6 +37,7 @@ class TestBasicFeatures(TempDirectoryTestCase, OverridePreferencesTestCase):
         cls.manager = Manager(cls.window)
         # to make sure ProjectManagerCommand shares the same manager so that
         # we could patch ProjectManagerCommand.manager.window
+        # it works because ProjectManager is reloaded before running the tests.
         ProjectManagerCommand.manager = cls.manager
 
     @classmethod
@@ -44,6 +45,7 @@ class TestBasicFeatures(TempDirectoryTestCase, OverridePreferencesTestCase):
         sublime_plugin.unload_module(cls.capture_module)
         TempDirectoryTestCase.tearDownClass.__func__(cls)
         OverridePreferencesTestCase.tearDownClass.__func__(cls)
+        ProjectManagerCommand.manager = None
 
     def setUp(self):
         yield from self.__class__.setWindowFolder()
