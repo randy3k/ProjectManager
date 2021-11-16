@@ -43,6 +43,11 @@ class TestBasicFeatures(TempDirectoryTestCase, OverridePreferencesTestCase):
         TempDirectoryTestCase.tearDownClass.__func__(cls)
         OverridePreferencesTestCase.tearDownClass.__func__(cls)
 
+        if cls.project_name in cls.manager.projects_info.info():
+            with patch("sublime.ok_cancel_dialog", return_value=True):
+                cls.manager.remove_project(cls.project_name)
+                yield cls.project_name not in cls.manager.projects_info.info()
+
     def setUp(self):
         yield from self.__class__.setWindowFolder()
 
