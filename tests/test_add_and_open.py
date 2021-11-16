@@ -11,7 +11,7 @@ from unittest import skipIf
 from unittest.mock import patch
 
 
-SELECT_NOT_AVALIABLE = "The `select` command is only avaiable in Sublime Text 4."
+SELECT_NOT_AVALIABLE = "Only work well in ST4 macOS and Windows."
 
 
 class TestBasicFeatures(TempDirectoryTestCase, OverridePreferencesTestCase):
@@ -50,7 +50,7 @@ class TestBasicFeatures(TempDirectoryTestCase, OverridePreferencesTestCase):
         yield lambda: self.last_view[0] and self.last_view[0].settings().get("is_widget")
         return self.last_view[0]
 
-    @skipIf(sublime.version() < "4000", SELECT_NOT_AVALIABLE)
+    @skipIf(sublime.version() < "4000" or sublime.platform() == "linux", SELECT_NOT_AVALIABLE)
     def test_add_and_open(self):
         self.window.run_command("project_manager", {"action": "add_project"})
         yield from self.active_widget_view()
