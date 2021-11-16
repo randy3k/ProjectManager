@@ -1,7 +1,7 @@
 # Project Manager for [Sublime Text](https://www.sublimetext.com)
 
-[![Test](https://github.com/randy3k/UnitTesting-example/actions/workflows/test.yaml/badge.svg)](https://github.com/randy3k/UnitTesting-example/actions/workflows/test.yaml)
-[![codecov](https://codecov.io/gh/randy3k/UnitTesting-example/branch/master/graph/badge.svg)](https://codecov.io/gh/randy3k/UnitTesting-example)
+[![test](https://github.com/randy3k/ProjectManager/actions/workflows/test.yaml/badge.svg)](https://github.com/randy3k/ProjectManager/actions/workflows/test.yaml)
+[![codecov](https://codecov.io/gh/randy3k/ProjectManager/branch/master/graph/badge.svg)](https://codecov.io/gh/randy3k/ProjectManager)
 <a href="https://packagecontrol.io/packages/ProjectManager"><img src="https://packagecontrol.herokuapp.com/downloads/ProjectManager.svg"></a>
 <a href="https://www.paypal.me/randy3k/5usd" title="Donate to this project using Paypal"><img src="https://img.shields.io/badge/paypal-donate-blue.svg" /></a>
 
