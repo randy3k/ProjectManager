@@ -649,7 +649,7 @@ class ProjectManagerEventHandler(sublime_plugin.EventListener):
             window.run_command("project_manager_close_project")
 
 
-class ProjectManager(sublime_plugin.WindowCommand):
+class ProjectManagerCommand(sublime_plugin.WindowCommand):
     manager = None
 
     def run(self, action=None, caller=None):

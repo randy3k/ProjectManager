@@ -1,13 +1,16 @@
 import sublime
 import sublime_plugin
 from unittesting.helpers import TempDirectoryTestCase, OverridePreferencesTestCase
-from ProjectManager.project_manager import Manager
+from ProjectManager.project_manager import ProjectManagerCommand, Manager
 
 
 import os
 import imp
 import unittest
-import unittest.mock
+from unittest.mock import patch, Mock
+
+
+SELECT_NOT_AVALIABLE = "The `select` command is only avaiable in Sublime Text 4."
 
 
 class TestBasicFeatures(TempDirectoryTestCase, OverridePreferencesTestCase):
@@ -32,6 +35,9 @@ class TestBasicFeatures(TempDirectoryTestCase, OverridePreferencesTestCase):
         yield from OverridePreferencesTestCase.setUpClass.__func__(cls)
         cls.project_name = os.path.basename(cls._temp_dir)
         cls.manager = Manager(cls.window)
+        # to make sure ProjectManagerCommand shares the same manager so that
+        # we could patch ProjectManagerCommand.manager.window
+        ProjectManagerCommand.manager = cls.manager
 
     @classmethod
     def tearDownClass(cls):
@@ -39,17 +45,14 @@ class TestBasicFeatures(TempDirectoryTestCase, OverridePreferencesTestCase):
         TempDirectoryTestCase.tearDownClass.__func__(cls)
         OverridePreferencesTestCase.tearDownClass.__func__(cls)
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.last_view[0] = None
+    def setUp(self):
+        yield from self.__class__.setWindowFolder()
 
     def active_widget_view(self):
         yield lambda: self.last_view[0] and self.last_view[0].settings().get("is_widget")
         return self.last_view[0]
 
-    @unittest.skipIf(
-        sublime.version() < "4000",
-        "The `select` command is only avaiable in Sublime Text 4.")
+    @unittest.skipIf(sublime.version() < "4000", SELECT_NOT_AVALIABLE)
     def test_add_and_open(self):
         self.window.run_command("project_manager", {"action": "add_project"})
         yield from self.active_widget_view()
@@ -75,16 +78,48 @@ class TestBasicFeatures(TempDirectoryTestCase, OverridePreferencesTestCase):
 
         self.assertEqual(os.path.basename(self.window.folders()[0]), self.project_name)
 
-        with unittest.mock.patch("sublime.ok_cancel_dialog", return_value=True):
-
+        with patch("sublime.ok_cancel_dialog", return_value=True):
             self.window.run_command("project_manager", {"action": "remove_project"})
             view = yield from self.active_widget_view()
             view.run_command("insert", {"characters": self.project_name})
             self.window.run_command("select")
-
             yield lambda: self.window.project_file_name() is None
 
+    def test_add_and_open_with_mock(self):
+        def _show_input_panel(caption, initial_text, on_done, on_change, on_cancel):
+            sublime.set_timeout(lambda: on_done(initial_text), 100)
+            return Mock()
 
+        with patch.object(self.manager.window, "show_input_panel", _show_input_panel):
+            self.window.run_command("project_manager", {"action": "add_project"})
+            yield lambda: self.window.project_file_name() is not None
 
-    def test_empty(self):
-        self.assertTrue(True)
+        projects_info = self.manager.projects_info.info()
+
+        self.assertTrue(self.project_name in projects_info)
+
+        # clear sidebar
+        self.window.run_command('close_workspace')
+
+        self.assertTrue(self.window.project_file_name() is None)
+
+        def _show_quick_panel(items, on_done, *args, **kwargs):
+            if hasattr(sublime, "QuickPanelItem"):
+                index = next(i for i, item in enumerate(items) if
+                             item.trigger.startswith(self.project_name))
+            else:
+                index = next(i for i, item in enumerate(items) if item[0].startswith(self.project_name))
+
+            sublime.set_timeout(lambda: on_done(index), 100)
+            return Mock()
+
+        with patch.object(self.manager.window, "show_quick_panel", _show_quick_panel):
+            self.window.run_command("project_manager", {"action": "open_project"})
+            yield lambda: self.window.project_file_name() is not None
+
+        self.assertEqual(os.path.basename(self.window.folders()[0]), self.project_name)
+
+        with patch.object(self.manager.window, "show_quick_panel", _show_quick_panel):
+            with patch("sublime.ok_cancel_dialog", return_value=True):
+                self.window.run_command("project_manager", {"action": "remove_project"})
+                yield lambda: self.window.project_file_name() is None
