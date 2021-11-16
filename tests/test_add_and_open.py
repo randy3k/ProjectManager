@@ -50,6 +50,10 @@ class TestBasicFeatures(TempDirectoryTestCase, OverridePreferencesTestCase):
 
     def setUp(self):
         yield from self.__class__.setWindowFolder()
+        yield lambda: self.window.active_view()
+        self.window.active_view().run_command("noop")
+        yield AWAIT_WORKER
+        yield 100
 
     def active_widget_view(self):
         yield lambda: self.last_view[0] and self.last_view[0].settings().get("is_widget")
