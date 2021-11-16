@@ -33,10 +33,6 @@ class TestBasicFeatures(TempDirectoryTestCase, OverridePreferencesTestCase):
         capture_module.capture_event_listener = capture_event_listener
         sublime_plugin.load_module(capture_module)
         cls.capture_module = capture_module
-        yield
-        yield
-        yield AWAIT_WORKER
-        yield AWAIT_WORKER
         yield from TempDirectoryTestCase.setUpClass.__func__(cls)
         yield from OverridePreferencesTestCase.setUpClass.__func__(cls)
         cls.project_name = os.path.basename(cls._temp_dir)
@@ -51,9 +47,6 @@ class TestBasicFeatures(TempDirectoryTestCase, OverridePreferencesTestCase):
     def setUp(self):
         yield from self.__class__.setWindowFolder()
         yield lambda: self.window.active_view()
-        self.window.active_view().run_command("noop")
-        yield AWAIT_WORKER
-        yield 100
 
     def active_widget_view(self):
         yield lambda: self.last_view[0] and self.last_view[0].settings().get("is_widget")
@@ -61,6 +54,9 @@ class TestBasicFeatures(TempDirectoryTestCase, OverridePreferencesTestCase):
 
     @skipIf(sublime.version() < "4000", SELECT_NOT_AVALIABLE)
     def test_add_and_open(self):
+        if sublime.platform() == "linux":
+            yield 5000
+
         self.window.run_command("project_manager", {"action": "add_project"})
         yield from self.active_widget_view()
         self.window.run_command("select")
