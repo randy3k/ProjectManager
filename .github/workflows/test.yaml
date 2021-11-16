@@ -16,6 +16,8 @@ jobs:
         with:
           sublime-text-version: ${{ matrix.st-version }}
           unittesting-version: master
+          # we need xfce for the subl command to work in st3
+          window-manager: xfce
       - uses: SublimeText/UnitTesting/actions/run-tests@master
         with:
           coverage: true

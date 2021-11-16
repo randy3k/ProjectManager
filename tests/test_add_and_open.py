@@ -7,8 +7,7 @@ from ProjectManager.project_manager import Manager
 
 import os
 import imp
-import unittest
-from unittest.mock import patch, Mock
+from unittest.mock import patch
 
 
 SELECT_NOT_AVALIABLE = "The `select` command is only avaiable in Sublime Text 4."
@@ -86,10 +85,11 @@ class TestBasicFeatures(TempDirectoryTestCase, OverridePreferencesTestCase):
     def test_add_and_open_with_mock(self):
         def _window_show_input_panel(wid, caption, initial_text, on_done, on_change, on_cancel):
             sublime.set_timeout(lambda: on_done(initial_text), 100)
-            return Mock()
+            return 0
 
         with patch.object(sublime_api, "window_show_input_panel", _window_show_input_panel):
             self.window.run_command("project_manager", {"action": "add_project"})
+
             yield lambda: self.window.project_file_name() is not None
 
         projects_info = self.manager.projects_info.info()
@@ -101,10 +101,18 @@ class TestBasicFeatures(TempDirectoryTestCase, OverridePreferencesTestCase):
 
         self.assertTrue(self.window.project_file_name() is None)
 
-        def _window_show_quick_panel(wid, items, on_done, *args, **kwargs):
-            index = next(i for i, item in enumerate(items) if item[0].startswith(self.project_name))
-            sublime.set_timeout(lambda: on_done(index), 100)
-            return Mock()
+        if sublime.version() >= '4000':
+            def _window_show_quick_panel(wid, items, on_done, *args, **kwargs):
+                index = next(i for i, item in enumerate(items)
+                             if item[0].startswith(self.project_name))
+                sublime.set_timeout(lambda: on_done(index), 100)
+                return 0
+        else:
+            def _window_show_quick_panel(wid, items, items_per_row, on_done, *args, **kwargs):
+                index = next(int(i / items_per_row) for i, item in enumerate(items)
+                             if i % items_per_row == 0 and item.startswith(self.project_name))
+                sublime.set_timeout(lambda: on_done(index), 100)
+                return 0
 
         with patch.object(sublime_api, "window_show_quick_panel", _window_show_quick_panel):
             self.window.run_command("project_manager", {"action": "open_project"})

@@ -49,6 +49,7 @@ def plugin_unloaded():
 
 
 def subl(*args):
+    print(args)
     executable_path = sublime.executable_path()
     if sublime.platform() == 'osx':
         app_path = executable_path[:executable_path.rfind('.app/') + 5]
@@ -513,7 +514,7 @@ class Manager:
         self.check_project(project)
         self.close_project_by_window(self.window)
         self.close_project_by_name(project)
-        subl('--project', self.project_workspace(project))
+        subl('--project', self.project_file_name(project))
         self.projects_info.refresh_projects()
 
     @dont_close_windows_when_empty
@@ -521,7 +522,7 @@ class Manager:
         self.update_recent(project)
         self.check_project(project)
         self.close_project_by_name(project)
-        subl('-n', '--project', self.project_workspace(project))
+        subl('-n', '--project', self.project_file_name(project))
         self.projects_info.refresh_projects()
 
     def _remove_project(self, project):
