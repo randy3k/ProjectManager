@@ -55,13 +55,11 @@ class TestBasicFeatures(TempDirectoryTestCase, OverridePreferencesTestCase):
                 index = next(i for i, item in enumerate(items)
                              if item[0].startswith(self.project_name))
                 sublime.set_timeout(lambda: on_done(index), 100)
-                return 0
         else:
             def _window_show_quick_panel(wid, items, items_per_row, on_done, *args, **kwargs):
                 index = next(int(i / items_per_row) for i, item in enumerate(items)
                              if i % items_per_row == 0 and item.startswith(self.project_name))
                 sublime.set_timeout(lambda: on_done(index), 100)
-                return 0
 
         with patch.object(sublime_api, "window_show_quick_panel", _window_show_quick_panel):
             self.window.run_command("project_manager", {"action": "open_project"})
