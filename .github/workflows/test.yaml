@@ -16,8 +16,6 @@ jobs:
         with:
           sublime-text-version: ${{ matrix.st-version }}
           unittesting-version: master
-          # we need turbovnc to capture on_activated call in ubuntu
-          display: turbovnc
           # we need xfce for the subl command to work in st3
           window-manager: xfce
       - uses: SublimeText/UnitTesting/actions/run-tests@master
