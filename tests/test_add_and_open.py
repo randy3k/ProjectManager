@@ -126,6 +126,7 @@ class TestBasicFeatures(TempDirectoryTestCase, OverridePreferencesTestCase):
         with widget_view_finder() as for_widget_view:
             self.window.run_command("project_manager", {"action": "open_project"})
             view = yield for_widget_view
+            yield 100
             view.run_command("insert", {"characters": self.project_name})
             self.window.run_command("select")
 
@@ -137,6 +138,7 @@ class TestBasicFeatures(TempDirectoryTestCase, OverridePreferencesTestCase):
                 patch("sublime.ok_cancel_dialog", return_value=True):
             self.window.run_command("project_manager", {"action": "remove_project"})
             view = yield for_widget_view
+            yield 100
             view.run_command("insert", {"characters": self.project_name})
             self.window.run_command("select")
             yield lambda: self.window.project_file_name() is None
