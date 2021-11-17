@@ -1,5 +1,4 @@
 import sublime
-import sublime_api
 from unittesting.helpers import TempDirectoryTestCase, OverridePreferencesTestCase
 from ProjectManager.project_manager import Manager
 
@@ -36,9 +35,8 @@ class TestBasicFeatures(TempDirectoryTestCase, OverridePreferencesTestCase):
             sublime.set_timeout(lambda: on_done(initial_text), 100)
             return 0
 
-        with patch.object(sublime_api, "window_show_input_panel", _window_show_input_panel):
+        with patch("sublime_api.window_show_input_panel", _window_show_input_panel):
             self.window.run_command("project_manager", {"action": "add_project"})
-
             yield lambda: self.window.project_file_name() is not None
 
         projects_info = self.manager.projects_info.info()
@@ -61,13 +59,13 @@ class TestBasicFeatures(TempDirectoryTestCase, OverridePreferencesTestCase):
                              if i % items_per_row == 0 and item.startswith(self.project_name))
                 sublime.set_timeout(lambda: on_done(index), 100)
 
-        with patch.object(sublime_api, "window_show_quick_panel", _window_show_quick_panel):
+        with patch("sublime_api.window_show_quick_panel", _window_show_quick_panel):
             self.window.run_command("project_manager", {"action": "open_project"})
             yield lambda: self.window.project_file_name() is not None
 
         self.assertEqual(os.path.basename(self.window.folders()[0]), self.project_name)
 
-        with patch.object(sublime_api, "window_show_quick_panel", _window_show_quick_panel):
+        with patch("sublime_api.window_show_quick_panel", _window_show_quick_panel):
             with patch("sublime.ok_cancel_dialog", return_value=True):
                 self.window.run_command("project_manager", {"action": "remove_project"})
                 yield lambda: self.window.project_file_name() is None
