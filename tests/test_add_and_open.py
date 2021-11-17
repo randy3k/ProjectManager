@@ -100,6 +100,9 @@ class TestBasicFeatures(TempDirectoryTestCase, OverridePreferencesTestCase):
 
     @skipIf(sublime.version() < "4000", SELECT_NOT_AVAILABLE)
     def test_add_and_open_with_select(self):
+        if sublime.platform() == "linux" and os.environ.get("CI"):
+            # it gives enough time for the window manager to response to changes in focus
+            yield 5000
         self.window.run_command("project_manager", {"action": "add_project"})
         yield from self.active_widget_view()
         self.window.run_command("select")
