@@ -49,6 +49,7 @@ class TestBasicFeatures(TempDirectoryTestCase, OverridePreferencesTestCase):
                 yield mocked.called
 
     def setUp(self):
+        self.last_view[0] = None
         yield from self.__class__.setWindowFolder()
 
     def active_widget_view(self):
