@@ -29,7 +29,7 @@ class TestBasicFeatures(TempDirectoryTestCase, OverridePreferencesTestCase):
         if cls.project_name in cls.manager.projects_info.info():
             with patch("sublime.ok_cancel_dialog", return_value=True) as mocked:
                 cls.manager.remove_project(cls.project_name)
-                yield mocked.called
+                yield lambda: mocked.called
 
     def setUp(self):
         yield from self.__class__.setWindowFolder()
