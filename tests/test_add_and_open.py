@@ -16,16 +16,13 @@ class TestBasicFeatures(TempDirectoryTestCase, OverridePreferencesTestCase):
 
     @classmethod
     def setUpClass(cls):
-        yield from TempDirectoryTestCase.setUpClass.__func__(cls)
-        yield from OverridePreferencesTestCase.setUpClass.__func__(cls)
+        yield from super().setUpClass()
         cls.project_name = os.path.basename(cls._temp_dir)
         cls.manager = Manager(cls.window)
 
     @classmethod
     def tearDownClass(cls):
-        TempDirectoryTestCase.tearDownClass.__func__(cls)
-        OverridePreferencesTestCase.tearDownClass.__func__(cls)
-
+        yield from super().tearDownClass()
         if cls.project_name in cls.manager.projects_info.info():
             with patch("sublime.ok_cancel_dialog", return_value=True) as mocked:
                 cls.manager.remove_project(cls.project_name)
