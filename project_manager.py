@@ -120,6 +120,34 @@ def format_directory(item, folder):
         return [item, pretty_path(folder)]
 
 
+def format_files(item, paths):
+    if hasattr(sublime, "QuickPanelItem"):
+        length = 0
+        details = ""
+        for i, path in enumerate(paths):
+            name = path.rsplit(os.sep, 1)[1]
+            if length + len(name) > 85:
+                name = name[:85-length-len(name)]
+            details += '<a href=\'subl:open_file {"file": "%s"}\'>%s</a>' % (path, name)
+            length += len(name)
+
+            if length >= 80:
+                details += " [...] (" + str(len(paths) - i) + " more)"
+                break
+            elif i < len(paths)-1:
+                details += " / "
+                length += 3
+
+        return sublime.QuickPanelItem(item, details)
+
+    else:
+        names = [path.rsplit(os.sep, 1)[1] for path in paths]
+        details = " / ".join(names)
+        if len(details) > 85:
+            details = details[:85] + " [...] (" + str(details[80:].count('/')) + " more)"
+        return [item, details]
+
+
 _computer_name = []
 
 
@@ -676,38 +704,29 @@ class Manager:
                 wname += active_workspace_indicator
             wlist[i] = [wpath, wname, wbuffers]
 
-        return [w[0] for w in wlist], [format_directory(w[1], w[2]) for w in wlist]
+        return [w[0] for w in wlist], [format_files(w[1], w[2]) for w in wlist]
 
     def render_workspace(self, wfile):
-        """Given a workspace file, returns a tuplet with its file, its name and a
-        prettified path to the file
+        """Given a workspace file, returns a tuplet with its file, its name,
+        a prettified path to its files and the real path to its files
 
         Args:
             wfile: str
                 The complete path to the workspace file
 
         Returns:
-            list[(str, str, str)]: a tuplet composed of the path of the file, the name of
-                the workspace and a prettified path to the file to display to the user
+            list[(str, str, str, str)]: a tuplet composed of the path of the file,
+                the name of the workspace, a prettified path to the file to display
+                to the user and the real path to these files
         """
         wname = os.path.basename(re.sub(r'\.sublime-workspace$', '', wfile))
         winfo = JsonFile(wfile).load()
         if "buffers" not in winfo:
-            return [wfile, wname, wfile]
+            return [wfile, wname, []]
 
-        wbuffer_list = winfo["buffers"]
-        wbuffers_names = []
-        for buffer in wbuffer_list:
-            if 'file' not in buffer:
-                continue
+        wbuffer_info = winfo["buffers"]
+        wbuffers = [buffer['file'] for buffer in wbuffer_info if 'file' in buffer]
 
-            buffer_file = buffer['file']
-            buffer_name = buffer_file.rsplit(os.sep, 1)[1]
-            wbuffers_names.append(buffer_name)
-
-        wbuffers = " / ".join(wbuffers_names)
-        if len(wbuffers) > 85:
-            wbuffers = wbuffers[:85] + " [...] (" + str(wbuffers[80:].count('/')) + " more)"
         return [wfile, wname, wbuffers]
 
     def move_recent_workspaces_to_top(self, project, wlist, move_second):
@@ -724,7 +743,7 @@ class Manager:
         Args:
             project: str
                 The name of the project from which to sort the workspaces
-            wlist: list[(str, str, str)]
+            wlist: list[(str, str, list[str]]
                 A list of information of all of the project's workspaces as given by
                 self.render_workspace (i.e. [(wpath, wname, wbuffers)])
             move_second: bool
@@ -767,9 +786,9 @@ class Manager:
         Args:
             project: str
                 The name of the project
-            wlist: list[(str, str, str)]
+            wlist: list[(str, str, list[str])]
                 A list of information of all of the project's workspaces as given by
-                self.render_workspace (i.e. [(wpath, wname, pretty(wpath))])
+                self.render_workspace (i.e. [(wpath, wname, wbuffers])
         """
         for i in range(len(wlist)):
             if wlist[i][1] == project:
@@ -833,15 +852,16 @@ class Manager:
 
     def close_project_by_name(self, project):
         pfile = os.path.realpath(self.project_file_name(project))
-        closed = False
+        closed_workspaces = set()
         for w in sublime.windows():
             if w.project_file_name():
                 if os.path.realpath(w.project_file_name()) == pfile:
+                    closed_workspaces.add(w.workspace_file_name())
                     self.close_project_by_window(w)
                     if w.id() != sublime.active_window().id():
                         w.run_command('close_window')
-                    closed = True
-        return closed
+
+        return closed_workspaces
 
     def close_window(self, window):
         window.run_command('close')
@@ -1169,8 +1189,10 @@ class Manager:
             pfile = os.path.realpath(self.project_file_name(project))
             pdir = os.path.dirname(pfile)
 
+            close_curr_window = (self.window.project_file_name() == pfile)
             new_pfile = os.path.join(pdir, '%s.sublime-project' % new_project)
-            reopen = self.close_project_by_name(project)
+            closed_workspaces = self.close_project_by_name(project)
+            reopen_workspaces = []
             os.rename(pfile, new_pfile)
 
             for wfile in self.projects_info.info()[project]['workspaces']:
@@ -1193,6 +1215,10 @@ class Manager:
 
                 else:
                     new_wfile = wfile
+
+                if wfile in closed_workspaces:
+                    beg, mid, end = new_wfile.rpartition('/' + project + '/')
+                    reopen_workspaces.append(beg + '/' + new_project + '/' + end)
 
                 j = JsonFile(new_wfile)
                 data = j.load({})
@@ -1219,8 +1245,11 @@ class Manager:
 
             self.projects_info.refresh_projects()
 
-            if reopen:
-                self.open_in_new_window(new_project)
+            for wfile in reopen_workspaces:
+                self.open_in_new_window(new_project, wfile, False)
+
+            if close_curr_window:
+                self.window.run_command('close_window')
 
         def _ask_project_name():
             v = self.window.show_input_panel('New project name:',
