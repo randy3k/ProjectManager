@@ -1,18 +1,18 @@
 [
     {
         "keys": ["ctrl+alt+p"],
-        "command": "project_manager", "args": {"action": "switch"}
+        "command": "project_manager", "args": {"action": "open_project"}
     },
     // {
     //     "keys": ["ctrl+alt+shift+p"],
-    //     "command": "project_manager", "args": {"action": "new"}
+    //     "command": "project_manager", "args": {"action": "open_project_in_new_window"}
     // },
     // {
     //     "keys": ["ctrl+alt+o"],
-    //     "command": "project_manager", "args": {"action": "switch_ws"}
+    //     "command": "project_manager", "args": {"action": "open_workspace"}
     // },
     // {
     //     "keys": ["ctrl+alt+shift+o"],
-    //     "command": "project_manager", "args": {"action": "new_ws"}
+    //     "command": "project_manager", "args": {"action": "open_workspace_in_new_window"}
     // }
 ]
