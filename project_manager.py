@@ -1173,13 +1173,20 @@ class Manager:
             self.window.open_file(self.project_file_name(project))
         sublime.set_timeout_async(on_open, 100)
 
+    def is_valid_name(self, project_name):
+        for char in project_name:
+            if not (char.isalnum() or char in '.,_- '):
+                return False
+        return True
+
     def rename_project(self, project):
         def rename_callback(new_project):
             if not new_project or project == new_project:
+                sublime.status_message("Aborted")
                 return
 
-            if os.sep in new_project:
-                sublime.message_dialog("Invalid name: can't have a '/' in the new name")
+            if not self.is_valid_name(new_project):
+                sublime.message_dialog("Invalid name: the only character authorized are [a-zA-Z.,_- ]")
                 return
 
             if new_project in self.projects_info.info():
@@ -1261,11 +1268,18 @@ class Manager:
 
         sublime.set_timeout(_ask_project_name, 100)
 
-    def rename_workspace(self, wfile):
+    def rename_workspace(self, wfile=None):
+        if wfile is None:
+            wfile = self.get_default_workspace(self.curr_pname)
+
         def rename_callback(new_workspace):
             project = self.curr_pname
             if not new_workspace:
                 new_workspace = project
+
+            if not self.is_valid_name(new_workspace):
+                sublime.message_dialog("Invalid name: the only character authorized are [a-zA-Z.,_- ]")
+                return
 
             new_wfile = os.path.join(os.path.dirname(wfile),
                                      new_workspace + '.sublime-workspace')
