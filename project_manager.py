@@ -960,11 +960,12 @@ class Manager:
         self.prompt_directory(_ask_project_name, on_cancel=on_cancel)
 
     def add_workspace(self):
+        if not self.curr_pname:
+            sublime.message_dialog("No active project")
+            return
+
         def add_callback(new_workspace):
             project = self.curr_pname
-            if not project:
-                sublime.message_dialog("No active project")
-                return
 
             if not new_workspace:
                 new_workspace = project
