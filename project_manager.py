@@ -5,7 +5,6 @@ import os
 import platform
 import re
 import copy
-import json
 
 from .json_file import JsonFile
 
@@ -340,8 +339,7 @@ class ProjectsInfo:
         filename = '{}.sublime-project'.format(project_name)
         filepath = os.path.join(self.primary_dir(), filename)
         print('ProjectManager: Creating {} -> {}'.format(filename, folder))
-        with open(filepath, 'w') as handle:
-            json.dump(data, handle, indent=2)
+        JsonFile(filepath).save(data)
 
 
 class Manager:
