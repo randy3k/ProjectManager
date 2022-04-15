@@ -106,6 +106,14 @@ def format_directory(item, folder):
         return [item, pretty_path(folder)]
 
 
+def safe_remove(path):
+    if os.path.exists(path):
+        try:
+            os.remove(path)
+        except Exception:
+            pass
+
+
 _computer_name = []
 
 
@@ -261,7 +269,7 @@ class ProjectsInfo:
             # remove empty directories
             for d in dirs:
                 d = os.path.join(path, d)
-                if len(os.listdir(d)) == 0:
+                if os.path.exists(d) and len(os.listdir(d)) == 0:
                     os.rmdir(d)
         return pfiles
 
@@ -531,8 +539,8 @@ class Manager:
             pfile = self.project_file_name(project)
             if self.projects_info.which_project_dir(pfile):
                 self.close_project_by_name(project)
-                os.remove(self.project_file_name(project))
-                os.remove(self.project_workspace(project))
+                safe_remove(self.project_file_name(project))
+                safe_remove(self.project_workspace(project))
             else:
                 for pdir in self.projects_info.projects_path():
                     j = JsonFile(os.path.join(pdir, 'library.json'))
