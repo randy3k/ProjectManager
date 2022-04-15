@@ -319,12 +319,14 @@ class ProjectsInfo:
             max_depth = pm_settings.get('auto_discover_max_recursion_depth', 1)
             ignores = pm_settings.get('auto_discover_ignored_folders', [])
             for basedir in discover_dirs:
+                if not os.path.isdir(basedir):
+                    print('ProjectManager: {} is not a valid path'.format(basedir))
                 for folder, repodir in find_repos(basedir, max_depth, ignores):
                     if folder not in existing:
                         project_name = os.path.basename(folder)
                         self._create_new_project(project_name, folder)
         except Exception as err:
-            print('Error auto discovering repos: {}' % err)
+            print(err)
 
     def _create_new_project(self, project_name, folder):
         data = {"folders": [{
@@ -337,7 +339,7 @@ class ProjectsInfo:
         
         filename = '{}.sublime-project'.format(project_name)
         filepath = os.path.join(self.primary_dir(), filename)
-        print('Creating {} -> {}'.format(filename, folder))
+        print('ProjectManager: Creating {} -> {}'.format(filename, folder))
         with open(filepath, 'w') as handle:
             json.dump(data, handle, indent=2)
 
