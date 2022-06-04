@@ -1369,12 +1369,32 @@ class ProjectManagerEventHandler(sublime_plugin.EventListener):
 class ProjectManagerCommand(sublime_plugin.WindowCommand):
     manager = None
 
-    def run(self, action=None, caller=None):
+    def run(self, action=None, caller=None, project=None, workspace=None):
         self.caller = caller
 
         if not self.manager:
             self.manager = Manager(self.window)
         self.manager.refresh_curr_project()
+
+        if project is not None:
+            pinfos = self.manager.projects_info.info()
+            if project not in pinfos:
+                sublime.status_message("Project '{}' does not exist".format(project))
+                return
+
+            if workspace is None:
+                self.manager.open_in_new_window(project)
+                return
+
+            wfiles = pinfos[project]["workspaces"]
+            wnames = [os.path.basename(re.sub(r'\.sublime-workspace$', '', wfile))
+                      for wfile in wfiles]
+            if workspace in wnames:
+                self.manager.open_in_new_window(project, wfiles[wnames.index(workspace)])
+            else:
+                sublime.status_message("Workspace '{}' does not exist in project '{}'"
+                                       .format(workspace, project))
+            return
 
         if action is None:
             self.show_options()
