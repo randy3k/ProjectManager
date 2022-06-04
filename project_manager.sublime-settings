@@ -58,5 +58,5 @@
     "project_display_format": "{project_group}{project_name}{active_project_indicator}",
 
     // Display the name of the currently opened project in the status bar
-    "display_in_status_bar": false,
+    "display_in_status_bar": true,
 }

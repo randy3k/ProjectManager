@@ -71,7 +71,7 @@ def subl(*args):
 
         # Automatically close window if no folders nor sheets are open BUT there is
         # still project data -> that means the workspace was opened elsewhere
-        # (this happen when trying to open a workspace already opened in another window)
+        # (this happens when trying to open a workspace already opened in another window)
         if window.project_data() and not window.folders() and not window.sheets():
             window.run_command('close_window')
 
@@ -165,30 +165,40 @@ def computer_name():
 
 
 def show_project_status_bar(view):
+    if not pm_settings.get("display_in_status_bar", False):
+        return
+
     project_file = view.window().project_file_name()
-    if project_file:
-        projects_info = ProjectsInfo.get_instance()
-        project_name = os.path.splitext(os.path.basename(project_file))[0]
-        project_info = projects_info.info()[project_name]
-        project_group = project_info.get("group", "")
+    if not project_file:
+        return
 
-        display_name = '['
-        display_name += project_group
-        display_name += project_name
+    projects_info = ProjectsInfo.get_instance()
+    project_name = os.path.splitext(os.path.basename(project_file))[0]
+    project_info = projects_info.info()[project_name]
+    project_group = project_info.get("group", "")
 
-        if sublime.version() >= '4050':
-            workspace_file = view.window().workspace_file_name()
-            workspace_name = os.path.splitext(os.path.basename(workspace_file))[0]
-            if project_name != workspace_name:
-                display_name += ':' + workspace_name
+    display_name = '['
+    display_name += project_group
+    display_name += project_name
 
-        display_name += ']'
+    if sublime.version() >= '4050':
+        workspace_file = view.window().workspace_file_name()
+        workspace_name = os.path.splitext(os.path.basename(workspace_file))[0]
+        if project_name != workspace_name:
+            display_name += ':' + workspace_name
 
-        view.set_status("00ProjectManager_project_name", display_name)
+    display_name += ']'
+
+    view.set_status("00ProjectManager_project_name", display_name)
 
 
 # Display the current project name in the status bar
 class ProjectInStatusbar(sublime_plugin.EventListener):
+    # When opening sublime text
+    def on_init(self, views):
+        for view in views:
+            show_project_status_bar(view)
+
     # When you create a new empty file
     def on_new(self, view):
         show_project_status_bar(view)
