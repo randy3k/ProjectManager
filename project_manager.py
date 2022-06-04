@@ -427,7 +427,7 @@ class ProjectsInfo:
             # remove empty directories
             for d in dirs:
                 d = os.path.join(path, d)
-                if len(os.listdir(d)) == 0:
+                if os.path.exists(d) and len(os.listdir(d)) == 0:
                     os.rmdir(d)
         return pfiles
 
@@ -914,6 +914,10 @@ class Manager:
 
     def add_project(self, on_cancel=None):
         def add_callback(project, pdir):
+            existing_projects = self.projects_info.info().keys()
+            if project in existing_projects:
+                sublime.message_dialog("Another project is already named "+ project)
+                return
             pd = self.window.project_data()
             pf = self.window.project_file_name()
             if os.sep in project:
