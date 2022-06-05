@@ -945,14 +945,9 @@ class Manager:
             if not os.path.exists(wfile):
                 JsonFile(wfile).save({"project": os.path.basename(pfile)})
 
-            self.close_project_by_window(self.window)
-            # nuke the current window by closing sidebar and all files
-            self.window.run_command('close_project')
-            self.window.run_command('close_all')
-
             # reload projects info
             self.projects_info.refresh_projects()
-            self.switch_project(project, wfile)
+            self.open_in_new_window(project, wfile)
 
         def _ask_project_name(pdir):
             project = 'New Project'
