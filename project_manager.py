@@ -199,15 +199,15 @@ class ProjectInStatusbar(sublime_plugin.EventListener):
         for view in views:
             show_project_status_bar(view)
 
-    # When you create a new empty file
+    # When creating a new empty file
     def on_new(self, view):
         show_project_status_bar(view)
 
-    # When you load an existing file
+    # When loading an existing file
     def on_load(self, view):
         show_project_status_bar(view)
 
-    # When you use File > New view into file on an existing file
+    # When using File > New view into file on an existing file
     def on_clone(self, view):
         show_project_status_bar(view)
 
@@ -861,24 +861,25 @@ class Manager:
     def get_project_data(self, project):
         return JsonFile(self.project_file_name(project)).load()
 
-    def close_project_by_window(self, window):
-        window.run_command('close_workspace')
-
-    def close_project_by_name(self, project):
+    def close_project(self, project):
         pfile = os.path.realpath(self.project_file_name(project))
         closed_workspaces = set()
         for w in sublime.windows():
-            if w.project_file_name():
-                if os.path.realpath(w.project_file_name()) == pfile:
+            if w.project_file_name() and os.path.realpath(w.project_file_name()) == pfile:
+                if sublime.version() > '4050':
                     closed_workspaces.add(w.workspace_file_name())
-                    self.close_project_by_window(w)
-                    if w.id() != sublime.active_window().id():
-                        w.run_command('close_window')
+                w.run_command('close_workspace')
+                if w.id() != sublime.active_window().id():
+                    w.run_command('close_window')
 
         return closed_workspaces
 
-    def close_window(self, window):
-        window.run_command('close')
+    def close_workspace(self, wfile):
+        if not sublime.version() > '4050':
+            return
+        for w in sublime.windows():
+            if w.workspace_file_name() == wfile:
+                w.run_command('close_window')
 
     def prompt_directory(self, callback, on_cancel=None):
         primary_dir = self.projects_info.primary_dir()
@@ -1092,9 +1093,12 @@ class Manager:
         if workspace is None:
             workspace = self.get_default_workspace(project)
         self.update_recent(project, workspace)
-        self.close_project_by_window(self.window)
-        if self.is_workspace_open(workspace):
-            self.close_window(self.window)
+        self.window.run_command("close_workspace")
+        if pm_settings.get("reopen_project_goto", True):
+            if self.is_workspace_open(workspace):
+                self.window.run_command('close')
+        else:
+            self.close_workspace(workspace)
         subl('--project', workspace)
         self.projects_info.refresh_projects()
 
@@ -1105,13 +1109,20 @@ class Manager:
         if workspace is None:
             workspace = self.get_default_workspace(project)
         self.update_recent(project, workspace)
-        if self.is_workspace_open(workspace):
-            sublime.status_message("Can't open the same workspace in several windows!")
-            subl('--project', workspace)
+        if pm_settings.get("reopen_project_goto", True):
+            if self.is_workspace_open(workspace):
+                sublime.status_message("Can't open the same workspace in several windows!")
+                subl('--project', workspace)
 
+            else:
+                if close_project:
+                    self.close_project(project)
+                subl('-n', '--project', workspace)
         else:
-            if close_project:
-                self.close_project_by_name(project)
+            if sublime.version() > '4050':
+                self.close_workspace(workspace)
+            else:
+                self.close_project(project)
             subl('-n', '--project', workspace)
 
         self.projects_info.refresh_projects()
@@ -1121,7 +1132,7 @@ class Manager:
         if answer is True:
             pfile = self.project_file_name(project)
             if self.projects_info.which_project_dir(pfile):
-                self.close_project_by_name(project)
+                self.close_project(project)
                 os.remove(self.project_file_name(project))
                 for workspace in self.projects_info.info()[project]['workspaces']:
                     os.remove(workspace)
@@ -1150,7 +1161,7 @@ class Manager:
                                           'containing the corresponding project' % workspace)
         if answer is True:
             project = self.curr_pname
-            self.close_project_by_name(project)
+            self.close_project(project)
             os.remove(wfile)
             self.projects_info.refresh_projects()
             sublime.status_message('Workspace "%s" is removed.' % project)
@@ -1212,7 +1223,7 @@ class Manager:
 
             close_curr_window = (self.window.project_file_name() == pfile)
             new_pfile = os.path.join(pdir, '%s.sublime-project' % new_project)
-            closed_workspaces = self.close_project_by_name(project)
+            closed_workspaces = self.close_project(project)
             reopen_workspaces = []
             os.rename(pfile, new_pfile)
 
@@ -1312,7 +1323,7 @@ class Manager:
             else:
                 wfile_to_reopen = new_wfile
 
-            self.close_project_by_name(project)
+            self.close_project(project)
             os.rename(wfile, new_wfile)
             self.projects_info.refresh_projects()
             subl('--project', wfile_to_reopen)

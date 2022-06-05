@@ -59,4 +59,9 @@
 
     // Display the name of the currently opened project in the status bar
     "display_in_status_bar": true,
+
+    // When trying to open an already open project / workspace:
+    // if this option is true, the focus will be put on the existing window
+    // else, the existing window will be closed and reopened
+    "reopen_project_goto": true,
 }
