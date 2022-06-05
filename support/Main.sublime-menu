@@ -15,8 +15,8 @@
                     },
                     { "caption": "-" },
                     {
-                        "caption": "Add New Project",
-                        "command": "project_manager", "args": {"action": "add_project"}
+                        "caption": "Create New Project",
+                        "command": "project_manager", "args": {"action": "create_project"}
                     },
                     {
                         "caption": "Add New Workspace",

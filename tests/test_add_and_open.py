@@ -36,7 +36,7 @@ class TestBasicFeatures(TempDirectoryTestCase, OverridePreferencesTestCase):
             return 0
 
         with patch("sublime_api.window_show_input_panel", _window_show_input_panel):
-            self.window.run_command("project_manager", {"action": "add_project"})
+            self.window.run_command("project_manager", {"action": "create_project"})
             yield lambda: self.window.project_file_name() is not None
 
         projects_info = self.manager.projects_info.info()

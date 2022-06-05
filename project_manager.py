@@ -912,7 +912,7 @@ class Manager:
         # fallback
         sublime.set_timeout(lambda: callback(primary_dir), 100)
 
-    def add_project(self, on_cancel=None):
+    def create_project(self, on_cancel=None):
         def add_callback(project, pdir):
             existing_projects = self.projects_info.info().keys()
             if project in existing_projects:
@@ -1414,7 +1414,7 @@ class ProjectManagerCommand(sublime_plugin.WindowCommand):
             ['Remove Project', 'Remove from Project Manager'],
             ['Rename Workspace', 'Rename Workspace'],
             ['Remove Workspace', 'Remove workspace from Project Manager'],
-            ['Add New Project', 'Add current folders to Project Manager'],
+            ['Create New Project', 'Create a new project and add current folders to it'],
             ['Add New Workspace', 'Add a new workspace to the current project'],
             ['Add Folder to Project', 'Add a folder to the current project'],
             ['Import Project', 'Import current .sublime-project file'],
@@ -1434,7 +1434,7 @@ class ProjectManagerCommand(sublime_plugin.WindowCommand):
             'remove_project',
             'rename_workspace',
             'remove_workspace',
-            'add_project',
+            'create_project',
             'add_workspace',
             'add_folder',
             'import_sublime_project',
@@ -1522,8 +1522,8 @@ class ProjectManagerCommand(sublime_plugin.WindowCommand):
     def remove_workspace(self):
         self._prompt_workspace(None, self.manager.remove_workspace, False)
 
-    def add_project(self):
-        self.manager.add_project(on_cancel=self._on_cancel)
+    def create_project(self):
+        self.manager.create_project(on_cancel=self._on_cancel)
 
     def add_workspace(self):
         self.manager.add_workspace()

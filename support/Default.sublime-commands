@@ -4,8 +4,8 @@
         "command": "project_manager"
     },
     {
-        "caption": "Project Manager: Add New Project",
-        "command": "project_manager", "args": {"action": "add_project"}
+        "caption": "Project Manager: Create New Project",
+        "command": "project_manager", "args": {"action": "create_project"}
     },
     {
         "caption": "Project Manager: Add New Workspace",
