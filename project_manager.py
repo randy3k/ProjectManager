@@ -211,6 +211,10 @@ class ProjectInStatusbar(sublime_plugin.EventListener):
     def on_clone(self, view):
         show_project_status_bar(view)
 
+    # Remove project name when closing view
+    def on_close(self, view):
+        view.erase_status("00ProjectManager_project_name")
+
 
 def dont_close_windows_when_empty(func):
     def f(*args, **kwargs):
