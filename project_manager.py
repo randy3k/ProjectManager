@@ -110,12 +110,16 @@ def pretty_path(path):
     return path
 
 
-def format_directory(item, folder):
+def format_directory(item, folder, nb_ws=0):
     if hasattr(sublime, "QuickPanelItem"):
+        annotation = ""
+        if pm_settings.get('activate_workspaces', True) and nb_ws > 1:
+            annotation = '{} workspaces'.format(nb_ws)
         return sublime.QuickPanelItem(
             item,
             '<a href=\'subl:open_dir {"dir": "%s"}\'>%s</a>' % (
-                folder, pretty_path(folder)))
+                folder, pretty_path(folder)),
+            annotation)
     else:
         return [item, pretty_path(folder)]
 
@@ -613,7 +617,7 @@ class Manager:
         if pm_settings.get('show_active_projects_first', True):
             self.move_opened_projects_to_top(plist)
 
-        return [p[0] for p in plist], [format_directory(p[1], p[2]) for p in plist]
+        return [p[0] for p in plist], [format_directory(p[1], p[2], p[4]) for p in plist]
 
     def mark_open_projects(self, info):
         project_file_names = [
@@ -639,7 +643,8 @@ class Manager:
             project_name,
             display_name.strip(),
             info['folder'],
-            pretty_path(info['file'])]
+            pretty_path(info['file']),
+            len(info['workspaces'])]
 
     def move_recent_projects_to_top(self, plist):
         j = JsonFile(os.path.join(self.projects_info.primary_dir(), 'recent.json'))
