@@ -1045,6 +1045,7 @@ class Manager:
                 if pfile not in data:
                     data.append(pfile)
                     j.save(data)
+            self.projects_info.refresh_projects()
 
         self.prompt_directory(_import_sublime_project, on_cancel=on_cancel)
 
