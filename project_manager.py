@@ -1164,16 +1164,20 @@ class Manager:
         workspace = os.path.basename(re.sub(r'\.sublime-workspace$', '', wfile))
         answer = sublime.ok_cancel_dialog('Remove workspace "%s" from this project?\n'
                                           'Warning: this will close any window opened '
-                                          'containing the corresponding project' % workspace)
+                                          'containing files attached to the '
+                                          'corresponding project' % workspace)
         if answer is True:
             project = self.curr_pname
-            self.close_project(project)
+            closed_workspaces = list(self.close_project(project))
             os.remove(wfile)
             self.projects_info.refresh_projects()
             sublime.status_message('Workspace "%s" is removed.' % project)
-            window = sublime.active_window()
-            if window.folders() == [] and window.sheets() == []:
-                window.run_command('close_window')
+
+            if wfile in closed_workspaces:
+                closed_workspaces.remove(wfile)
+            self.switch_project(project, closed_workspaces[0])
+            for closed_wfile in closed_workspaces[1:]:
+                self.open_in_new_window(project, closed_wfile, False)
 
     def remove_workspace(self, wfile):
         sublime.set_timeout(lambda: self._remove_workspace(wfile), 100)
