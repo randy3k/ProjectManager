@@ -988,8 +988,8 @@ class Manager:
 
             if not new_workspace:
                 new_workspace = project
-            elif '/' in new_workspace:
-                sublime.message_dialog("Invalid name: can't contain a '\\'")
+            elif os.sep in new_workspace:
+                sublime.message_dialog("Invalid name: can't contain a '{}'".format(os.sep))
                 return
 
             wfile = self.get_default_workspace(project)
