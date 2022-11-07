@@ -1282,6 +1282,14 @@ class Manager:
 
             self.projects_info.refresh_projects()
 
+            # If all windows should be closed and reopened, keep one open and switch
+            # in it to prevent sublime from exiting entirely
+            if close_curr_window and len(sublime.windows()) == len(reopen_workspaces):
+                self.switch_project(new_project, reopen_workspaces[0])
+                for wfile in reopen_workspaces[1:]:
+                    self.open_in_new_window(new_project, wfile, False)
+                return
+
             for wfile in reopen_workspaces:
                 self.open_in_new_window(new_project, wfile, False)
 
