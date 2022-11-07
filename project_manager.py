@@ -1473,9 +1473,9 @@ class ProjectManagerCommand(sublime_plugin.WindowCommand):
 
         # If the current project cannot switch workspace (either because workspace
         # management is off or because there is only one workspace), we remove the
-        # actions on workspace (open, open in new window, rename and remove)
+        # actions on workspace (open, open in new window and remove)
         if not self.manager.can_switch_workspaces():
-            for workspace_action_index in sorted([2, 3, 8, 9], reverse=True):
+            for workspace_action_index in sorted([2, 3, 9], reverse=True):
                 actions.pop(workspace_action_index)
                 items.pop(workspace_action_index)
 
