@@ -129,7 +129,7 @@ def format_files(item, paths):
         length = 0
         details = ""
         for i, path in enumerate(paths):
-            name = path.rsplit(os.sep, 1)[1]
+            name = os.path.basename(path)
             if length + len(name) > 85:
                 name = name[:85-length-len(name)]
             details += '<a href=\'subl:open_file {"file": "%s"}\'>%s</a>' % (path, name)
@@ -145,7 +145,7 @@ def format_files(item, paths):
         return sublime.QuickPanelItem(item, details)
 
     else:
-        names = [path.rsplit(os.sep, 1)[1] for path in paths]
+        names = [os.path.basename(path) for path in paths]
         details = " / ".join(names)
         if len(details) > 85:
             details = details[:85] + " [...] (" + str(details[80:].count('/')) + " more)"
