@@ -1312,6 +1312,10 @@ class Manager:
         sublime.set_timeout(_ask_project_name, 100)
 
     def rename_workspace(self, wfile=None):
+        if not self.curr_pname:
+            sublime.message_dialog("No active project")
+            return
+
         if wfile is None:
             wfile = self.get_default_workspace(self.curr_pname)
 
@@ -1479,11 +1483,12 @@ class ProjectManagerCommand(sublime_plugin.WindowCommand):
                 actions.pop(workspace_action_index)
                 items.pop(workspace_action_index)
 
-        # Can't add a workspace if no project is currently opened
+        # Can't add or rename a workspace if no project is currently opened
         if self.manager.curr_pname is None:
-            index = actions.index('add_workspace')
-            actions.pop(index)
-            items.pop(index)
+            for action in ('add_workspace', 'rename_workspace'):
+                action_index = actions.index(action)
+                actions.pop(action_index)
+                items.pop(action_index)
 
         def callback(i):
             if i < 0:
