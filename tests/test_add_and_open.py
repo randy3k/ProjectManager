@@ -37,16 +37,11 @@ class TestBasicFeatures(TempDirectoryTestCase, OverridePreferencesTestCase):
 
         with patch("sublime_api.window_show_input_panel", _window_show_input_panel):
             self.window.run_command("project_manager", {"action": "create_project"})
-            yield lambda: self.window.project_file_name() is not None
+            yield lambda: self.project_name in self.manager.projects_info.info()
 
         projects_info = self.manager.projects_info.info()
 
         self.assertTrue(self.project_name in projects_info)
-
-        # clear sidebar
-        self.window.run_command('close_workspace')
-
-        self.assertTrue(self.window.project_file_name() is None)
 
         if sublime.version() >= '4000':
             def _window_show_quick_panel(wid, items, on_done, *args, **kwargs):
@@ -60,12 +55,6 @@ class TestBasicFeatures(TempDirectoryTestCase, OverridePreferencesTestCase):
                 sublime.set_timeout(lambda: on_done(index), 100)
 
         with patch("sublime_api.window_show_quick_panel", _window_show_quick_panel):
-            self.window.run_command("project_manager", {"action": "open_project"})
-            yield lambda: self.window.project_file_name() is not None
-
-        self.assertEqual(os.path.basename(self.window.folders()[0]), self.project_name)
-
-        with patch("sublime_api.window_show_quick_panel", _window_show_quick_panel):
             with patch("sublime.ok_cancel_dialog", return_value=True):
                 self.window.run_command("project_manager", {"action": "remove_project"})
-                yield lambda: self.window.project_file_name() is None
+                yield lambda: self.project_name not in self.manager.projects_info.info()
