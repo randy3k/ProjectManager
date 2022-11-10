@@ -1,14 +1,19 @@
 import sublime
 import sublime_plugin
-import subprocess
-import os
-import shutil
-import platform
-import re
+
 import copy
+import os
+import re
+import shutil
+
 from functools import partial
 
 from .json_file import JsonFile
+from .utils import (
+    get_computer_name, pretty_path, expand_path,
+    run_sublime, dont_close_windows_when_empty
+)
+
 
 SETTINGS_FILENAME = 'project_manager.sublime-settings'
 pm_settings = None
@@ -57,59 +62,6 @@ def plugin_unloaded():
     pm_settings.clear_on_change("refresh_projects")
 
 
-def subl(*args):
-    executable_path = sublime.executable_path()
-    if sublime.platform() == 'osx':
-        app_path = executable_path[:executable_path.rfind('.app/') + 5]
-        executable_path = app_path + 'Contents/SharedSupport/bin/subl'
-
-    subprocess.Popen([executable_path] + list(args))
-
-    def on_activated():
-        window = sublime.active_window()
-        view = window.active_view()
-
-        # Automatically close window if no folders nor sheets are open BUT there is
-        # still project data -> that means the workspace was opened elsewhere
-        # (this happens when trying to open a workspace already opened in another window)
-        if window.project_data() and not window.folders() and not window.sheets():
-            window.run_command('close_window')
-
-        if sublime.platform() == 'windows':
-            # fix focus on windows
-            window.run_command('focus_neighboring_group')
-            window.focus_view(view)
-
-        sublime_plugin.on_activated(view.id())
-        sublime.set_timeout_async(lambda: sublime_plugin.on_activated_async(view.id()))
-
-    sublime.set_timeout(on_activated, 300)
-
-
-def expand_path(path, relative_to=None):
-    root = None
-    if relative_to:
-        if os.path.isfile(relative_to):
-            root = os.path.dirname(relative_to)
-        elif os.path.isdir(relative_to):
-            root = relative_to
-
-    if path:
-        path = os.path.expanduser(path)
-        if path.endswith(os.sep):
-            path = path[:-1]
-        if root and not os.path.isabs(path):
-            path = os.path.normpath(os.path.join(root, path))
-    return path
-
-
-def pretty_path(path):
-    user_home = os.path.expanduser('~') + os.sep
-    if path and path.startswith(user_home):
-        path = os.path.join("~", path[len(user_home):])
-    return path
-
-
 def format_directory(item, folder, nb_ws=0):
     if hasattr(sublime, "QuickPanelItem"):
         annotation = ""
@@ -152,22 +104,6 @@ def format_files(item, paths):
         return [item, details]
 
 
-_computer_name = []
-
-
-def computer_name():
-    if _computer_name:
-        node = _computer_name[0]
-    else:
-        if sublime.platform() == 'osx':
-            node = subprocess.check_output(['scutil', '--get', 'ComputerName']).decode().strip()
-        else:
-            node = platform.node().split('.')[0]
-        _computer_name.append(node)
-
-    return node
-
-
 def show_project_status_bar(view):
     if not pm_settings.get("display_in_status_bar", False):
         return
@@ -178,7 +114,7 @@ def show_project_status_bar(view):
 
     projects_info = ProjectsInfo.get_instance()
     project_name = os.path.splitext(os.path.basename(project_file))[0]
-    project_info = projects_info.info()[project_name]
+    project_info = projects_info.info[project_name]
     project_group = project_info.get("group", "")
 
     display_name = '['
@@ -220,19 +156,6 @@ class ProjectInStatusbar(sublime_plugin.EventListener):
         view.erase_status("00ProjectManager_project_name")
 
 
-def dont_close_windows_when_empty(func):
-    def f(*args, **kwargs):
-        s = sublime.load_settings('Preferences.sublime-settings')
-        close_windows_when_empty = s.get('close_windows_when_empty')
-        s.set('close_windows_when_empty', False)
-        func(*args, **kwargs)
-        if close_windows_when_empty:
-            sublime.set_timeout(
-                lambda: s.set('close_windows_when_empty', close_windows_when_empty),
-                1000)
-    return f
-
-
 class ProjectsInfo:
     _instance = None
 
@@ -254,6 +177,7 @@ class ProjectsInfo:
     def default_dir(self):
         return self._default_dir
 
+    @property
     def info(self):
         return self._info
 
@@ -272,7 +196,7 @@ class ProjectsInfo:
         self._projects_path = []
 
         user_projects_dirs = pm_settings.get('projects')
-        node = computer_name()
+        node = get_computer_name()
 
         if isinstance(user_projects_dirs, dict):
             if node in user_projects_dirs:
@@ -307,7 +231,7 @@ class ProjectsInfo:
     def workspace_version_migrator(self):
         # Clear recent projects file if it doesn't support workspaces
         json_file = JsonFile(os.path.join(self._primary_dir, 'recent.json'))
-        recent_files = json_file.load([])
+        recent_files = json_file.load()
         if recent_files and type(recent_files[0]) != dict:
             json_file.remove()
             sublime.run_command("clear_recent_projects_and_workspaces")
@@ -352,48 +276,49 @@ class ProjectsInfo:
             if not os.path.exists(pdir):
                 continue
 
+            # If there are sublime-project files in a directory, move it into its
+            # folder with all of its workspaces
             for file in os.listdir(pdir):
+                if not file.endswith('.sublime-project'):
+                    continue
 
-                # If there are sublime-project files in a directory, move it into its
-                # folder with all of its workspaces
-                if file.endswith('.sublime-project'):
-                    modified = True
+                modified = True
 
-                    # Create project folder
-                    pname = re.sub(r'\.sublime-project$', '', file)
-                    directory = os.path.join(pdir, pname)
-                    if not os.path.exists(directory):
-                        os.mkdir(directory)
+                # Create project folder
+                pname = file[:-16]
+                directory = os.path.join(pdir, pname)
+                if not os.path.exists(directory):
+                    os.mkdir(directory)
 
-                    # If one of the workspace is open, we must close it before moving
-                    # the workspace file
-                    to_reopen = None
-                    pfile = os.path.join(pdir, file)
-                    if active_window.project_file_name() == pfile:
-                        if sublime.version() >= '4050':
-                            wfile = os.path.basename(active_window.workspace_file_name())
-                            to_reopen = os.path.join(directory, wfile)
-                        else:
-                            to_reopen = pfile
-                        active_window.run_command("close_workspace")
+                # If one of the workspace is open, we must close it before moving
+                # the workspace file
+                to_reopen = None
+                pfile = os.path.join(pdir, file)
+                if active_window.project_file_name() == pfile:
+                    if sublime.version() >= '4050':
+                        wfile = os.path.basename(active_window.workspace_file_name())
+                        to_reopen = os.path.join(directory, wfile)
+                    else:
+                        to_reopen = pfile
+                    active_window.run_command("close_workspace")
 
-                    # Move all of its existing workspaces files
-                    for wfile in self._info[pname]['workspaces']:
-                        try:
-                            shutil.move(wfile, directory)
-                        except Exception:
-                            sublime.message_dialog('Please remove the existing file %s to be able to load projects.' % wfile)
-                            raise
-
-                    # Move the sublime-project file itself
-                    pfile = os.path.join(pdir, file)
+                # Move all of its existing workspaces files
+                for wfile in self._info[pname]['workspaces']:
                     try:
-                        shutil.move(pfile, directory)
+                        shutil.move(wfile, directory)
                     except Exception:
-                        sublime.message_dialog('Please remove the existing file %s to be able to load projects.' % pfile)
+                        sublime.message_dialog('Please remove the existing file %s to be able to load projects.' % wfile)
+                        raise
 
-                    if to_reopen:
-                        subl("--project", to_reopen)
+                # Move the sublime-project file itself
+                pfile = os.path.join(pdir, file)
+                try:
+                    shutil.move(pfile, directory)
+                except Exception:
+                    sublime.message_dialog('Please remove the existing file %s to be able to load projects.' % pfile)
+
+                if to_reopen:
+                    run_sublime("--project", to_reopen)
 
         return modified
 
@@ -417,12 +342,14 @@ class ProjectsInfo:
         library = os.path.join(folder, 'library.json')
         if os.path.exists(library):
             j = JsonFile(library)
-            for f in j.load([]):
+            for f in j.load():
                 pfile = expand_path(f)
                 if os.path.exists(pfile) and pfile not in pfiles:
                     pfiles.append(os.path.normpath(pfile))
+
             pfiles.sort()
             j.save(pfiles)
+
         return pfiles
 
     def _load_sublime_project_files(self, folder):
@@ -432,11 +359,13 @@ class ProjectsInfo:
                 f = os.path.join(path, f)
                 if f.endswith('.sublime-project') and f not in pfiles:
                     pfiles.append(os.path.normpath(f))
+
             # remove empty directories
             for d in dirs:
                 d = os.path.join(path, d)
                 if os.path.exists(d) and len(os.listdir(d)) == 0:
                     os.rmdir(d)
+
         return pfiles
 
     def _get_info_from_project_file(self, pfile):
@@ -537,10 +466,10 @@ class Manager:
         Returns:
             bool: whether a project with more than one workspace is currently opened
         """
-        if self.curr_pname not in self.projects_info.info():
+        if self.curr_pname not in self.projects_info.info:
             return False
 
-        info = copy.deepcopy(self.projects_info.info())
+        info = copy.deepcopy(self.projects_info.info)
         self.mark_open_projects(info)
 
         pinfo = info[self.curr_pname]
@@ -555,8 +484,8 @@ class Manager:
         """
         if project is None:
             project = self.curr_pname
-        if project in self.projects_info.info():
-            return len(self.projects_info.info()[project]['workspaces'])
+        if project in self.projects_info.info:
+            return len(self.projects_info.info[project]['workspaces'])
         return 0
 
     def get_default_workspace(self, project):
@@ -575,7 +504,7 @@ class Manager:
             str: the path of the default workspace file
         """
         # Load workspaces and sort them alphabetically
-        workspaces = self.projects_info.info()[project]['workspaces']
+        workspaces = self.projects_info.info[project]['workspaces']
         workspaces.sort(key=lambda wfile: os.path.basename(wfile))
 
         # If one of the workspace has default name, return it
@@ -590,7 +519,7 @@ class Manager:
             return workspaces[0]
 
         j = JsonFile(recent_file)
-        recent = j.load([])
+        recent = j.load()
         if project not in [pw['project'] for pw in recent]:
             return workspaces[0]
         else:
@@ -607,7 +536,7 @@ class Manager:
         return ws_file in open_workspaces
 
     def display_projects(self):
-        info = copy.deepcopy(self.projects_info.info())
+        info = copy.deepcopy(self.projects_info.info)
         self.mark_open_projects(info)
         plist = list(map(self.render_display_item, info.items()))
         plist.sort(key=lambda p: p[0])
@@ -648,7 +577,7 @@ class Manager:
 
     def move_recent_projects_to_top(self, plist):
         j = JsonFile(os.path.join(self.projects_info.primary_dir(), 'recent.json'))
-        recent = j.load([])
+        recent = j.load()
         recent = [pretty_path(obj["project"]) for obj in recent]
         plist.sort(key=lambda p: recent.index(p[3]) if p[3] in recent else -1,
                    reverse=True)
@@ -662,7 +591,7 @@ class Manager:
                 count = count + 1
 
     def project_file_name(self, project):
-        return self.projects_info.info()[project]['file']
+        return self.projects_info.info[project]['file']
 
     def display_workspaces(self, project):
         """Return a list of path to project's workspaces and a list of display elements
@@ -693,11 +622,11 @@ class Manager:
         """
         if project is None:
             project = self.curr_pname
-        if project not in self.projects_info.info():
+        if project not in self.projects_info.info:
             raise ValueError('Project not found !')
 
         # Load workspaces and their information, then sort them alphabetically
-        wfiles = self.projects_info.info()[project]["workspaces"]
+        wfiles = self.projects_info.info[project]["workspaces"]
         wlist = list(map(self.render_workspace, wfiles))
         wlist.sort(key=lambda w: w[1])
 
@@ -734,9 +663,9 @@ class Manager:
                 The complete path to the workspace file
 
         Returns:
-            list[(str, str, str, str)]: a tuplet composed of the path of the file,
-                the name of the workspace, a prettified path to the file to display
-                to the user and the real path to these files
+            list[(str, str, str)]: a tuplet composed of the path of the file,
+                the name of the workspace, and the path of the buffers the
+                workspace contains
         """
         wname = os.path.basename(re.sub(r'\.sublime-workspace$', '', wfile))
         winfo = JsonFile(wfile).load()
@@ -769,7 +698,7 @@ class Manager:
                 Whether to move the most recently opened workspace in second position
         """
         j = JsonFile(os.path.join(self.projects_info.primary_dir(), 'recent.json'))
-        recent = j.load([])
+        recent = j.load()
 
         # We look for the project in the `recent.json` file and extract the list of its
         # workspaces (sorted by most recently opened)
@@ -825,7 +754,7 @@ class Manager:
                 The path of the workspace file
         """
         j = JsonFile(os.path.join(self.projects_info.primary_dir(), 'recent.json'))
-        recent = j.load([])
+        recent = j.load()
         pfile = pretty_path(self.project_file_name(project))
 
         # If no workspace is given, take the default one
@@ -855,11 +784,12 @@ class Manager:
 
     def clear_recent_projects(self):
         def clear_callback():
-            answer = sublime.ok_cancel_dialog('Clear Recent Projects?')
-            if answer is True:
-                j = JsonFile(os.path.join(self.projects_info.primary_dir(), 'recent.json'))
-                j.remove()
-                self.window.run_command("clear_recent_projects_and_workspaces")
+            if not sublime.ok_cancel_dialog("Clear recent projects ?"):
+                return
+
+            j = JsonFile(os.path.join(self.projects_info.primary_dir(), 'recent.json'))
+            j.remove()
+            self.window.run_command("clear_recent_projects_and_workspaces")
 
         sublime.set_timeout(clear_callback, 100)
 
@@ -924,9 +854,8 @@ class Manager:
 
     def create_project(self, on_cancel=None):
         def add_callback(project, pdir):
-            existing_projects = self.projects_info.info().keys()
-            if project in existing_projects:
-                sublime.message_dialog("Another project is already named "+ project)
+            if project in self.projects_info.info:
+                sublime.message_dialog("Another project is already named " + project)
                 return
             pd = self.window.project_data()
             pf = self.window.project_file_name()
@@ -1038,10 +967,9 @@ class Manager:
             if self.projects_info.which_project_dir(pfile):
                 sublime.message_dialog('This project was created by Project Manager!')
                 return
-            answer = sublime.ok_cancel_dialog('Import %s?' % os.path.basename(pfile))
-            if answer is True:
+            if sublime.ok_cancel_dialog('Import %s?' % os.path.basename(pfile)):
                 j = JsonFile(os.path.join(pdir, 'library.json'))
-                data = j.load([])
+                data = j.load()
                 if pfile not in data:
                     data.append(pfile)
                     j.save(data)
@@ -1059,13 +987,13 @@ class Manager:
             sublime.message_dialog("No projects are managed currently")
             return
 
-        def _(i):
+        def prompt_callback(i):
             if i >= 0:
                 callback(projects[i])
             elif on_cancel:
                 on_cancel()
 
-        sublime.set_timeout(lambda: self.window.show_quick_panel(display, _), 100)
+        sublime.set_timeout(lambda: self.window.show_quick_panel(display, prompt_callback), 100)
 
     def prompt_workspace(self, project, callback, on_cancel=None):
         if self.nb_workspaces(project) < 2:
@@ -1077,20 +1005,20 @@ class Manager:
         except ValueError:
             return
 
-        def _(i):
+        def prompt_callback(i):
             if i >= 0:
                 callback(workspaces[i])
             elif on_cancel:
                 on_cancel()
 
-        sublime.set_timeout(lambda: self.window.show_quick_panel(wdisplay, _), 100)
+        sublime.set_timeout(lambda: self.window.show_quick_panel(wdisplay, prompt_callback), 100)
 
     def append_project(self, project):
         self.update_recent(project)
         pd = self.get_project_data(project)
         paths = [expand_path(f.get('path'), self.project_file_name(project))
                  for f in pd.get('folders')]
-        subl('-a', *paths)
+        run_sublime('-a', *paths)
 
     @dont_close_windows_when_empty
     def switch_project(self, project, workspace=None):
@@ -1105,7 +1033,7 @@ class Manager:
                 self.window.run_command('close')
         else:
             self.close_workspace(workspace)
-        subl('--project', workspace)
+        run_sublime('--project', workspace)
         self.projects_info.refresh_projects()
 
     @dont_close_windows_when_empty
@@ -1118,73 +1046,76 @@ class Manager:
         if pm_settings.get("reopen_project_goto", True):
             if self.is_workspace_open(workspace):
                 sublime.status_message("Can't open the same workspace in several windows!")
-                subl('--project', workspace)
+                run_sublime('--project', workspace)
 
             else:
                 if close_project:
                     self.close_project(project)
-                subl('-n', '--project', workspace)
+                run_sublime('-n', '--project', workspace)
         else:
             if sublime.version() > '4050':
                 self.close_workspace(workspace)
             else:
                 self.close_project(project)
-            subl('-n', '--project', workspace)
+            run_sublime('-n', '--project', workspace)
 
         self.projects_info.refresh_projects()
 
     def _remove_project(self, project):
-        answer = sublime.ok_cancel_dialog('Remove "%s" from Project Manager?' % project)
-        if answer is True:
-            pfile = self.project_file_name(project)
-            if self.projects_info.which_project_dir(pfile):
-                self.close_project(project)
-                os.remove(self.project_file_name(project))
-                for workspace in self.projects_info.info()[project]['workspaces']:
-                    os.remove(workspace)
-                if not os.listdir(os.path.dirname(pfile)):
-                    os.removedirs(os.path.dirname(pfile))
+        if not sublime.ok_cancel_dialog('Remove "%s" from Project Manager?' % project):
+            return
 
-            else:
-                for pdir in self.projects_info.projects_path():
-                    j = JsonFile(os.path.join(pdir, 'library.json'))
-                    data = j.load([])
-                    if pfile in data:
-                        data.remove(pfile)
-                        j.save(data)
-            sublime.status_message('Project "%s" is removed.' % project)
+        pfile = self.project_file_name(project)
+        if self.projects_info.which_project_dir(pfile):
+            self.close_project(project)
+            os.remove(self.project_file_name(project))
+            for workspace in self.projects_info.info[project]['workspaces']:
+                os.remove(workspace)
+            if not os.listdir(os.path.dirname(pfile)):
+                os.removedirs(os.path.dirname(pfile))
+
+        else:
+            for pdir in self.projects_info.projects_path():
+                j = JsonFile(os.path.join(pdir, 'library.json'))
+                data = j.load()
+                if pfile in data:
+                    data.remove(pfile)
+                    j.save(data)
+        sublime.status_message('Project "%s" is removed.' % project)
 
     def remove_project(self, project):
-        def _():
+        def callback():
             self._remove_project(project)
             self.projects_info.refresh_projects()
-        sublime.set_timeout(_, 100)
+        sublime.set_timeout(callback, 100)
 
     def _remove_workspace(self, wfile):
         workspace = os.path.basename(re.sub(r'\.sublime-workspace$', '', wfile))
-        answer = sublime.ok_cancel_dialog('Remove workspace "%s" from this project?\n'
-                                          'Warning: this will close any window opened '
-                                          'containing files attached to the '
-                                          'corresponding project' % workspace)
-        if answer is True:
-            project = self.curr_pname
-            closed_workspaces = list(self.close_project(project))
-            os.remove(wfile)
-            self.projects_info.refresh_projects()
-            sublime.status_message('Workspace "%s" is removed.' % project)
+        message = ('Remove workspace "%s" from this project?\n'
+                   'Warning: this will close any window opened containing files'
+                   'attached to the corresponding project' % workspace)
 
-            if wfile in closed_workspaces:
-                closed_workspaces.remove(wfile)
-            self.switch_project(project, closed_workspaces[0])
-            for closed_wfile in closed_workspaces[1:]:
-                self.open_in_new_window(project, closed_wfile, False)
+        if not sublime.ok_cancel_dialog(message):
+            return
+
+        project = self.curr_pname
+        closed_workspaces = list(self.close_project(project))
+        os.remove(wfile)
+        self.projects_info.refresh_projects()
+        sublime.status_message('Workspace "%s" is removed.' % project)
+
+        if wfile in closed_workspaces:
+            closed_workspaces.remove(wfile)
+        self.switch_project(project, closed_workspaces[0])
+        for closed_wfile in closed_workspaces[1:]:
+            self.open_in_new_window(project, closed_wfile, False)
 
     def remove_workspace(self, wfile):
         sublime.set_timeout(lambda: self._remove_workspace(wfile), 100)
 
     def clean_dead_projects(self):
         projects_to_remove = []
-        for pname, pi in self.projects_info.info().items():
+        for pname, pi in self.projects_info.info.items():
             folder = pi['folder']
             if not os.path.exists(folder):
                 projects_to_remove.append(pname)
@@ -1224,7 +1155,7 @@ class Manager:
                 sublime.message_dialog("Invalid name: the only character authorized are [a-zA-Z.,_- ]")
                 return
 
-            if new_project in self.projects_info.info():
+            if new_project in self.projects_info.info:
                 sublime.message_dialog("Another project is already called like this")
                 return
 
@@ -1237,7 +1168,7 @@ class Manager:
             reopen_workspaces = []
             os.rename(pfile, new_pfile)
 
-            for wfile in self.projects_info.info()[project]['workspaces']:
+            for wfile in self.projects_info.info[project]['workspaces']:
                 if wfile.endswith(os.sep + '%s.sublime-workspace' % project):
                     new_wfile = re.sub(project + r'\.sublime-workspace$',
                                        new_project + '.sublime-workspace',
@@ -1279,7 +1210,7 @@ class Manager:
                     library = os.path.join(pdir, 'library.json')
                     if os.path.exists(library):
                         j = JsonFile(library)
-                        data = j.load([])
+                        data = j.load()
                         if pfile in data:
                             data.remove(pfile)
                             data.append(new_pfile)
@@ -1337,7 +1268,7 @@ class Manager:
 
             if sublime.version() > '4050':
                 focused_wfile = self.window.workspace_file_name()
-                project_ws = self.projects_info.info()[project]["workspaces"]
+                project_ws = self.projects_info.info[project]["workspaces"]
                 if focused_wfile != wfile and focused_wfile in project_ws:
                     wfile_to_reopen = focused_wfile
                 else:
@@ -1348,7 +1279,7 @@ class Manager:
             self.close_project(project)
             os.rename(wfile, new_wfile)
             self.projects_info.refresh_projects()
-            subl('--project', wfile_to_reopen)
+            run_sublime('--project', wfile_to_reopen)
 
         workspace = os.path.basename(re.sub(r'\.sublime-workspace$', '', wfile))
 
@@ -1408,26 +1339,7 @@ class ProjectManagerCommand(sublime_plugin.WindowCommand):
             self.manager = Manager(self.window)
         self.manager.refresh_curr_project()
 
-        if project is not None:
-            pinfos = self.manager.projects_info.info()
-            if project not in pinfos:
-                sublime.status_message("Project '{}' does not exist".format(project))
-                return
-
-            if workspace is None:
-                self.manager.open_in_new_window(project)
-                return
-
-            wfiles = pinfos[project]["workspaces"]
-            wnames = [os.path.basename(re.sub(r'\.sublime-workspace$', '', wfile))
-                      for wfile in wfiles]
-            if workspace in wnames:
-                self.manager.open_in_new_window(project, wfiles[wnames.index(workspace)])
-            else:
-                sublime.status_message("Workspace '{}' does not exist in project '{}'"
-                                       .format(workspace, project))
-            return
-
+        # No action passed: show options in the quick panel
         if action is None:
             self.show_options()
             return
@@ -1495,9 +1407,7 @@ class ProjectManagerCommand(sublime_plugin.WindowCommand):
                 return
             self.run(action=actions[i], caller="manager")
 
-        sublime.set_timeout(
-            lambda: self.window.show_quick_panel(items, callback),
-            100)
+        sublime.set_timeout(lambda: self.window.show_quick_panel(items, callback), 100)
 
     def _prompt_project(self, callback):
         self.manager.prompt_project(callback, on_cancel=self._on_cancel)

@@ -7,7 +7,10 @@ class JsonFile:
         self.encoding = encoding
         self.fpath = fpath
 
-    def load(self, default=[]):
+    def load(self, default=None):
+        if default is None:
+            default = []
+
         self.fdir = os.path.dirname(self.fpath)
         if not os.path.isdir(self.fdir):
             os.makedirs(self.fdir)

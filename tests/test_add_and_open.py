@@ -22,7 +22,7 @@ class TestBasicFeatures(TempDirectoryTestCase, OverridePreferencesTestCase):
     @classmethod
     def tearDownClass(cls):
         yield from super().tearDownClass()
-        if cls.project_name in cls.manager.projects_info.info():
+        if cls.project_name in cls.manager.projects_info.info:
             with patch("sublime.ok_cancel_dialog", return_value=True) as mocked:
                 cls.manager.remove_project(cls.project_name)
                 yield lambda: mocked.called
@@ -37,9 +37,9 @@ class TestBasicFeatures(TempDirectoryTestCase, OverridePreferencesTestCase):
 
         with patch("sublime_api.window_show_input_panel", _window_show_input_panel):
             self.window.run_command("project_manager", {"action": "create_project"})
-            yield lambda: self.project_name in self.manager.projects_info.info()
+            yield lambda: self.project_name in self.manager.projects_info.info
 
-        projects_info = self.manager.projects_info.info()
+        projects_info = self.manager.projects_info.info
 
         self.assertTrue(self.project_name in projects_info)
 
@@ -57,4 +57,4 @@ class TestBasicFeatures(TempDirectoryTestCase, OverridePreferencesTestCase):
         with patch("sublime_api.window_show_quick_panel", _window_show_quick_panel):
             with patch("sublime.ok_cancel_dialog", return_value=True):
                 self.window.run_command("project_manager", {"action": "remove_project"})
-                yield lambda: self.project_name not in self.manager.projects_info.info()
+                yield lambda: self.project_name not in self.manager.projects_info.info
