@@ -858,7 +858,7 @@ class Manager:
         # fallback
         sublime.set_timeout(lambda: callback(primary_dir), 100)
 
-    def create_project(self, on_cancel=None):
+    def create_project(self, value=None, on_cancel=None):
         def add_callback(project, pdir):
             if project in self.projects_info.info:
                 sublime.message_dialog("Another project is already named " + project)
@@ -894,6 +894,10 @@ class Manager:
             self.projects_info.refresh_projects()
             self.open_in_new_window(project, wfile)
 
+        if value is not None:
+            self.prompt_directory(partial(add_callback, value))
+            return
+
         def _ask_project_name(pdir):
             project = 'New Project'
             pd = self.window.project_data()
@@ -913,7 +917,7 @@ class Manager:
 
         self.prompt_directory(_ask_project_name, on_cancel=on_cancel)
 
-    def add_workspace(self, project):
+    def add_workspace(self, project, value=None):
         def add_callback(new_workspace):
             if not new_workspace:
                 new_workspace = project
@@ -944,10 +948,13 @@ class Manager:
             self.projects_info.refresh_projects()
             self.open_in_new_window(project, new_wfile, False)
 
+        if value is not None:
+            add_callback(value)
+            return
+
         def _ask_workspace_name():
-            workspace = 'New Workspace'
             v = self.window.show_input_panel('Workspace name:',
-                                             workspace,
+                                             'New Workspace',
                                              add_callback,
                                              None,
                                              None)
@@ -1139,7 +1146,7 @@ class Manager:
                 return False
         return True
 
-    def rename_project(self, project):
+    def rename_project(self, project, value=None):
         def rename_callback(new_project):
             if not new_project or project == new_project:
                 sublime.status_message("Aborted")
@@ -1214,6 +1221,10 @@ class Manager:
             force_switch = (project == self.curr_pname)
             self.reopen_workspaces(new_project, closed_workspaces, force_switch=force_switch)
 
+        if value is not None:
+            rename_callback(value)
+            return
+
         def _ask_project_name():
             v = self.window.show_input_panel('New project name:',
                                              project,
@@ -1224,7 +1235,7 @@ class Manager:
 
         sublime.set_timeout(_ask_project_name, 100)
 
-    def rename_workspace(self, project, wfile=None):
+    def rename_workspace(self, project, wfile=None, value=None):
         if wfile is None:
             wfile = self.get_default_workspace(project)
 
@@ -1253,9 +1264,12 @@ class Manager:
 
             self.reopen_workspaces(project, closed_workspaces)
 
-        workspace = os.path.basename(re.sub(r'\.sublime-workspace$', '', wfile))
+        if value is not None:
+            rename_callback(value)
+            return
 
         def show_input_panel():
+            workspace = os.path.basename(re.sub(r'\.sublime-workspace$', '', wfile))
             v = self.window.show_input_panel('New workspace name:',
                                              workspace,
                                              rename_callback,
@@ -1304,7 +1318,7 @@ class ProjectManagerEventHandler(sublime_plugin.EventListener):
 class ProjectManagerCommand(sublime_plugin.WindowCommand):
     manager = None
 
-    def run(self, action=None, caller=None, project=None, workspace=None):
+    def run(self, action=None, caller=None, project=None, workspace=None, value=None):
         self.caller = caller
 
         if not self.manager:
@@ -1318,6 +1332,7 @@ class ProjectManagerCommand(sublime_plugin.WindowCommand):
 
         self.cmd_project = project
         self.cmd_workspace = workspace
+        self.cmd_value = value
         if not hasattr(self, action):
             sublime.status_message('Invalid action "%s"' % action)
             return
@@ -1481,13 +1496,14 @@ class ProjectManagerCommand(sublime_plugin.WindowCommand):
         self._prompt_project(self.manager.edit_project)
 
     def rename_project(self):
-        self._prompt_project(self.manager.rename_project)
+        callback = partial(self.manager.rename_project, value=self.cmd_value)
+        self._prompt_project(callback)
 
     def rename_workspace(self):
         project = self.get_target_project(None)
         if project is None:
             return
-        callback = partial(self.manager.rename_workspace, project)
+        callback = partial(self.manager.rename_workspace, project, value=self.cmd_value)
         self._prompt_workspace(project, callback, True)
 
     def remove_project(self):
@@ -1501,13 +1517,13 @@ class ProjectManagerCommand(sublime_plugin.WindowCommand):
         self._prompt_workspace(project, callback, False)
 
     def create_project(self):
-        self.manager.create_project(on_cancel=self._on_cancel)
+        self.manager.create_project(on_cancel=self._on_cancel, value=self.cmd_value)
 
     def add_workspace(self):
         project = self.get_target_project(None)
         if project is None:
             return
-        self.manager.add_workspace(project)
+        self.manager.add_workspace(project, value=self.cmd_value)
 
     def add_folder(self):
         self.manager.add_folder()
