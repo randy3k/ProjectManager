@@ -1280,41 +1280,6 @@ class Manager:
         sublime.set_timeout(show_input_panel, 100)
 
 
-def cancellable(func):
-    def _ret(self, action):
-        if action >= 0:
-            func(self, action)
-        elif action < 0 and self.caller == 'manager':
-            sublime.set_timeout(self.run, 10)
-    return _ret
-
-
-class ProjectManagerCloseProject(sublime_plugin.WindowCommand):
-    def run(self):
-        if self.window.project_file_name():
-            # if it is a project, close the project
-            self.window.run_command('close_workspace')
-        else:
-            self.window.run_command('close_all')
-            # exit if there are dirty views
-            for v in self.window.views():
-                if v.is_dirty():
-                    return
-            # close the sidebar
-            self.window.run_command('close_project')
-
-
-class ProjectManagerEventHandler(sublime_plugin.EventListener):
-
-    def on_window_command(self, window, command_name, args):
-        if sublime.platform() == "osx":
-            return
-        settings = sublime.load_settings(SETTINGS_FILENAME)
-        if settings.get("close_project_when_close_window", True) and \
-                command_name == "close_window":
-            window.run_command("project_manager_close_project")
-
-
 class ProjectManagerCommand(sublime_plugin.WindowCommand):
     manager = None
 
