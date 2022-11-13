@@ -71,6 +71,14 @@ class TestBasicFeatures(TempDirectoryTestCase, OverridePreferencesTestCase):
         yield lambda: self.window.views()[0].file_name() == pfile
         self.window.run_command("close_file")
 
+        # Add a description to the project
+        desc = "This is a test project"
+        self.window.run_command("project_manager", {"action": "set_description",
+                                                    "project": self.project_name,
+                                                    "value": desc})
+        yield lambda: os.path.exists(self.manager.desc_path)
+        yield lambda: desc in open(self.manager.desc_path).read()
+
         # Rename project...
         self.window.run_command("project_manager", {"action": "rename_project",
                                                     "project": self.project_name,

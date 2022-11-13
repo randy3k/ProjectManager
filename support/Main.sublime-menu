@@ -59,6 +59,10 @@
                         "command": "project_manager", "args": {"action": "edit_project"}
                     },
                     {
+                        "caption": "Set Description",
+                        "command": "project_manager", "args": {"action": "set_description"}
+                    },
+                    {
                         "caption": "Rename Project",
                         "command": "project_manager", "args": {"action": "rename_project"}
                     },
