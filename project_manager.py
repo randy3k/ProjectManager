@@ -100,8 +100,9 @@ def format_directory(item, folder):
     if hasattr(sublime, "QuickPanelItem"):
         return sublime.QuickPanelItem(
             item,
-            '<a href=\'subl:open_dir {"dir": "%s"}\'>%s</a>' % (
-                folder, pretty_path(folder)))
+            '<a href="%s">%s</a>' % (
+                sublime.command_url('open_dir', {'dir': folder}),
+                pretty_path(folder)))
     else:
         return [item, pretty_path(folder)]
 
