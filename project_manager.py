@@ -712,7 +712,7 @@ class ProjectManagerCommand(sublime_plugin.WindowCommand):
             "import_sublime_project",
             "refresh_projects",
             "clear_recent_projects",
-            "remove_dead_project"
+            "remove_dead_projects"
         ]
 
         def callback(i):
