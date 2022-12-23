@@ -1,7 +1,7 @@
 {
     // The path to the Projects folder, could be either a string or a directory with keys
     // associated with computer names.
-    // if you are not sure about your computer name, run the following in the sublime console
+    // If you are not sure about your computer name, run the following in the sublime console
     //
     //   from ProjectManager.project_manager import computer_name; print(computer_name())
     //
@@ -10,10 +10,10 @@
     //     "computer2": "path/to/computer1/projects"
     // }
     // For backward compatibility, each entry could be also an array of directories.
-    // The variable `$default` will expand to to `PATH/TO/Packages/Users/Projects`,
+    // The variable `$default` will expand to `PATH/TO/Packages/Users/Projects`,
     // and `$hostname` will expand to the computer name.
     // Please note that they shall be the folders containing solely *.sublime-project or
-    // *.sublimn-workspace files. It is not intended to be used for automatic project discovery.
+    // *.sublime-workspace files. It is not intended to be used for automatic project discovery.
     "projects": "$default",
 
     // If there are more than one directory, prompt which directory to save the project files.
