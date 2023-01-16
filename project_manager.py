@@ -6,10 +6,10 @@ import platform
 import re
 import copy
 
-
 from .json_file import JsonFile
 
 SETTINGS_FILENAME = 'project_manager.sublime-settings'
+REPODIRS = ('.git', '.svn', '.hg')
 pm_settings = None
 
 
@@ -144,6 +144,31 @@ def dont_close_windows_when_empty(func):
     return f
 
 
+def find_repos(basedir, max_level=1, ignores=None):
+    """ os.walk with max depth. https://stackoverflow.com/a/234329 """
+    ignores = [i.lower() for i in (ignores or [])]
+    basedir = basedir.rstrip(os.path.sep)
+    assert os.path.isdir(basedir)
+    num_sep = basedir.count(os.path.sep)
+    for root, dirs, files in os.walk(basedir):
+        for dirname in dirs:
+            if not _is_ignored(root, ignores) and dirname in REPODIRS:
+                yield root, dirname
+        # yield root, dirs, files
+        num_sep_this = root.count(os.path.sep)
+        if num_sep + max_level <= num_sep_this:
+            del dirs[:]
+
+
+def _is_ignored(dirname, ignores):
+    parts = dirname.split(os.path.sep)
+    for ignore in ignores:
+        for part in parts:
+            if ignore == part.lower():
+                return True
+    return False
+
+
 class ProjectsInfo:
     _instance = None
 
@@ -214,6 +239,7 @@ class ProjectsInfo:
             raise Exception("Directory \"{}\" does not exists.".format(self._primary_dir))
 
         self._info = self._get_all_projects_info()
+        self._auto_discover_repos()
 
     def _get_all_projects_info(self):
         all_projects_info = {}
@@ -273,6 +299,56 @@ class ProjectsInfo:
                 if os.path.exists(d) and len(os.listdir(d)) == 0:
                     os.rmdir(d)
         return pfiles
+
+    def _auto_discover_repos(self):
+        try:
+            user_discover_dirs = pm_settings.get('auto_discover_base_directories')
+
+            # Get a list of discover_dirs to search for projects
+            node = computer_name()
+            if isinstance(user_discover_dirs, dict):
+                if node in user_discover_dirs:
+                    user_discover_dirs = user_discover_dirs[node]
+                else:
+                    user_discover_dirs = []
+            if isinstance(user_discover_dirs, str):
+                user_discover_dirs = [user_discover_dirs]
+
+            discover_dirs = []
+            for folder in user_discover_dirs:
+                p = expand_path(folder)
+                p = p.replace("$hostname", node)
+                discover_dirs.append(p)
+
+            # Convert existing project info to dict for easy lookup
+            existing = {info['folder']:key for key,info in self._info.items()}
+
+            # Find new repo directories
+            max_depth = pm_settings.get('auto_discover_max_recursion_depth', 1)
+            ignores = pm_settings.get('auto_discover_ignored_folders', [])
+            for basedir in discover_dirs:
+                if not os.path.isdir(basedir):
+                    print('ProjectManager: {} is not a valid path'.format(basedir))
+                for folder, repodir in find_repos(basedir, max_depth, ignores):
+                    if folder not in existing:
+                        project_name = os.path.basename(folder)
+                        self._create_new_project(project_name, folder)
+        except Exception as err:
+            print(err)
+
+    def _create_new_project(self, project_name, folder):
+        data = {"folders": [{
+            "binary_file_patterns": [],
+            "file_exclude_patterns": [],
+            "folder_exclude_patterns": [],
+            "name": project_name,
+            "path": folder,
+        }]}
+        
+        filename = '{}.sublime-project'.format(project_name)
+        filepath = os.path.join(self.primary_dir(), filename)
+        print('ProjectManager: Creating {} -> {}'.format(filename, folder))
+        JsonFile(filepath).save(data)
 
 
 class Manager:
